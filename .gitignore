@@ -1,6 +1,7 @@
 # Environments
 .env
 .env.testing
+.env.example
 
 # Vendor & dependencies
 /vendor/
