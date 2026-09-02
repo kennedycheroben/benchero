@@ -1,0 +1,317 @@
+{
+    "results": [
+        {
+            "section": "1. Environment",
+            "test": "Apache & Web Server Response",
+            "status": "PASS",
+            "details": "HTTP 200 OK from \/health"
+        },
+        {
+            "section": "1. Environment",
+            "test": "Database Connection & MySQL\/MariaDB",
+            "status": "PASS",
+            "details": "MySQL version: 10.4.32-MariaDB"
+        },
+        {
+            "section": "2. Registration",
+            "test": "Registration Page Load & CSRF Token Present",
+            "status": "PASS",
+            "details": "Form rendered with _csrf field"
+        },
+        {
+            "section": "16. CSRF",
+            "test": "Registration missing CSRF rejected",
+            "status": "PASS",
+            "details": "Returned HTTP 403"
+        },
+        {
+            "section": "2. Registration",
+            "test": "Password Strength Validation",
+            "status": "PASS",
+            "details": "Weak password rejected"
+        },
+        {
+            "section": "2. Registration",
+            "test": "Invalid Email Format Validation",
+            "status": "PASS",
+            "details": "Invalid email format rejected"
+        },
+        {
+            "section": "2. Registration",
+            "test": "Successful Registration",
+            "status": "PASS",
+            "details": "Registered user qa_e2e_1788358681@teamora.test"
+        },
+        {
+            "section": "3. Login \/ Auth",
+            "test": "Unverified Account Login Blocked",
+            "status": "PASS",
+            "details": "Blocked unverified user login (Code: 403)"
+        },
+        {
+            "section": "2. Registration",
+            "test": "Email Verification URL Execution",
+            "status": "PASS",
+            "details": "User verified via token link"
+        },
+        {
+            "section": "3. Login \/ Auth",
+            "test": "Verified User Login & Session Creation",
+            "status": "PASS",
+            "details": "Logged in and redirected to onboarding\/org selection"
+        },
+        {
+            "section": "4. Account Features",
+            "test": "Forgot Password",
+            "status": "NOT IMPLEMENTED",
+            "details": "No route or controller for forgot password"
+        },
+        {
+            "section": "4. Account Features",
+            "test": "Password Reset",
+            "status": "NOT IMPLEMENTED",
+            "details": "No route or controller for password reset"
+        },
+        {
+            "section": "4. Account Features",
+            "test": "Change Password",
+            "status": "NOT IMPLEMENTED",
+            "details": "No route or controller for change password"
+        },
+        {
+            "section": "4. Account Features",
+            "test": "Profile \/ Account Edit",
+            "status": "NOT IMPLEMENTED",
+            "details": "No route or controller for user profile editing"
+        },
+        {
+            "section": "4. Account Features",
+            "test": "Resend Email Verification Form",
+            "status": "PASS",
+            "details": "GET \/verify-email\/resend loads form"
+        },
+        {
+            "section": "5. Onboarding",
+            "test": "Onboarding Page Render",
+            "status": "PASS",
+            "details": "Loaded organization creation form"
+        },
+        {
+            "section": "5. Onboarding",
+            "test": "Organization Creation & Auto-Slug",
+            "status": "PASS",
+            "details": "Organization created, redirected to dashboard: http:\/\/localhost\/teamora\/o\/e2e-org-816\/dashboard"
+        },
+        {
+            "section": "5. Onboarding",
+            "test": "DB Organization Persistence",
+            "status": "PASS",
+            "details": "Org ID: 01M1H7QSDSEYVEMCEVRXS4QBBP, Slug: e2e-org-816"
+        },
+        {
+            "section": "5. Onboarding",
+            "test": "User Role Assignment (Owner)",
+            "status": "PASS",
+            "details": "User assigned owner role in org"
+        },
+        {
+            "section": "6. Trial Subscription",
+            "test": "Trial Subscription Creation",
+            "status": "PASS",
+            "details": "Subscription trialing, plan: 2, ends: 2026-09-16 17:18:02"
+        },
+        {
+            "section": "7. Sports",
+            "test": "Organization Sports Dashboard",
+            "status": "PASS",
+            "details": "Loaded sports dashboard"
+        },
+        {
+            "section": "7. Sports",
+            "test": "Extracted Token Check",
+            "status": "INFO",
+            "details": "Token: 452aa070592f562afafa226c8cef118c7fd8d7c260d129f8882b772dfecb1ac4"
+        },
+        {
+            "section": "7. Sports",
+            "test": "Activate Football Sport",
+            "status": "PASS",
+            "details": "Activated Football (Sport ID 1)"
+        },
+        {
+            "section": "8. Seasons",
+            "test": "Seasons List Index",
+            "status": "PASS",
+            "details": "Seasons page rendered"
+        },
+        {
+            "section": "8. Seasons",
+            "test": "Season Creation & Current Invariant",
+            "status": "PASS",
+            "details": "Created season 2026\/2027 E2E Season"
+        },
+        {
+            "section": "9. Teams",
+            "test": "Team Creation (Home & Away)",
+            "status": "PASS",
+            "details": "Created team 1 & team 2"
+        },
+        {
+            "section": "10. Players",
+            "test": "Player Creation",
+            "status": "PASS",
+            "details": "Created 2 players"
+        },
+        {
+            "section": "11. Rosters",
+            "test": "Extracted Roster Token Check",
+            "status": "INFO",
+            "details": "Roster Page Code: 200 Token: 452aa070592f562afafa226c8cef118c7fd8d7c260d129f8882b772dfecb1ac4 Body: \n\n\n    \n    \n    E2E Test Organization 742\n    \n    \n    \n    \n    \n        :root {\n            --primary-color: #0d6efd;\n        }\n        body {\n   "
+        },
+        {
+            "section": "11. Rosters",
+            "test": "Add Player to Roster",
+            "status": "PASS",
+            "details": "Assigned player 01M1H7QSS388C0P41RAC7HC1CR to team 01M1H7QSNVDKTN3V470MP384EV"
+        },
+        {
+            "section": "11. Rosters",
+            "test": "Duplicate Roster Assignment Protection",
+            "status": "PASS",
+            "details": "Prevented duplicate roster assignment"
+        },
+        {
+            "section": "12. Fixtures",
+            "test": "Create Fixture Page Load",
+            "status": "INFO",
+            "details": "Page Code: 200 Token: 452aa070592f562afafa226c8cef118c7fd8d7c260d129f8882b772dfecb1ac4 Body: \n\n\n    \n    \n    E2E Test Organization 742\n    \n    \n    \n    \n    \n        :root {\n            --primary-color: #0d6efd;\n        }\n        body {\n   "
+        },
+        {
+            "section": "12. Fixtures",
+            "test": "Same Home and Away Team Validation",
+            "status": "PASS",
+            "details": "Blocked identical home & away team selection"
+        },
+        {
+            "section": "12. Fixtures",
+            "test": "Extracted Fixture A Token Check",
+            "status": "INFO",
+            "details": "FixA Token: 452aa070592f562afafa226c8cef118c7fd8d7c260d129f8882b772dfecb1ac4"
+        },
+        {
+            "section": "12. Fixtures",
+            "test": "Create Competitive Fixture A",
+            "status": "PASS",
+            "details": "Created Competitive Fixture"
+        },
+        {
+            "section": "12. Fixtures",
+            "test": "Create Friendly Fixture B",
+            "status": "PASS",
+            "details": "Created Friendly Fixture"
+        },
+        {
+            "section": "13. Public Fixtures",
+            "test": "Unauthenticated Public Fixture Overview",
+            "status": "PASS",
+            "details": "Public fixture page loaded without auth"
+        },
+        {
+            "section": "13. Public Fixtures",
+            "test": "Public Data Sanitization",
+            "status": "PASS",
+            "details": "No sensitive tenant data leaked"
+        },
+        {
+            "section": "16. CSRF",
+            "test": "Login missing CSRF token rejected",
+            "status": "PASS",
+            "details": "HTTP 403 returned"
+        },
+        {
+            "section": "16. CSRF",
+            "test": "Login invalid CSRF token rejected",
+            "status": "PASS",
+            "details": "HTTP 403 returned"
+        },
+        {
+            "section": "20. Error Handling",
+            "test": "404 Graceful Response",
+            "status": "PASS",
+            "details": "Nonexistent route returned HTTP 404"
+        },
+        {
+            "section": "20. Error Handling",
+            "test": "Sensitive Data Leakage Protection",
+            "status": "PASS",
+            "details": "No stack traces or sensitive credentials leaked"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `users` integrity check",
+            "status": "PASS",
+            "details": "Row count: 48"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `organizations` integrity check",
+            "status": "PASS",
+            "details": "Row count: 40"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `organization_user` integrity check",
+            "status": "PASS",
+            "details": "Row count: 40"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `organization_sports` integrity check",
+            "status": "PASS",
+            "details": "Row count: 31"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `sports` integrity check",
+            "status": "PASS",
+            "details": "Row count: 3"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `seasons` integrity check",
+            "status": "PASS",
+            "details": "Row count: 21"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `teams` integrity check",
+            "status": "PASS",
+            "details": "Row count: 45"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `players` integrity check",
+            "status": "PASS",
+            "details": "Row count: 41"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `roster_assignments` integrity check",
+            "status": "PASS",
+            "details": "Row count: 10"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `fixtures` integrity check",
+            "status": "PASS",
+            "details": "Row count: 12"
+        },
+        {
+            "section": "21. Database Verification",
+            "test": "Table `subscriptions` integrity check",
+            "status": "PASS",
+            "details": "Row count: 40"
+        }
+    ],
+    "bugs": []
+}
