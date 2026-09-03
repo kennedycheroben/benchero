@@ -12,7 +12,7 @@
     <div class="container">
         <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-secondary leading-relaxed max-w-4xl mx-auto">
             <h4 class="fw-bold text-dark mb-3">1. Acceptance of Terms</h4>
-            <p>By registering for, accessing, or using the Benchero multi-sport SaaS platform ("Benchero", "Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, you may not access or use Benchero.</p>
+            <p>By registering for, accessing, or using the Benchero multi-sport site platform ("Benchero", "Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, you may not access or use Benchero.</p>
 
             <h4 class="fw-bold text-dark mt-4 mb-3">2. Description of Platform</h4>
             <p>Benchero provides multi-sport club management software allowing sports organizations, academies, leagues, and schools to organize sports, teams, player rosters, staff, seasons, fixtures, results, and subscription billing.</p>
