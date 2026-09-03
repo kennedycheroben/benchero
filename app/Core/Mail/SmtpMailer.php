@@ -41,7 +41,7 @@ class SmtpMailer implements MailerInterface
             return false;
         }
 
-        $this->readSmtpResponse($socket);
+        $this->getResponse($socket);
 
         $this->writeSmtp($socket, "EHLO " . ($_SERVER['SERVER_NAME'] ?? 'localhost'));
         
@@ -62,7 +62,9 @@ class SmtpMailer implements MailerInterface
         $this->writeSmtp($socket, "DATA");
 
         $boundary = md5(time());
-        $headers  = "From: {$this->fromName} <{$this->fromAddress}>\r\n";
+        $headers  = "Date: " . date('r') . "\r\n";
+        $headers .= "Message-ID: <" . time() . '.' . uniqid() . "@benchero.co.ke>\r\n";
+        $headers .= "From: {$this->fromName} <{$this->fromAddress}>\r\n";
         $headers .= "To: {$to}\r\n";
         $headers .= "Subject: {$subject}\r\n";
         $headers .= "MIME-Version: 1.0\r\n";
@@ -77,7 +79,7 @@ class SmtpMailer implements MailerInterface
         $message .= "--{$boundary}--";
 
         fwrite($socket, $headers . "\r\n" . $message . "\r\n.\r\n");
-        $this->readSmtpResponse($socket);
+        $this->getResponse($socket);
 
         $this->writeSmtp($socket, "QUIT");
         fclose($socket);
@@ -88,18 +90,20 @@ class SmtpMailer implements MailerInterface
     private function writeSmtp($socket, string $data): void
     {
         fwrite($socket, $data . "\r\n");
-        $this->readSmtpResponse($socket);
+        $this->getResponse($socket);
     }
 
-    private function readSmtpResponse($socket): string
+    protected function getResponse($socket): string
     {
         $response = '';
-        while ($str = fgets($socket, 515)) {
-            $response .= $str;
-            if (substr($str, 3, 1) === ' ') {
+        while ($line = fgets($socket, 512)) {
+            $response .= $line;
+            // In SMTP, the last line of a response has a space after the status code (e.g. "250 ")
+            // while intermediate lines have a hyphen (e.g. "250-")
+            if (isset($line[3]) && $line[3] === ' ') {
                 break;
             }
         }
-        return $response;
+        return trim($response);
     }
 }
