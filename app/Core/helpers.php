@@ -66,7 +66,7 @@ if (!function_exists('csrf_field')) {
 
 if (!function_exists('base_path_url')) {
     /**
-     * Determine base path prefix for URLs (e.g. '/teamora' or '/teamora/public' or '').
+     * Determine base path prefix for URLs (e.g. '/benchero' or '/benchero/public' or '').
      */
     function base_path_url(): string
     {
@@ -83,12 +83,12 @@ if (!function_exists('base_path_url')) {
             $publicDir = '';
         }
 
-        // 1. If REQUEST_URI explicitly starts with /teamora/public
+        // 1. If REQUEST_URI explicitly starts with /benchero/public
         if ($publicDir !== '' && strpos($requestUri, $publicDir) === 0) {
             return $publicDir;
         }
         
-        // 2. If rewrite sent request to teamora/ without /public in REQUEST_URI (e.g. /teamora/login)
+        // 2. If rewrite sent request to benchero/ without /public in REQUEST_URI (e.g. /benchero/login)
         $parentDir = dirname($publicDir);
         if ($parentDir !== '/' && $parentDir !== '\\' && $parentDir !== '.' && strpos($requestUri, $parentDir) === 0) {
             return $parentDir;

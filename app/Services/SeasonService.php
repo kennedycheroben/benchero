@@ -1,8 +1,8 @@
 <?php
 
-namespace Teamora\Services;
+namespace Benchero\Services;
 
-use Teamora\Repositories\SeasonRepository;
+use Benchero\Repositories\SeasonRepository;
 
 class SeasonService
 {

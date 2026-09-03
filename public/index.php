@@ -2,19 +2,19 @@
 
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Middleware\Pipeline;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Middleware\Pipeline;
 
-/** @var \Teamora\Core\Routing\Router $router */
+/** @var \Benchero\Core\Routing\Router $router */
 $router = require __DIR__ . '/../config/routes.php';
 
 $pipeline = new Pipeline();
 
 $response = $pipeline->through([
-    Teamora\Middleware\SecurityHeadersMiddleware::class,
-    Teamora\Middleware\SessionMiddleware::class,
-    Teamora\Middleware\CsrfMiddleware::class,
-    Teamora\Middleware\TenantMiddleware::class,
+    Benchero\Middleware\SecurityHeadersMiddleware::class,
+    Benchero\Middleware\SessionMiddleware::class,
+    Benchero\Middleware\CsrfMiddleware::class,
+    Benchero\Middleware\TenantMiddleware::class,
 ])->then(function (Request $request) use ($router) {
     return $router->dispatch($request);
 });

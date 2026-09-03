@@ -1,8 +1,8 @@
 <?php
 
-namespace Teamora\Services;
+namespace Benchero\Services;
 
-use Teamora\Repositories\PlayerRepository;
+use Benchero\Repositories\PlayerRepository;
 
 class PlayerService
 {

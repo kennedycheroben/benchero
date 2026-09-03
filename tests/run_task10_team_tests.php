@@ -1,13 +1,13 @@
 <?php
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Middleware\TenantMiddleware;
-use Teamora\Services\OrganizationService;
-use Teamora\Services\TeamService;
-use Teamora\Core\Ulid;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Middleware\TenantMiddleware;
+use Benchero\Services\OrganizationService;
+use Benchero\Services\TeamService;
+use Benchero\Core\Ulid;
 
 $db = Database::getConnection();
 $db->exec("DELETE FROM teams");
@@ -88,7 +88,7 @@ $isActive = $db->query("SELECT is_active FROM teams WHERE id = '$team1'")->fetch
 logResult('Archive Team', $deletedAt !== null && $isActive == 0, 'Soft deleted and set inactive');
 
 // 8. Archived teams excluded from active list
-$repo = new \Teamora\Repositories\TeamRepository();
+$repo = new \Benchero\Repositories\TeamRepository();
 $activeTeams = $repo->findActiveByOrgAndSport($orgA, $footballId);
 logResult('Archived Team Excluded', count($activeTeams) === 0, 'Archived team not in active list');
 

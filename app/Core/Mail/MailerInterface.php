@@ -1,6 +1,6 @@
 <?php
 
-namespace Teamora\Core\Mail;
+namespace Benchero\Core\Mail;
 
 interface MailerInterface
 {

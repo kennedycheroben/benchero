@@ -1,11 +1,11 @@
 <?php
 
-namespace Teamora\Controllers;
+namespace Benchero\Controllers;
 
-use Teamora\Core\Controller;
-use Teamora\Core\Database\Database;
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
+use Benchero\Core\Controller;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
 
 class HealthController extends Controller
 {

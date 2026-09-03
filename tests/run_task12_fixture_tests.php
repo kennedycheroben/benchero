@@ -2,9 +2,9 @@
 
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
-use Teamora\Core\Ulid;
-use Teamora\Services\FixtureService;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Ulid;
+use Benchero\Services\FixtureService;
 
 // Setup test environment
 $db = Database::getConnection();
@@ -21,9 +21,9 @@ $db->exec("DELETE FROM users");
 
 $fixtureService = new FixtureService();
 
-use Teamora\Services\OrganizationService;
-use Teamora\Services\TeamService;
-use Teamora\Services\SeasonService;
+use Benchero\Services\OrganizationService;
+use Benchero\Services\TeamService;
+use Benchero\Services\SeasonService;
 
 // Create users
 $userA = Ulid::generate();
@@ -151,7 +151,7 @@ try {
     assertTest("Fixture is soft-deleted in DB", $deletedAt !== null && $deletedAt !== false, $passed, $failed);
     
     // Ensure normal fetch fails
-    $repo = new \Teamora\Repositories\FixtureRepository();
+    $repo = new \Benchero\Repositories\FixtureRepository();
     $fetched = $repo->findById($fixtureId, $org1, $sport1);
     assertTest("Soft-deleted fixture is excluded from normal queries", $fetched === null, $passed, $failed);
     
@@ -182,7 +182,7 @@ try {
         '2026-12-01 15:00:00', 'Public Venue', 'league', 'Public Comp'
     );
     
-    $repo = new \Teamora\Repositories\FixtureRepository();
+    $repo = new \Benchero\Repositories\FixtureRepository();
     $publicFixtures = $repo->findPublicBySeason($season1, $org1, $sport1);
     
     // Ensure active fixture is visible
@@ -218,10 +218,10 @@ try {
     $stmt->execute([$org1]);
     $org1Slug = $stmt->fetchColumn();
 
-    $request = new \Teamora\Core\Http\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => "/o/{$org1Slug}/s/football/fixtures"], [], []);
-    $middleware = new \Teamora\Middleware\TenantMiddleware();
+    $request = new \Benchero\Core\Http\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => "/o/{$org1Slug}/s/football/fixtures"], [], []);
+    $middleware = new \Benchero\Middleware\TenantMiddleware();
     $response = $middleware->handle($request, function($req) {
-        return new \Teamora\Core\Http\Response('OK');
+        return new \Benchero\Core\Http\Response('OK');
     });
     assertTest("Public visitor cannot access authenticated tenant endpoints", $response->getStatusCode() === 302, $passed, $failed);
     

@@ -1,12 +1,12 @@
 <?php
 
-namespace Teamora\Core\Routing;
+namespace Benchero\Core\Routing;
 
 use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use function FastRoute\simpleDispatcher;
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
 
 class Router
 {
@@ -32,7 +32,9 @@ class Router
 
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
-                return new Response('404 Not Found', 404);
+                $templates = new \League\Plates\Engine(__DIR__ . '/../../../views');
+                $templates->registerFunction('url', 'url');
+                return new Response($templates->render('errors/404', ['title' => 'Page Not Found']), 404, ['Content-Type' => 'text/html; charset=utf-8']);
             case Dispatcher::METHOD_NOT_ALLOWED:
                 $allowedMethods = $routeInfo[1];
                 return new Response('405 Method Not Allowed', 405);

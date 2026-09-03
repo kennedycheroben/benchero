@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
+use Benchero\Core\Database\Database;
 
 class Migrator
 {

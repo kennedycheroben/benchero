@@ -1,6 +1,6 @@
 <?php
 
-namespace Teamora\Core\Http;
+namespace Benchero\Core\Http;
 
 class Request
 {
@@ -58,18 +58,18 @@ class Request
         }
         $uri = rawurldecode($uri);
         
-        // Remove base path if applicable (e.g. /teamora or /teamora/public)
+        // Remove base path if applicable (e.g. /benchero or /benchero/public)
         $scriptName = $this->server['SCRIPT_NAME'] ?? '';
-        $basePath = dirname($scriptName); // e.g. /teamora/public
+        $basePath = dirname($scriptName); // e.g. /benchero/public
         
         if ($basePath !== '/' && $basePath !== '\\') {
-            // Check if URI starts with /teamora/public
+            // Check if URI starts with /benchero/public
             if (strpos($uri, $basePath) === 0) {
                 $uri = substr($uri, strlen($basePath));
             } else {
-                // If the URI is just /teamora/login (redirected silently to public/)
-                // we should strip /teamora
-                $parentBase = dirname($basePath); // e.g. /teamora
+                // If the URI is just /benchero/login (redirected silently to public/)
+                // we should strip /benchero
+                $parentBase = dirname($basePath); // e.g. /benchero
                 if ($parentBase !== '/' && $parentBase !== '\\' && strpos($uri, $parentBase) === 0) {
                     $uri = substr($uri, strlen($parentBase));
                 }

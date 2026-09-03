@@ -1,6 +1,6 @@
 <?php
 
-namespace Teamora\Core;
+namespace Benchero\Core;
 
 use PDO;
 

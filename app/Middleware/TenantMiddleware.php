@@ -1,10 +1,10 @@
 <?php
 
-namespace Teamora\Middleware;
+namespace Benchero\Middleware;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Core\Middleware\MiddlewareInterface;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Core\Middleware\MiddlewareInterface;
 
 class TenantMiddleware implements MiddlewareInterface
 {
@@ -18,7 +18,7 @@ class TenantMiddleware implements MiddlewareInterface
             if (count($parts) >= 2) {
                 $slug = $parts[1];
 
-                $db = \Teamora\Core\Database\Database::getConnection();
+                $db = \Benchero\Core\Database\Database::getConnection();
 
                 // Find the organization
                 $stmt = $db->prepare("SELECT * FROM `organizations` WHERE `slug` = :slug");

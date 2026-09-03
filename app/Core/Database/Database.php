@@ -1,6 +1,6 @@
 <?php
 
-namespace Teamora\Core\Database;
+namespace Benchero\Core\Database;
 
 use PDO;
 use PDOException;
@@ -15,7 +15,7 @@ class Database
         if (self::$instance === null) {
             $host = env('DB_HOST', '127.0.0.1');
             $port = env('DB_PORT', 3306);
-            $db   = env('DB_DATABASE', 'teamora');
+            $db   = env('DB_DATABASE', 'benchero_dev');
             $user = env('DB_USERNAME', 'root');
             $pass = env('DB_PASSWORD', '');
             $charset = env('DB_CHARSET', 'utf8mb4');

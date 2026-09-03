@@ -15,7 +15,7 @@
                         </div>
                     <?php endif; ?>
 
-                    <p class="text-muted mb-4">Welcome to Teamora. To get started, please set up your organization details.</p>
+                    <p class="text-muted mb-4">Welcome to Benchero. To get started, please set up your sports organization details.</p>
                     
                     <form method="POST" action="<?= $this->url('/onboarding') ?>">
                         <?= csrf_field() ?>

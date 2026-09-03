@@ -1,14 +1,14 @@
 <?php
 
-namespace Teamora\Controllers\Tenant;
+namespace Benchero\Controllers\Tenant;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Services\RosterService;
-use Teamora\Repositories\RosterRepository;
-use Teamora\Repositories\TeamRepository;
-use Teamora\Repositories\SeasonRepository;
-use Teamora\Repositories\PlayerRepository;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Services\RosterService;
+use Benchero\Repositories\RosterRepository;
+use Benchero\Repositories\TeamRepository;
+use Benchero\Repositories\SeasonRepository;
+use Benchero\Repositories\PlayerRepository;
 
 class RosterController
 {

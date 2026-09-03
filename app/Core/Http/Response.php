@@ -1,6 +1,6 @@
 <?php
 
-namespace Teamora\Core\Http;
+namespace Benchero\Core\Http;
 
 class Response
 {

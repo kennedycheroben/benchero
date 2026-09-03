@@ -2,15 +2,13 @@
 
 /**
  * Migration 014 — Enhance Players and Add Rosters
- *
- * 1. Modifies the existing `players` table to add sport context and profile fields.
- * 2. Creates the `roster_assignments` table to act as a pivot for Player -> Team -> Season.
  */
 return new class {
     public function up(\PDO $pdo): void
     {
-        // 1. Enhance `players` table
-        if (!$this->columnExists($pdo, 'teamora_dev', 'players', 'sport_id')) {
+        $dbName = env('DB_DATABASE', 'benchero_dev');
+
+        if (!$this->columnExists($pdo, $dbName, 'players', 'sport_id')) {
             $pdo->exec("
                 ALTER TABLE players 
                 ADD COLUMN sport_id CHAR(26) NOT NULL AFTER organization_id,
@@ -18,35 +16,33 @@ return new class {
             ");
         }
 
-        if (!$this->columnExists($pdo, 'teamora_dev', 'players', 'display_name')) {
+        if (!$this->columnExists($pdo, $dbName, 'players', 'display_name')) {
             $pdo->exec("
                 ALTER TABLE players 
                 ADD COLUMN display_name VARCHAR(100) NULL AFTER last_name
             ");
         }
 
-        if (!$this->columnExists($pdo, 'teamora_dev', 'players', 'bio')) {
+        if (!$this->columnExists($pdo, $dbName, 'players', 'bio')) {
             $pdo->exec("
                 ALTER TABLE players 
                 ADD COLUMN bio TEXT NULL AFTER display_name
             ");
         }
 
-        if (!$this->columnExists($pdo, 'teamora_dev', 'players', 'is_active')) {
+        if (!$this->columnExists($pdo, $dbName, 'players', 'is_active')) {
             $pdo->exec("
                 ALTER TABLE players 
                 ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1 AFTER bio
             ");
         }
         
-        // Ensure index for tenant isolation exists
-        if (!$this->indexExists($pdo, 'teamora_dev', 'players', 'idx_player_org_sport')) {
+        if (!$this->indexExists($pdo, $dbName, 'players', 'idx_player_org_sport')) {
             $pdo->exec("
                 ALTER TABLE players ADD INDEX idx_player_org_sport (organization_id, sport_id)
             ");
         }
 
-        // 2. Create `roster_assignments` table
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS roster_assignments (
                 id CHAR(26) PRIMARY KEY,

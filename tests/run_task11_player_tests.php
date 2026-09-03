@@ -1,15 +1,15 @@
 <?php
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
-use Teamora\Services\OrganizationService;
-use Teamora\Services\TeamService;
-use Teamora\Services\SeasonService;
-use Teamora\Services\PlayerService;
-use Teamora\Services\RosterService;
-use Teamora\Repositories\PlayerRepository;
-use Teamora\Repositories\RosterRepository;
-use Teamora\Core\Ulid;
+use Benchero\Core\Database\Database;
+use Benchero\Services\OrganizationService;
+use Benchero\Services\TeamService;
+use Benchero\Services\SeasonService;
+use Benchero\Services\PlayerService;
+use Benchero\Services\RosterService;
+use Benchero\Repositories\PlayerRepository;
+use Benchero\Repositories\RosterRepository;
+use Benchero\Core\Ulid;
 
 $db = Database::getConnection();
 $db->exec("DELETE FROM roster_assignments");

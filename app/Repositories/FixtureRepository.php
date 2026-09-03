@@ -1,9 +1,9 @@
 <?php
 
-namespace Teamora\Repositories;
+namespace Benchero\Repositories;
 
-use Teamora\Core\Database\Database;
-use Teamora\Core\Ulid;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Ulid;
 
 class FixtureRepository
 {
@@ -139,11 +139,32 @@ class FixtureRepository
         return $stmt->execute(['id' => $id, 'org_id' => $orgId, 'sport_id' => $sportId]);
     }
 
+    public function updateResult(string $id, int $homeScore, int $awayScore, ?string $resultNotes, string $orgId, string $sportId): bool
+    {
+        $stmt = $this->db->prepare("
+            UPDATE fixtures 
+            SET home_score = :home_score,
+                away_score = :away_score,
+                result_notes = :result_notes,
+                status = 'completed',
+                completed_at = NOW()
+            WHERE id = :id AND organization_id = :org_id AND sport_id = :sport_id
+        ");
+        return $stmt->execute([
+            'home_score' => $homeScore,
+            'away_score' => $awayScore,
+            'result_notes' => $resultNotes,
+            'id' => $id,
+            'org_id' => $orgId,
+            'sport_id' => $sportId
+        ]);
+    }
+
     public function findPublicBySeason(string $seasonId, string $orgId, string $sportId): array
     {
         $stmt = $this->db->prepare("
             SELECT f.id, f.home_team_id, f.away_team_id, f.scheduled_at, f.venue_name, 
-                   f.competition_type, f.competition_name, f.status,
+                   f.competition_type, f.competition_name, f.status, f.home_score, f.away_score,
                    ht.name as home_team_name, 
                    at.name as away_team_name,
                    s.name as season_name

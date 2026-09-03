@@ -1,9 +1,9 @@
 <?php
 
-namespace Teamora\Core\Middleware;
+namespace Benchero\Core\Middleware;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
 
 class Pipeline
 {

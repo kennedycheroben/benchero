@@ -1,9 +1,9 @@
 <?php
 
-namespace Teamora\Core;
+namespace Benchero\Core;
 
 use League\Plates\Engine;
-use Teamora\Core\Http\Response;
+use Benchero\Core\Http\Response;
 
 abstract class Controller
 {

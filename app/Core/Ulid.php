@@ -1,9 +1,9 @@
 <?php
 
-namespace Teamora\Core;
+namespace Benchero\Core;
 
 /**
- * Teamora ULID generator.
+ * Benchero ULID generator.
  *
  * Generates a 26-character Universally Unique Lexicographically Sortable Identifier
  * using Crockford Base32 encoding (spec: https://github.com/ulid/spec).

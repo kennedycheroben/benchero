@@ -1,6 +1,6 @@
 <?php
 
-use Teamora\Core\Database\Database;
+use Benchero\Core\Database\Database;
 
 return new class {
     public function up(): void

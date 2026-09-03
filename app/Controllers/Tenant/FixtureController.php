@@ -1,13 +1,13 @@
 <?php
 
-namespace Teamora\Controllers\Tenant;
+namespace Benchero\Controllers\Tenant;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Services\FixtureService;
-use Teamora\Repositories\FixtureRepository;
-use Teamora\Repositories\SeasonRepository;
-use Teamora\Repositories\TeamRepository;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Services\FixtureService;
+use Benchero\Repositories\FixtureRepository;
+use Benchero\Repositories\SeasonRepository;
+use Benchero\Repositories\TeamRepository;
 use DateTime;
 use DateTimeZone;
 
@@ -265,6 +265,35 @@ class FixtureController
 
         try {
             $this->service->updateStatus($id, $tenant['id'], $sport['id'], $newStatus);
+        } catch (\Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+        }
+
+        return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/fixtures/{$id}");
+    }
+
+    public function saveResult(Request $request, array $params): Response
+    {
+        try {
+            $this->requireManagerRole($request);
+        } catch (\Exception $e) {
+            return new Response($e->getMessage(), 403);
+        }
+
+        if (!$request->validateCsrf()) {
+            return new Response('403 Forbidden - CSRF failed', 403);
+        }
+
+        $tenant = $request->getAttribute('tenant');
+        $sport = $request->getAttribute('sport');
+        $id = $params['id'];
+
+        $homeScore = (int)($_POST['home_score'] ?? 0);
+        $awayScore = (int)($_POST['away_score'] ?? 0);
+        $resultNotes = trim($_POST['result_notes'] ?? '');
+
+        try {
+            $this->service->recordResult($id, $tenant['id'], $sport['id'], $homeScore, $awayScore, $resultNotes ?: null);
         } catch (\Exception $e) {
             $_SESSION['error'] = $e->getMessage();
         }

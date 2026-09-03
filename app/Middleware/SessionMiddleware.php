@@ -1,10 +1,10 @@
 <?php
 
-namespace Teamora\Middleware;
+namespace Benchero\Middleware;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Core\Middleware\MiddlewareInterface;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Core\Middleware\MiddlewareInterface;
 
 class SessionMiddleware implements MiddlewareInterface
 {
@@ -22,7 +22,7 @@ class SessionMiddleware implements MiddlewareInterface
                 'samesite' => 'Lax'
             ]);
 
-            session_name('tmsess');
+            session_name('benchero_session');
             
             $savePath = __DIR__ . '/../../storage/sessions';
             if (!is_dir($savePath)) {

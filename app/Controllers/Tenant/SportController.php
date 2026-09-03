@@ -1,10 +1,10 @@
 <?php
 
-namespace Teamora\Controllers\Tenant;
+namespace Benchero\Controllers\Tenant;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Core\Database\Database;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Core\Database\Database;
 
 class SportController
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Teamora\Controllers;
+namespace Benchero\Controllers;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Services\OrganizationService;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Services\OrganizationService;
 
 class OnboardingController
 {

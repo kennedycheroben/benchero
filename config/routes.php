@@ -1,77 +1,105 @@
 <?php
 
-use Teamora\Core\Routing\Router;
+use Benchero\Core\Routing\Router;
 
 $router = new Router();
 
-$router->addRoute('GET', '/', ['Teamora\Controllers\HomeController', 'index']);
-$router->addRoute('GET', '/health', ['Teamora\Controllers\HealthController', 'check']);
+// Public Marketing Routes
+$router->addRoute('GET', '/', ['Benchero\Controllers\HomeController', 'index']);
+$router->addRoute('GET', '/about', ['Benchero\Controllers\HomeController', 'about']);
+$router->addRoute('GET', '/pricing', ['Benchero\Controllers\HomeController', 'pricing']);
+$router->addRoute('GET', '/contact', ['Benchero\Controllers\HomeController', 'contactForm']);
+$router->addRoute('POST', '/contact', ['Benchero\Controllers\HomeController', 'contactSubmit']);
+$router->addRoute('GET', '/terms', ['Benchero\Controllers\HomeController', 'terms']);
+$router->addRoute('GET', '/privacy', ['Benchero\Controllers\HomeController', 'privacy']);
+$router->addRoute('GET', '/health', ['Benchero\Controllers\HealthController', 'check']);
 
-// Task 5: Auth - Registration & Verification
-$router->addRoute('GET', '/register', ['Teamora\Controllers\AuthController', 'registerForm']);
-$router->addRoute('POST', '/register', ['Teamora\Controllers\AuthController', 'register']);
-$router->addRoute('GET', '/verify-email/{id}/{token}', ['Teamora\Controllers\AuthController', 'verifyEmail']);
-$router->addRoute('GET', '/verify-email/resend', ['Teamora\Controllers\AuthController', 'resendVerificationForm']);
-$router->addRoute('POST', '/verify-email/resend', ['Teamora\Controllers\AuthController', 'resendVerification']);
+// Auth - Registration & Verification
+$router->addRoute('GET', '/register', ['Benchero\Controllers\AuthController', 'registerForm']);
+$router->addRoute('POST', '/register', ['Benchero\Controllers\AuthController', 'register']);
+$router->addRoute('GET', '/verify-email/{id}/{token}', ['Benchero\Controllers\AuthController', 'verifyEmail']);
+$router->addRoute('GET', '/verify-email/resend', ['Benchero\Controllers\AuthController', 'resendVerificationForm']);
+$router->addRoute('POST', '/verify-email/resend', ['Benchero\Controllers\AuthController', 'resendVerification']);
 
-// Task 6: Auth - Login & Logout
-$router->addRoute('GET', '/login', ['Teamora\Controllers\AuthController', 'loginForm']);
-$router->addRoute('POST', '/login', ['Teamora\Controllers\AuthController', 'login']);
-$router->addRoute('POST', '/logout', ['Teamora\Controllers\AuthController', 'logout']);
+// Auth - Login & Logout & Recovery
+$router->addRoute('GET', '/login', ['Benchero\Controllers\AuthController', 'loginForm']);
+$router->addRoute('POST', '/login', ['Benchero\Controllers\AuthController', 'login']);
+$router->addRoute('POST', '/logout', ['Benchero\Controllers\AuthController', 'logout']);
+$router->addRoute('GET', '/forgot-password', ['Benchero\Controllers\AuthController', 'forgotPasswordForm']);
+$router->addRoute('POST', '/forgot-password', ['Benchero\Controllers\AuthController', 'forgotPasswordSubmit']);
+$router->addRoute('GET', '/reset-password/{token}', ['Benchero\Controllers\AuthController', 'resetPasswordForm']);
+$router->addRoute('POST', '/reset-password', ['Benchero\Controllers\AuthController', 'resetPasswordSubmit']);
 
-// Task 7: Organization Onboarding & Selection
-$router->addRoute('GET', '/organizations', ['Teamora\Controllers\OrganizationSelectionController', 'index']);
-$router->addRoute('GET', '/onboarding', ['Teamora\Controllers\OnboardingController', 'index']);
-$router->addRoute('POST', '/onboarding', ['Teamora\Controllers\OnboardingController', 'store']);
+// Organization Onboarding & Selection
+$router->addRoute('GET', '/organizations', ['Benchero\Controllers\OrganizationSelectionController', 'index']);
+$router->addRoute('GET', '/onboarding', ['Benchero\Controllers\OnboardingController', 'index']);
+$router->addRoute('POST', '/onboarding', ['Benchero\Controllers\OnboardingController', 'store']);
 
-// Task 7: Tenant Context routes
-$router->addRoute('GET', '/o/{slug}/dashboard', ['Teamora\Controllers\Tenant\DashboardController', 'index']);
+// Public Club Profile Page
+$router->addRoute('GET', '/club/{slug}', ['Benchero\Controllers\Public\PublicClubController', 'show']);
+$router->addRoute('GET', '/{org_slug}/{sport_slug}/fixtures', ['Benchero\Controllers\Public\FixtureController', 'index']);
 
-// Task 8: Sports Foundation routes
-$router->addRoute('GET', '/o/{slug}/sports', ['Teamora\Controllers\Tenant\SportController', 'index']);
-$router->addRoute('POST', '/o/{slug}/sports/toggle', ['Teamora\Controllers\Tenant\SportController', 'toggle']);
-// Task 10: Team routes
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams', ['Teamora\Controllers\Tenant\TeamController', 'index']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/create', ['Teamora\Controllers\Tenant\TeamController', 'create']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams', ['Teamora\Controllers\Tenant\TeamController', 'store']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/{id}', ['Teamora\Controllers\Tenant\TeamController', 'show']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/{id}/edit', ['Teamora\Controllers\Tenant\TeamController', 'edit']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{id}', ['Teamora\Controllers\Tenant\TeamController', 'update']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{id}/delete', ['Teamora\Controllers\Tenant\TeamController', 'delete']);
+// Tenant Context Routes
+$router->addRoute('GET', '/o/{slug}/dashboard', ['Benchero\Controllers\Tenant\DashboardController', 'index']);
 
-// Task 9: Seasons routes
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/seasons', ['Teamora\Controllers\Tenant\SeasonController', 'index']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/seasons/create', ['Teamora\Controllers\Tenant\SeasonController', 'create']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons', ['Teamora\Controllers\Tenant\SeasonController', 'store']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/seasons/{id}/edit', ['Teamora\Controllers\Tenant\SeasonController', 'edit']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons/{id}', ['Teamora\Controllers\Tenant\SeasonController', 'update']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons/{id}/current', ['Teamora\Controllers\Tenant\SeasonController', 'setCurrent']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons/{id}/delete', ['Teamora\Controllers\Tenant\SeasonController', 'delete']);
+// Tenant Sports
+$router->addRoute('GET', '/o/{slug}/sports', ['Benchero\Controllers\Tenant\SportController', 'index']);
+$router->addRoute('POST', '/o/{slug}/sports/toggle', ['Benchero\Controllers\Tenant\SportController', 'toggle']);
 
-// Task 11: Player routes
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players', ['Teamora\Controllers\Tenant\PlayerController', 'index']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players/create', ['Teamora\Controllers\Tenant\PlayerController', 'create']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/players', ['Teamora\Controllers\Tenant\PlayerController', 'store']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players/{id}', ['Teamora\Controllers\Tenant\PlayerController', 'show']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players/{id}/edit', ['Teamora\Controllers\Tenant\PlayerController', 'edit']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/players/{id}', ['Teamora\Controllers\Tenant\PlayerController', 'update']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/players/{id}/delete', ['Teamora\Controllers\Tenant\PlayerController', 'delete']);
+// Tenant Teams
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams', ['Benchero\Controllers\Tenant\TeamController', 'index']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/create', ['Benchero\Controllers\Tenant\TeamController', 'create']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams', ['Benchero\Controllers\Tenant\TeamController', 'store']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/{id}', ['Benchero\Controllers\Tenant\TeamController', 'show']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/{id}/edit', ['Benchero\Controllers\Tenant\TeamController', 'edit']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{id}', ['Benchero\Controllers\Tenant\TeamController', 'update']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{id}/delete', ['Benchero\Controllers\Tenant\TeamController', 'delete']);
 
-// Task 11: Roster routes
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}', ['Teamora\Controllers\Tenant\RosterController', 'index']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}', ['Teamora\Controllers\Tenant\RosterController', 'store']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}/assignments/{assignment_id}', ['Teamora\Controllers\Tenant\RosterController', 'update']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}/assignments/{assignment_id}/delete', ['Teamora\Controllers\Tenant\RosterController', 'delete']);
+// Tenant Seasons
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/seasons', ['Benchero\Controllers\Tenant\SeasonController', 'index']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/seasons/create', ['Benchero\Controllers\Tenant\SeasonController', 'create']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons', ['Benchero\Controllers\Tenant\SeasonController', 'store']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/seasons/{id}/edit', ['Benchero\Controllers\Tenant\SeasonController', 'edit']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons/{id}', ['Benchero\Controllers\Tenant\SeasonController', 'update']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons/{id}/current', ['Benchero\Controllers\Tenant\SeasonController', 'setCurrent']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/seasons/{id}/delete', ['Benchero\Controllers\Tenant\SeasonController', 'delete']);
 
-// Task 12: Fixture routes
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures', ['Teamora\Controllers\Tenant\FixtureController', 'index']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/create', ['Teamora\Controllers\Tenant\FixtureController', 'create']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures', ['Teamora\Controllers\Tenant\FixtureController', 'store']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Teamora\Controllers\Tenant\FixtureController', 'show']);
-$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/{id}/edit', ['Teamora\Controllers\Tenant\FixtureController', 'edit']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Teamora\Controllers\Tenant\FixtureController', 'update']);
-$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/status', ['Teamora\Controllers\Tenant\FixtureController', 'status']);
-// Task 12: Public Fixture routes
-$router->addRoute('GET', '/{org_slug}/{sport_slug}/fixtures', ['Teamora\Controllers\Public\FixtureController', 'index']);
+// Tenant Players & Rosters
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players', ['Benchero\Controllers\Tenant\PlayerController', 'index']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players/create', ['Benchero\Controllers\Tenant\PlayerController', 'create']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/players', ['Benchero\Controllers\Tenant\PlayerController', 'store']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players/{id}', ['Benchero\Controllers\Tenant\PlayerController', 'show']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/players/{id}/edit', ['Benchero\Controllers\Tenant\PlayerController', 'edit']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/players/{id}', ['Benchero\Controllers\Tenant\PlayerController', 'update']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/players/{id}/delete', ['Benchero\Controllers\Tenant\PlayerController', 'delete']);
+
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}', ['Benchero\Controllers\Tenant\RosterController', 'index']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}', ['Benchero\Controllers\Tenant\RosterController', 'store']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}/assignments/{assignment_id}', ['Benchero\Controllers\Tenant\RosterController', 'update']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{season_id}/assignments/{assignment_id}/delete', ['Benchero\Controllers\Tenant\RosterController', 'delete']);
+
+// Tenant Staff
+$router->addRoute('GET', '/o/{slug}/staff', ['Benchero\Controllers\Tenant\StaffController', 'index']);
+$router->addRoute('GET', '/o/{slug}/staff/create', ['Benchero\Controllers\Tenant\StaffController', 'create']);
+$router->addRoute('POST', '/o/{slug}/staff', ['Benchero\Controllers\Tenant\StaffController', 'store']);
+$router->addRoute('POST', '/o/{slug}/staff/{id}/delete', ['Benchero\Controllers\Tenant\StaffController', 'delete']);
+
+// Tenant Fixtures & Results
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures', ['Benchero\Controllers\Tenant\FixtureController', 'index']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/create', ['Benchero\Controllers\Tenant\FixtureController', 'create']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures', ['Benchero\Controllers\Tenant\FixtureController', 'store']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Benchero\Controllers\Tenant\FixtureController', 'show']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/{id}/edit', ['Benchero\Controllers\Tenant\FixtureController', 'edit']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Benchero\Controllers\Tenant\FixtureController', 'update']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/status', ['Benchero\Controllers\Tenant\FixtureController', 'status']);
+$router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/result', ['Benchero\Controllers\Tenant\FixtureController', 'saveResult']);
+
+// Tenant Billing & M-Pesa
+$router->addRoute('GET', '/o/{slug}/billing', ['Benchero\Controllers\Tenant\BillingController', 'index']);
+$router->addRoute('POST', '/o/{slug}/billing/stkpush', ['Benchero\Controllers\Tenant\BillingController', 'stkPush']);
+$router->addRoute('POST', '/billing/mpesa/callback', ['Benchero\Controllers\Public\MpesaCallbackController', 'handle']);
+
+// Platform Admin Routes
+$router->addRoute('GET', '/admin', ['Benchero\Controllers\Admin\AdminController', 'index']);
 
 return $router;

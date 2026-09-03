@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Middleware\TenantMiddleware;
-use Teamora\Services\OrganizationService;
-use Teamora\Core\Ulid;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Middleware\TenantMiddleware;
+use Benchero\Services\OrganizationService;
+use Benchero\Core\Ulid;
 
 $db = Database::getConnection();
 $db->exec("DELETE FROM organization_sports");

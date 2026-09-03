@@ -1,9 +1,9 @@
 <?php
 
-namespace Teamora\Services;
+namespace Benchero\Services;
 
-use Teamora\Core\Database\Database;
-use Teamora\Core\Ulid;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Ulid;
 
 class OrganizationService
 {

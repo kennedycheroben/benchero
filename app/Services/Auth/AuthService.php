@@ -1,9 +1,9 @@
 <?php
 
-namespace Teamora\Services\Auth;
+namespace Benchero\Services\Auth;
 
 use PDO;
-use Teamora\Core\Ulid;
+use Benchero\Core\Ulid;
 
 class AuthService
 {

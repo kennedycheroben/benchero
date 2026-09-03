@@ -3,11 +3,11 @@
 namespace Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
-use Teamora\Repositories\PlayerRepository;
-use Teamora\Repositories\RosterRepository;
-use Teamora\Services\PlayerService;
-use Teamora\Services\RosterService;
-use Teamora\Core\Database\Database;
+use Benchero\Repositories\PlayerRepository;
+use Benchero\Repositories\RosterRepository;
+use Benchero\Services\PlayerService;
+use Benchero\Services\RosterService;
+use Benchero\Core\Database\Database;
 
 class Task11PlayersTest extends TestCase
 {

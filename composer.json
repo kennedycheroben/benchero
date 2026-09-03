@@ -1,6 +1,6 @@
 {
-    "name": "teamora/app",
-    "description": "Teamora SaaS Platform",
+    "name": "benchero/app",
+    "description": "Benchero SaaS Platform",
     "type": "project",
     "require": {
         "php": ">=8.2",
@@ -14,7 +14,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Teamora\\": "app/"
+            "Benchero\\": "app/"
         },
         "files": [
             "app/Core/helpers.php"

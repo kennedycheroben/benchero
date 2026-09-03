@@ -1,10 +1,10 @@
 <?php
 
-namespace Teamora\Services;
+namespace Benchero\Services;
 
-use Teamora\Repositories\FixtureRepository;
-use Teamora\Repositories\TeamRepository;
-use Teamora\Repositories\SeasonRepository;
+use Benchero\Repositories\FixtureRepository;
+use Benchero\Repositories\TeamRepository;
+use Benchero\Repositories\SeasonRepository;
 use Exception;
 
 class FixtureService
@@ -127,6 +127,20 @@ class FixtureService
         }
 
         $this->repo->updateStatus($id, $newStatus, $orgId, $sportId);
+    }
+
+    public function recordResult(string $id, string $orgId, string $sportId, int $homeScore, int $awayScore, ?string $notes = null): void
+    {
+        $fixture = $this->repo->findById($id, $orgId, $sportId);
+        if (!$fixture) {
+            throw new Exception("Fixture not found.");
+        }
+
+        if ($homeScore < 0 || $awayScore < 0) {
+            throw new Exception("Scores cannot be negative.");
+        }
+
+        $this->repo->updateResult($id, $homeScore, $awayScore, $notes, $orgId, $sportId);
     }
 
     public function deleteFixture(string $id, string $orgId, string $sportId): void

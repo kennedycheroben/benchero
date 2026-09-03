@@ -2,9 +2,9 @@
 
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
-use Teamora\Services\Auth\AuthService;
-use Teamora\Core\Ulid;
+use Benchero\Core\Database\Database;
+use Benchero\Services\Auth\AuthService;
+use Benchero\Core\Ulid;
 
 $pdo = Database::getConnection();
 $authService = new AuthService($pdo);

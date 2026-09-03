@@ -1,10 +1,10 @@
 <?php
 
-namespace Teamora\Services;
+namespace Benchero\Services;
 
-use Teamora\Repositories\RosterRepository;
-use Teamora\Repositories\PlayerRepository;
-use Teamora\Repositories\TeamRepository;
+use Benchero\Repositories\RosterRepository;
+use Benchero\Repositories\PlayerRepository;
+use Benchero\Repositories\TeamRepository;
 
 class RosterService
 {

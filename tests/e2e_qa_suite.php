@@ -1,16 +1,16 @@
 <?php
 
 /**
- * Teamora End-to-End QA Acceptance Test Runner
+ * Benchero End-to-End QA Acceptance Test Runner
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
+use Benchero\Core\Database\Database;
 
 class E2EAutomationTester
 {
-    private string $baseUrl = 'http://localhost/teamora';
+    private string $baseUrl = 'http://localhost/benchero';
     private string $cookieFile;
     private PDO $db;
     private array $results = [];
@@ -108,7 +108,7 @@ class E2EAutomationTester
     public function runAll(): array
     {
         echo "==================================================\n";
-        echo "RUNNING TEAMORA E2E ACCEPTANCE TEST SUITE\n";
+        echo "RUNNING BENCHERO E2E ACCEPTANCE TEST SUITE\n";
         echo "==================================================\n\n";
 
         $this->testEnvironment();
@@ -199,7 +199,7 @@ class E2EAutomationTester
         }
 
         // 5. Valid Registration
-        $testEmail = 'qa_e2e_' . time() . '@teamora.test';
+        $testEmail = 'qa_e2e_' . time() . '@benchero.test';
         $validReg = $this->request('POST', '/register', [
             '_csrf' => $token,
             'name' => 'QA E2E Tester',
@@ -230,7 +230,7 @@ class E2EAutomationTester
 
         // 7. Extract Verification Link from Mail Log & Verify User
         $mailLog = file_get_contents(__DIR__ . '/../storage/logs/mail.log');
-        if (preg_match_all('/http:\/\/localhost\/teamora\/public\/verify-email\/([A-Za-z0-9]+)\/([A-Fa-f0-9]+)/', $mailLog, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all('/http:\/\/localhost\/(?:benchero|teamora)\/public\/verify-email\/([A-Za-z0-9]+)\/([A-Fa-f0-9]+)/', $mailLog, $matches, PREG_SET_ORDER)) {
             $lastMatch = end($matches);
             $userId = $lastMatch[1];
             $verifyToken = $lastMatch[2];
@@ -252,7 +252,7 @@ class E2EAutomationTester
             'email' => $testEmail,
             'password' => 'Password123!'
         ]);
-        if ($loginRes['code'] === 302 || str_contains($loginRes['headers'], 'Location: /teamora/onboarding') || str_contains($loginRes['headers'], 'Location: /teamora/organizations')) {
+        if ($loginRes['code'] === 302 || str_contains($loginRes['headers'], 'Location: /benchero/onboarding') || str_contains($loginRes['headers'], 'Location: /benchero/organizations')) {
             $this->recordResult('3. Login / Auth', 'Verified User Login & Session Creation', 'PASS', 'Logged in and redirected to onboarding/org selection');
         } else {
             $this->recordResult('3. Login / Auth', 'Verified User Login & Session Creation', 'FAIL', 'Login failed for verified user');
@@ -575,7 +575,7 @@ class E2EAutomationTester
     private function testTenantIsolationAndAuthorization(): void
     {
         // Create second user & org to test tenant isolation
-        $userBEmail = 'tenant_b_' . time() . '@teamora.test';
+        $userBEmail = 'tenant_b_' . time() . '@benchero.test';
         $regForm = $this->request('GET', '/register', [], false);
         $token = $this->extractCsrfToken($regForm['body']);
 

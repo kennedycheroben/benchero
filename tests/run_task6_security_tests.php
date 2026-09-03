@@ -2,8 +2,8 @@
 
 require_once __DIR__ . '/../app/bootstrap.php';
 
-use Teamora\Core\Database\Database;
-use Teamora\Core\Ulid;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Ulid;
 
 $pdo = Database::getConnection();
 
@@ -22,7 +22,7 @@ $pdo->exec("INSERT INTO users (id, name, email, password_hash, email_verified_at
 
 $pdo->exec("TRUNCATE TABLE rate_limits");
 
-$baseUrl = 'http://localhost/teamora';
+$baseUrl = 'http://localhost/benchero';
 
 // 1. Get CSRF Token
 $ch = curl_init("$baseUrl/login");

@@ -1,8 +1,8 @@
 <?php
 
-namespace Teamora\Core;
+namespace Benchero\Core;
 
-use Teamora\Core\Database\Database;
+use Benchero\Core\Database\Database;
 use PDO;
 
 abstract class Repository

@@ -1,11 +1,11 @@
 <?php
 
-namespace Teamora\Controllers\Tenant;
+namespace Benchero\Controllers\Tenant;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Services\TeamService;
-use Teamora\Repositories\TeamRepository;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Services\TeamService;
+use Benchero\Repositories\TeamRepository;
 
 class TeamController
 {

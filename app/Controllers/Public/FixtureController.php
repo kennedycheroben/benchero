@@ -1,13 +1,13 @@
 <?php
 
-namespace Teamora\Controllers\Public;
+namespace Benchero\Controllers\Public;
 
-use Teamora\Core\Controller;
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Core\Database\Database;
-use Teamora\Repositories\FixtureRepository;
-use Teamora\Repositories\SeasonRepository;
+use Benchero\Core\Controller;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Core\Database\Database;
+use Benchero\Repositories\FixtureRepository;
+use Benchero\Repositories\SeasonRepository;
 use DateTime;
 use DateTimeZone;
 

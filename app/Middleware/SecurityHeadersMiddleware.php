@@ -1,10 +1,10 @@
 <?php
 
-namespace Teamora\Middleware;
+namespace Benchero\Middleware;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Core\Middleware\MiddlewareInterface;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Core\Middleware\MiddlewareInterface;
 
 class SecurityHeadersMiddleware implements MiddlewareInterface
 {

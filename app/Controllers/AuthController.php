@@ -1,16 +1,16 @@
 <?php
 
-namespace Teamora\Controllers;
+namespace Benchero\Controllers;
 
-use Teamora\Core\Controller;
-use Teamora\Core\Database\Database;
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Core\Mail\LogMailer;
-use Teamora\Core\Mail\SmtpMailer;
-use Teamora\Core\RateLimiter;
-use Teamora\Services\Auth\AuthService;
-use Teamora\Services\Auth\AuthTokenService;
+use Benchero\Core\Controller;
+use Benchero\Core\Database\Database;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Core\Mail\LogMailer;
+use Benchero\Core\Mail\SmtpMailer;
+use Benchero\Core\RateLimiter;
+use Benchero\Services\Auth\AuthService;
+use Benchero\Services\Auth\AuthTokenService;
 
 class AuthController extends Controller
 {
@@ -34,8 +34,8 @@ class AuthController extends Controller
                 env('MAIL_ENCRYPTION', 'tls'),
                 env('MAIL_USERNAME', ''),
                 env('MAIL_PASSWORD', ''),
-                env('MAIL_FROM_ADDRESS', 'noreply@teamora.local'),
-                env('MAIL_FROM_NAME', 'Teamora')
+                env('MAIL_FROM_ADDRESS', 'noreply@benchero.com'),
+                env('MAIL_FROM_NAME', 'Benchero')
             );
         } else {
             $this->mailer = new LogMailer();
@@ -44,7 +44,6 @@ class AuthController extends Controller
 
     public function registerForm(Request $request): Response
     {
-        // Don't show register form if already logged in
         if (isset($_SESSION['user_id'])) {
             return $this->redirectBasedOnOrgs($_SESSION['user_id']);
         }
@@ -53,7 +52,6 @@ class AuthController extends Controller
 
     public function register(Request $request): Response
     {
-        // CSRF handled by middleware.
         $name = trim($request->input('name') ?? '');
         $email = strtolower(trim($request->input('email') ?? ''));
         $password = $request->input('password') ?? '';
@@ -75,7 +73,6 @@ class AuthController extends Controller
             return $this->render('auth/register', ['error' => 'Passwords do not match.', 'name' => $name, 'email' => $email], 400);
         }
 
-        // Apply rate limit on registration to prevent spam/enumeration
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
         if (!$this->rateLimiter->hit("register_{$ip}", 5, 3600)) {
             return $this->render('auth/register', ['error' => 'Too many registration attempts. Please try again later.'], 429);
@@ -84,12 +81,7 @@ class AuthController extends Controller
         $userId = $this->authService->registerUser($name, $email, $password);
 
         if ($userId) {
-            // New user created. Generate token and send email.
             $this->sendVerificationEmail($userId, $email, $name);
-        } else {
-            // Email already exists. To prevent enumeration, we silently act as if successful, 
-            // but we could send an email saying "an account already exists". For this MVP, we just show success.
-            // (Alternatively, many SaaS show "Email taken" - but user requested no unnecessary enumeration).
         }
 
         return $this->render('auth/register', ['success' => 'Registration successful! Please check your email to verify your account.']);
@@ -157,6 +149,76 @@ class AuthController extends Controller
         return Response::redirect('/login');
     }
 
+    public function forgotPasswordForm(Request $request): Response
+    {
+        return $this->render('auth/forgot_password');
+    }
+
+    public function forgotPasswordSubmit(Request $request): Response
+    {
+        $email = strtolower(trim($request->input('email') ?? ''));
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->render('auth/forgot_password', ['error' => 'Please enter a valid email address.']);
+        }
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        if (!$this->rateLimiter->hit("forgot_pass_{$ip}", 3, 900)) {
+            return $this->render('auth/forgot_password', ['error' => 'Too many reset attempts. Please try again later.'], 429);
+        }
+
+        $user = $this->authService->findUserByEmail($email);
+        $genericMessage = 'If your email is registered, we have sent a password reset link to your inbox.';
+
+        if ($user) {
+            $token = $this->tokenService->generateToken($user['id'], AuthTokenService::TYPE_PASSWORD_RESET, 3600); // 1 hr
+            $appUrl = env('APP_URL', 'http://localhost');
+            $resetUrl = rtrim($appUrl, '/') . "/reset-password/{$token}";
+
+            $subject = 'Benchero Password Reset';
+            $htmlBody = "<p>Hello {$user['name']},</p><p>Click the link below to reset your Benchero password:</p><p><a href=\"{$resetUrl}\">{$resetUrl}</a></p><p>This link expires in 1 hour.</p>";
+            $textBody = "Hello {$user['name']},\n\nClick the link below to reset your Benchero password:\n{$resetUrl}\n\nThis link expires in 1 hour.";
+
+            $this->mailer->send($email, $subject, $htmlBody, $textBody);
+        }
+
+        return $this->render('auth/forgot_password', ['success' => $genericMessage]);
+    }
+
+    public function resetPasswordForm(Request $request, string $token): Response
+    {
+        return $this->render('auth/reset_password', ['token' => $token]);
+    }
+
+    public function resetPasswordSubmit(Request $request): Response
+    {
+        $token = $request->input('token') ?? '';
+        $password = $request->input('password') ?? '';
+        $confirm = $request->input('password_confirmation') ?? '';
+
+        if (empty($token) || empty($password)) {
+            return $this->render('auth/reset_password', ['error' => 'Token and password are required.', 'token' => $token], 400);
+        }
+
+        if (strlen($password) < 8) {
+            return $this->render('auth/reset_password', ['error' => 'Password must be at least 8 characters.', 'token' => $token], 400);
+        }
+
+        if ($password !== $confirm) {
+            return $this->render('auth/reset_password', ['error' => 'Passwords do not match.', 'token' => $token], 400);
+        }
+
+        $userId = $this->tokenService->validateAndUseToken($token, AuthTokenService::TYPE_PASSWORD_RESET);
+
+        if (!$userId) {
+            return $this->render('auth/reset_password', ['error' => 'The password reset link is invalid or has expired.', 'token' => $token], 400);
+        }
+
+        $this->authService->updatePassword($userId, $password);
+
+        return $this->render('auth/login', ['success' => 'Your password has been successfully reset! You may now log in with your new password.']);
+    }
+
     public function organizationSelection(Request $request): Response
     {
         if (!isset($_SESSION['user_id'])) {
@@ -187,8 +249,6 @@ class AuthController extends Controller
 
     public function verifyEmail(Request $request, string $id, string $token): Response
     {
-        // $id is the user ID, $token is the plaintext token
-        // First check if user exists
         $user = $this->authService->findUserById($id);
         if (!$user) {
             return $this->render('auth/verify_result', ['error' => 'Invalid verification link.'], 400);
@@ -222,13 +282,11 @@ class AuthController extends Controller
         }
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        if (!$this->rateLimiter->hit("resend_verify_{$ip}", 3, 900)) { // 3 per 15 minutes
+        if (!$this->rateLimiter->hit("resend_verify_{$ip}", 3, 900)) {
             return $this->render('auth/resend_verification', ['error' => 'Too many requests. Please try again later.'], 429);
         }
 
         $user = $this->authService->findUserByEmail($email);
-        
-        // Generic success message to prevent enumeration
         $successMsg = 'If your account exists and is unverified, a new verification link has been sent.';
 
         if ($user && $user['email_verified_at'] === null) {
@@ -240,8 +298,7 @@ class AuthController extends Controller
 
     private function sendVerificationEmail(string $userId, string $email, string $name): void
     {
-        $plaintextToken = $this->tokenService->generateToken($userId, AuthTokenService::TYPE_EMAIL_VERIFICATION, 86400); // 24 hours
-        
+        $plaintextToken = $this->tokenService->generateToken($userId, AuthTokenService::TYPE_EMAIL_VERIFICATION, 86400);
         $appUrl = env('APP_URL', 'http://localhost');
         $verifyUrl = rtrim($appUrl, '/') . "/verify-email/{$userId}/{$plaintextToken}";
 
@@ -252,4 +309,3 @@ class AuthController extends Controller
         $this->mailer->send($email, $subject, $htmlBody, $textBody);
     }
 }
-

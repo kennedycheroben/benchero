@@ -1,6 +1,6 @@
 <?php
 
-$baseUrl = 'http://localhost/teamora/public';
+$baseUrl = 'http://localhost/benchero/public';
 
 // 1. Get CSRF Token
 $ch = curl_init("$baseUrl/register");

@@ -1,11 +1,11 @@
 <?php
 
-namespace Teamora\Controllers\Tenant;
+namespace Benchero\Controllers\Tenant;
 
-use Teamora\Core\Http\Request;
-use Teamora\Core\Http\Response;
-use Teamora\Services\SeasonService;
-use Teamora\Repositories\SeasonRepository;
+use Benchero\Core\Http\Request;
+use Benchero\Core\Http\Response;
+use Benchero\Services\SeasonService;
+use Benchero\Repositories\SeasonRepository;
 
 class SeasonController
 {

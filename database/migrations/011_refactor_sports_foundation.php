@@ -9,7 +9,7 @@
  * - Seeds the global sports catalogue.
  */
 
-use Teamora\Core\Ulid;
+use Benchero\Core\Ulid;
 
 return new class {
     public function up(\PDO $pdo): void
