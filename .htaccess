@@ -1,4 +1,17 @@
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteRule ^(.*)$ public/$1 [L]
-</IfModule>
+# Publicly accessible files
+
+# Skip rewrite rules for all public asset types
+RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot) [NC]
+RewriteRule . - [L]
+
+# Skip rewrite for robot.txt (required by Google)
+RewriteCond %{REQUEST_URI} /robots.txt
+RewriteRule . - [L]
+
+# Skip rewrite for sitemap.xml (optional, but good practice)
+RewriteCond %{REQUEST_URI} /sitemap.xml
+RewriteRule . - [L]
+
+# Enable rewrites for everything else
+RewriteEngine On
+RewriteRule ^(.*)$ public/$1 [L]
