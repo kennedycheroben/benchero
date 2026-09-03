@@ -4,7 +4,7 @@ namespace Benchero\Controllers\Tenant;
 
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
-use Benchero\Core\Database\Database;
+use Benchero\Services\SubscriptionService;
 
 class DashboardController
 {
@@ -17,17 +17,14 @@ class DashboardController
             return new Response('404 Not Found', 404);
         }
 
-        $db = Database::getConnection();
-        
-        // Fetch subscription
-        $stmt = $db->prepare("SELECT * FROM `subscriptions` WHERE `organization_id` = :org_id");
-        $stmt->execute(['org_id' => $tenant['id']]);
-        $subscription = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $subService = new SubscriptionService();
+        $subscriptionStatus = $subService->getSubscriptionStatus($tenant['id']);
 
         return Response::view('tenant/dashboard', [
             'tenant' => $tenant,
             'role' => $role,
-            'subscription' => $subscription
+            'subscription' => $subService->getSubscription($tenant['id']),
+            'subscriptionStatus' => $subscriptionStatus
         ]);
     }
 }

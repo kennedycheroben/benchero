@@ -10,19 +10,18 @@ use Exception;
 class MpesaService
 {
     private PDO $db;
+    private SubscriptionService $subscriptionService;
 
     public function __construct()
     {
         $this->db = Database::getConnection();
+        $this->subscriptionService = new SubscriptionService();
     }
 
     public function initiateStkPush(string $orgId, string $phoneNumber, float $amount, int $planId): array
     {
         $consumerKey = env('MPESA_CONSUMER_KEY', '');
         $consumerSecret = env('MPESA_CONSUMER_SECRET', '');
-        $shortcode = env('MPESA_SHORTCODE', '');
-        $passkey = env('MPESA_PASSKEY', '');
-        $callbackUrl = env('MPESA_CALLBACK_URL', '');
 
         // Standardize phone number format (254...)
         $phone = preg_replace('/[^0-9]/', '', $phoneNumber);
@@ -44,7 +43,18 @@ class MpesaService
         ]);
 
         if (empty($consumerKey) || empty($consumerSecret)) {
-            // Development / Sandbox mode placeholder response
+            // In Sandbox / Development mode, auto-confirm mock payments if configured or return prompt
+            if (env('APP_ENV') === 'testing' || env('AUTO_CONFIRM_MOCK_PAYMENT', true)) {
+                $receipt = 'MP' . strtoupper(substr(md5(uniqid()), 0, 8));
+                $this->confirmPaymentAndActivate($paymentId, $receipt);
+                return [
+                    'status' => 'completed_mock',
+                    'payment_id' => $paymentId,
+                    'receipt' => $receipt,
+                    'message' => 'Development mock payment processed successfully.'
+                ];
+            }
+
             return [
                 'status' => 'initiated_mock',
                 'payment_id' => $paymentId,
@@ -52,12 +62,52 @@ class MpesaService
             ];
         }
 
-        // Production / Sandbox API STK Push logic
+        // Production API STK Push logic
         return [
             'status' => 'initiated',
             'payment_id' => $paymentId,
             'message' => 'STK Push sent to ' . $phone
         ];
+    }
+
+    /**
+     * Confirms a payment record and activates the subscription idempotently.
+     */
+    public function confirmPaymentAndActivate(string $paymentId, string $receiptNumber): bool
+    {
+        // Check idempotency on receipt number
+        $checkStmt = $this->db->prepare("SELECT id FROM payments WHERE mpesa_receipt_number = ? AND status = 'completed'");
+        $checkStmt->execute([$receiptNumber]);
+        if ($checkStmt->fetch()) {
+            return true; // Already processed safely
+        }
+
+        $stmt = $this->db->prepare("SELECT * FROM payments WHERE id = ?");
+        $stmt->execute([$paymentId]);
+        $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$payment) {
+            return false;
+        }
+
+        $meta = json_decode($payment['metadata'] ?? '{}', true);
+        $planId = (int)($meta['plan_id'] ?? 2);
+
+        // Mark payment completed
+        $updateStmt = $this->db->prepare("
+            UPDATE payments
+            SET status = 'completed', mpesa_receipt_number = ?, updated_at = NOW()
+            WHERE id = ?
+        ");
+        $updateStmt->execute([$receiptNumber, $paymentId]);
+
+        // Activate / Extend Subscription via central service
+        return $this->subscriptionService->activateSubscription(
+            $payment['organization_id'],
+            $planId,
+            $receiptNumber,
+            $paymentId
+        );
     }
 
     public function processCallback(array $callbackData): bool
@@ -68,8 +118,6 @@ class MpesaService
         }
 
         $resultCode = $stkCallback['ResultCode'] ?? -1;
-        $merchantRequestId = $stkCallback['MerchantRequestID'] ?? '';
-        $checkoutRequestId = $stkCallback['CheckoutRequestID'] ?? '';
 
         if ($resultCode !== 0) {
             // Transaction failed or cancelled
@@ -93,14 +141,14 @@ class MpesaService
             return false;
         }
 
-        // Check for idempotency: if mpesa_receipt_number already exists, return true (already processed)
-        $checkStmt = $this->db->prepare("SELECT id FROM payments WHERE mpesa_receipt_number = ?");
+        // Idempotency check: if mpesa_receipt_number already completed, return true
+        $checkStmt = $this->db->prepare("SELECT id FROM payments WHERE mpesa_receipt_number = ? AND status = 'completed'");
         $checkStmt->execute([$mpesaReceiptNumber]);
         if ($checkStmt->fetch()) {
             return true;
         }
 
-        // Find pending payment record or create new payment entry
+        // Find pending payment record matching amount
         $findStmt = $this->db->prepare("
             SELECT id, organization_id, metadata FROM payments
             WHERE status = 'pending' AND amount = ?
@@ -110,36 +158,21 @@ class MpesaService
         $payment = $findStmt->fetch(PDO::FETCH_ASSOC);
 
         if ($payment) {
-            $updateStmt = $this->db->prepare("
-                UPDATE payments
-                SET status = 'completed', mpesa_receipt_number = ?, updated_at = NOW()
-                WHERE id = ?
-            ");
-            $updateStmt->execute([$mpesaReceiptNumber, $payment['id']]);
-
-            // Update organization subscription to active
-            $subStmt = $this->db->prepare("
-                UPDATE subscriptions
-                SET status = 'active', current_period_end = DATE_ADD(NOW(), INTERVAL 30 DAY), updated_at = NOW()
-                WHERE organization_id = ?
-            ");
-            $subStmt->execute([$payment['organization_id']]);
-        } else {
-            // New direct payment entry
-            $paymentId = Ulid::generate();
-            $insStmt = $this->db->prepare("
-                INSERT INTO payments (id, organization_id, amount, currency, status, mpesa_receipt_number, metadata, created_at, updated_at)
-                VALUES (?, ?, ?, 'KES', 'completed', ?, ?, NOW(), NOW())
-            ");
-            // Pick default org ID or fallback
-            $insStmt->execute([
-                $paymentId,
-                'UNKNOWN_ORG',
-                $amount,
-                $mpesaReceiptNumber,
-                json_encode(['phone' => $phoneNumber])
-            ]);
+            return $this->confirmPaymentAndActivate($payment['id'], $mpesaReceiptNumber);
         }
+
+        // Fallback for untracked callback payment
+        $paymentId = Ulid::generate();
+        $insStmt = $this->db->prepare("
+            INSERT INTO payments (id, organization_id, amount, currency, status, mpesa_receipt_number, metadata, created_at, updated_at)
+            VALUES (?, 'UNKNOWN_ORG', ?, 'KES', 'completed', ?, ?, NOW(), NOW())
+        ");
+        $insStmt->execute([
+            $paymentId,
+            $amount,
+            $mpesaReceiptNumber,
+            json_encode(['phone' => $phoneNumber])
+        ]);
 
         return true;
     }

@@ -39,6 +39,12 @@ class FixtureController extends Controller
             return new Response('404 Not Found - Organization not found', 404);
         }
 
+        // Check backend subscription public profile visibility
+        $subService = new \Benchero\Services\SubscriptionService();
+        if (!$subService->isPublicProfileVisible($org['id'])) {
+            return $this->render('public/locked_profile', ['org' => $org]);
+        }
+
         // 2. Resolve Sport
         $stmt = $this->db->prepare("
             SELECT s.id, s.name, s.slug 

@@ -2,49 +2,81 @@
 
 <section class="py-5 bg-white border-bottom text-center">
     <div class="container py-lg-4">
-        <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-3">Transparent Pricing</span>
-        <h1 class="display-5 fw-extrabold mb-3">Affordable Plans for Every Club</h1>
-        <p class="lead text-muted max-w-2xl mx-auto mb-4">Choose the right capacity for your sports organization. Upgrade or cancel anytime.</p>
-        
-        <div class="d-inline-flex align-items-center bg-light p-1 rounded-pill border mb-4">
-            <button type="button" id="btnMonthly" class="btn btn-sm btn-primary rounded-pill px-4 fw-bold" onclick="setBillingPeriod('monthly')">Monthly</button>
-            <button type="button" id="btnAnnual" class="btn btn-sm text-muted rounded-pill px-4 fw-bold" onclick="setBillingPeriod('annual')">Annual (Save 20%)</button>
-        </div>
+        <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-3">Benchero Plans & Pricing</span>
+        <h1 class="display-5 fw-extrabold mb-3">Simple & Transparent Pricing for Every Club</h1>
+        <p class="lead text-muted max-w-2xl mx-auto mb-4">Empower your sports organization with complete team, player, fixture and public page management.</p>
     </div>
 </section>
 
 <section class="py-5 bg-light">
     <div class="container">
-        <div class="row g-4 justify-content-center">
+        <div class="row g-4 justify-content-center align-items-stretch">
             <?php foreach ($plans as $plan): ?>
                 <?php 
                     $features = json_decode($plan['features'] ?? '{}', true);
-                    $priceMonthly = (float)($plan['price_kes'] ?? 0);
-                    $priceAnnual = round($priceMonthly * 12 * 0.8, 2);
+                    $price = (float)($plan['price_kes'] ?? 0);
+                    $interval = $plan['billing_interval'] ?? 'monthly';
+                    $isYearly = ($interval === 'yearly');
+                    $isTrial = ($interval === 'trial' || $price == 0);
                 ?>
                 <div class="col-md-4">
-                    <div class="card h-100 border-0 shadow-sm rounded-4 p-4 <?= $plan['slug'] === 'starter' ? 'border border-primary border-2' : '' ?>">
-                        <?php if ($plan['slug'] === 'starter'): ?>
-                            <span class="badge bg-primary text-white position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill">Most Popular</span>
+                    <div class="card h-100 border-0 shadow-sm rounded-4 p-4 position-relative <?= $isYearly ? 'border border-primary border-2 shadow' : '' ?>">
+                        <?php if ($isYearly): ?>
+                            <span class="badge bg-success text-white position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill fw-bold">
+                                <i class="bi bi-piggy-bank me-1"></i>SAVE KSh 2,000
+                            </span>
+                        <?php elseif ($isTrial): ?>
+                            <span class="badge bg-secondary text-white position-absolute top-0 end-0 m-3 px-3 py-1 rounded-pill">
+                                14-Day Free Access
+                            </span>
                         <?php endif; ?>
                         
-                        <h4 class="fw-bold mb-1"><?= htmlspecialchars($plan['name']) ?></h4>
+                        <h4 class="fw-bold mb-1 mt-2"><?= htmlspecialchars($plan['name']) ?></h4>
+                        <p class="text-muted small mb-3"><?= htmlspecialchars($features['description'] ?? '') ?></p>
+
                         <div class="my-3">
-                            <span class="display-6 fw-extrabold price-monthly">KES <?= number_format($priceMonthly) ?></span>
-                            <span class="display-6 fw-extrabold price-annual d-none">KES <?= number_format($priceAnnual) ?></span>
-                            <span class="text-muted small interval-text">/ month</span>
+                            <span class="display-6 fw-extrabold text-dark">KSh <?= number_format($price) ?></span>
+                            <span class="text-muted small">
+                                <?php if ($isTrial): ?>
+                                    / trial
+                                <?php elseif ($isYearly): ?>
+                                    / year
+                                <?php else: ?>
+                                    / month
+                                <?php endif; ?>
+                            </span>
                         </div>
+
+                        <?php if ($isYearly): ?>
+                            <div class="alert alert-success-subtle py-2 px-3 rounded-3 small mb-3 text-success border border-success-subtle">
+                                <i class="bi bi-check-circle-fill me-1"></i> Pay <strong>KSh 10,000/year</strong> instead of KSh 12,000 monthly!
+                            </div>
+                        <?php elseif (!$isTrial): ?>
+                            <div class="text-muted small mb-3">
+                                KSh 12,000/year if paid monthly
+                            </div>
+                        <?php else: ?>
+                            <div class="text-muted small mb-3">
+                                Full public profile access included
+                            </div>
+                        <?php endif; ?>
                         
                         <ul class="list-unstyled d-grid gap-2 mb-4 text-secondary small">
-                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> <?= $features['teams_limit'] ?? 2 ?> Teams Limit</li>
-                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> <?= $features['player_limits'] ?? 25 ?> Player Roster Capacity</li>
-                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Multi-Sport Access</li>
+                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> <?= $features['teams_limit'] ?? 10 ?> Teams Limit</li>
+                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> <?= $features['player_limits'] ?? 100 ?> Player Roster Capacity</li>
+                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Multi-Sport Operations</li>
                             <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Fixtures & Results Tracking</li>
-                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Public Club Page</li>
+                            <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Public Club Profile Page</li>
                         </ul>
                         
-                        <a href="<?= url('/register?plan=' . urlencode($plan['slug'])) ?>" class="btn <?= $plan['slug'] === 'starter' ? 'btn-primary' : 'btn-outline-primary' ?> w-100 fw-bold py-2 rounded-3 mt-auto">
-                            <?= $priceMonthly == 0 ? 'Start Free Trial' : 'Select Plan' ?>
+                        <a href="<?= url('/register?plan=' . urlencode($plan['slug'])) ?>" class="btn <?= $isYearly ? 'btn-primary' : ($isTrial ? 'btn-outline-primary' : 'btn-dark') ?> w-100 fw-bold py-2.5 rounded-3 mt-auto shadow-sm">
+                            <?php if ($isTrial): ?>
+                                Start Free Trial
+                            <?php elseif ($isYearly): ?>
+                                Choose Yearly
+                            <?php else: ?>
+                                Choose Monthly
+                            <?php endif; ?>
                         </a>
                     </div>
                 </div>
@@ -52,27 +84,3 @@
         </div>
     </div>
 </section>
-
-<script>
-function setBillingPeriod(period) {
-    const monthlyEls = document.querySelectorAll('.price-monthly');
-    const annualEls = document.querySelectorAll('.price-annual');
-    const intervalEls = document.querySelectorAll('.interval-text');
-    const btnM = document.getElementById('btnMonthly');
-    const btnA = document.getElementById('btnAnnual');
-
-    if (period === 'annual') {
-        monthlyEls.forEach(el => el.classList.add('d-none'));
-        annualEls.forEach(el => el.classList.remove('d-none'));
-        intervalEls.forEach(el => el.textContent = ' / year');
-        btnA.className = 'btn btn-sm btn-primary rounded-pill px-4 fw-bold';
-        btnM.className = 'btn btn-sm text-muted rounded-pill px-4 fw-bold';
-    } else {
-        monthlyEls.forEach(el => el.classList.remove('d-none'));
-        annualEls.forEach(el => el.classList.add('d-none'));
-        intervalEls.forEach(el => el.textContent = ' / month');
-        btnM.className = 'btn btn-sm btn-primary rounded-pill px-4 fw-bold';
-        btnA.className = 'btn btn-sm text-muted rounded-pill px-4 fw-bold';
-    }
-}
-</script>

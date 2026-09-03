@@ -40,7 +40,7 @@
             "section": "2. Registration",
             "test": "Successful Registration",
             "status": "PASS",
-            "details": "Registered user qa_e2e_1788419438@benchero.test"
+            "details": "Registered user qa_e2e_1788423397@benchero.test"
         },
         {
             "section": "3. Login \/ Auth",
@@ -100,13 +100,13 @@
             "section": "5. Onboarding",
             "test": "Organization Creation & Auto-Slug",
             "status": "PASS",
-            "details": "Organization created, redirected to dashboard: http:\/\/localhost\/benchero\/o\/e2e-org-985\/dashboard"
+            "details": "Organization created, redirected to dashboard: http:\/\/localhost\/benchero\/o\/e2e-org-458\/dashboard"
         },
         {
             "section": "5. Onboarding",
             "test": "DB Organization Persistence",
             "status": "PASS",
-            "details": "Org ID: 01M1K1NZ31KW7X0EC9F6Z81HZ0, Slug: e2e-org-985"
+            "details": "Org ID: 01M1K5ES1VH8JQNDHC5D078X3N, Slug: e2e-org-458"
         },
         {
             "section": "5. Onboarding",
@@ -118,7 +118,7 @@
             "section": "6. Trial Subscription",
             "test": "Trial Subscription Creation",
             "status": "PASS",
-            "details": "Subscription trialing, plan: 2, ends: 2026-09-17 10:10:39"
+            "details": "Subscription trialing, plan: 1, ends: 2026-09-17 11:16:38"
         },
         {
             "section": "7. Sports",
@@ -130,7 +130,7 @@
             "section": "7. Sports",
             "test": "Extracted Token Check",
             "status": "INFO",
-            "details": "Token: 600f5ad8f40d0a012535e456b6429d6e302e591fb0c47bffdffc145d45ad0f3c"
+            "details": "Token: 182c963c534f14a5e3e734755e1cbc454ebaacc0e09ed4fe380f1137f5011633"
         },
         {
             "section": "7. Sports",
@@ -166,13 +166,13 @@
             "section": "11. Rosters",
             "test": "Extracted Roster Token Check",
             "status": "INFO",
-            "details": "Roster Page Code: 200 Token: 600f5ad8f40d0a012535e456b6429d6e302e591fb0c47bffdffc145d45ad0f3c Body: \n\n\n    \n    \n    E2E Test Organization 494 \u2014 Benchero\n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n        :root {\n            --benchero-"
+            "details": "Roster Page Code: 200 Token: 182c963c534f14a5e3e734755e1cbc454ebaacc0e09ed4fe380f1137f5011633 Body: \n\n\n    \n    \n    E2E Test Organization 128 \u2014 Benchero\n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n        :root {\n            --benchero-"
         },
         {
             "section": "11. Rosters",
             "test": "Add Player to Roster",
             "status": "PASS",
-            "details": "Assigned player 01M1K1NZHPN4JTZKX91P5RGWMR to team 01M1K1NZDDKKDECXR4WXK8YQ26"
+            "details": "Assigned player 01M1K5ESJVHQHA2DPXQG6EG9VR to team 01M1K5ESDAY1YRTMRFC2D1CD84"
         },
         {
             "section": "11. Rosters",
@@ -184,7 +184,7 @@
             "section": "12. Fixtures",
             "test": "Create Fixture Page Load",
             "status": "INFO",
-            "details": "Page Code: 200 Token: 600f5ad8f40d0a012535e456b6429d6e302e591fb0c47bffdffc145d45ad0f3c Body: \n\n\n    \n    \n    E2E Test Organization 494 \u2014 Benchero\n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n        :root {\n            --benchero-"
+            "details": "Page Code: 200 Token: 182c963c534f14a5e3e734755e1cbc454ebaacc0e09ed4fe380f1137f5011633 Body: \n\n\n    \n    \n    E2E Test Organization 128 \u2014 Benchero\n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n    \n        :root {\n            --benchero-"
         },
         {
             "section": "12. Fixtures",
@@ -196,7 +196,7 @@
             "section": "12. Fixtures",
             "test": "Extracted Fixture A Token Check",
             "status": "INFO",
-            "details": "FixA Token: 600f5ad8f40d0a012535e456b6429d6e302e591fb0c47bffdffc145d45ad0f3c"
+            "details": "FixA Token: 182c963c534f14a5e3e734755e1cbc454ebaacc0e09ed4fe380f1137f5011633"
         },
         {
             "section": "12. Fixtures",
@@ -250,25 +250,25 @@
             "section": "21. Database Verification",
             "test": "Table `users` integrity check",
             "status": "PASS",
-            "details": "Row count: 4"
+            "details": "Row count: 8"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `organizations` integrity check",
             "status": "PASS",
-            "details": "Row count: 44"
+            "details": "Row count: 47"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `organization_user` integrity check",
             "status": "PASS",
-            "details": "Row count: 44"
+            "details": "Row count: 47"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `organization_sports` integrity check",
             "status": "PASS",
-            "details": "Row count: 35"
+            "details": "Row count: 36"
         },
         {
             "section": "21. Database Verification",
@@ -280,37 +280,37 @@
             "section": "21. Database Verification",
             "test": "Table `seasons` integrity check",
             "status": "PASS",
-            "details": "Row count: 25"
+            "details": "Row count: 26"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `teams` integrity check",
             "status": "PASS",
-            "details": "Row count: 53"
+            "details": "Row count: 55"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `players` integrity check",
             "status": "PASS",
-            "details": "Row count: 49"
+            "details": "Row count: 51"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `roster_assignments` integrity check",
             "status": "PASS",
-            "details": "Row count: 14"
+            "details": "Row count: 15"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `fixtures` integrity check",
             "status": "PASS",
-            "details": "Row count: 20"
+            "details": "Row count: 22"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `subscriptions` integrity check",
             "status": "PASS",
-            "details": "Row count: 44"
+            "details": "Row count: 46"
         }
     ],
     "bugs": []

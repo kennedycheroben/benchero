@@ -7,16 +7,19 @@ use Benchero\Core\Database\Database;
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
 use Benchero\Services\MpesaService;
+use Benchero\Services\SubscriptionService;
 use PDO;
 
 class BillingController extends Controller
 {
     private MpesaService $mpesaService;
+    private SubscriptionService $subscriptionService;
 
     public function __construct()
     {
         parent::__construct();
         $this->mpesaService = new MpesaService();
+        $this->subscriptionService = new SubscriptionService();
     }
 
     public function index(Request $request): Response
@@ -24,19 +27,9 @@ class BillingController extends Controller
         $tenant = $request->getAttribute('tenant');
         $db = Database::getConnection();
 
-        // Fetch organization subscription and plan
-        $subStmt = $db->prepare("
-            SELECT s.*, p.name as plan_name, p.price_kes, p.features
-            FROM subscriptions s
-            LEFT JOIN plans p ON s.plan_id = p.id
-            WHERE s.organization_id = ?
-        ");
-        $subStmt->execute([$tenant['id']]);
-        $subscription = $subStmt->fetch(PDO::FETCH_ASSOC);
-
-        // Fetch available plans
-        $plansStmt = $db->query("SELECT * FROM plans WHERE deleted_at IS NULL ORDER BY price_kes ASC");
-        $plans = $plansStmt->fetchAll(PDO::FETCH_ASSOC);
+        $subStatus = $this->subscriptionService->getSubscriptionStatus($tenant['id']);
+        $subscription = $this->subscriptionService->getSubscription($tenant['id']);
+        $plans = $this->subscriptionService->getPlans();
 
         // Fetch payment history
         $payStmt = $db->prepare("
@@ -50,6 +43,7 @@ class BillingController extends Controller
         return $this->render('tenant/billing/index', [
             'tenant' => $tenant,
             'subscription' => $subscription,
+            'subStatus' => $subStatus,
             'plans' => $plans,
             'payments' => $payments,
             'error' => $_SESSION['error'] ?? null,
@@ -64,14 +58,11 @@ class BillingController extends Controller
         $planId = (int)$request->input('plan_id');
 
         if (empty($phone) || empty($planId)) {
-            $_SESSION['error'] = 'Please enter a valid M-Pesa phone number.';
+            $_SESSION['error'] = 'Please enter a valid M-Pesa phone number and select a plan.';
             return Response::redirect("/o/{$tenant['slug']}/billing");
         }
 
-        $db = Database::getConnection();
-        $stmt = $db->prepare("SELECT * FROM plans WHERE id = ?");
-        $stmt->execute([$planId]);
-        $plan = $stmt->fetch(PDO::FETCH_ASSOC);
+        $plan = $this->subscriptionService->getPlan($planId);
 
         if (!$plan) {
             $_SESSION['error'] = 'Invalid plan selected.';
@@ -80,7 +71,12 @@ class BillingController extends Controller
 
         $res = $this->mpesaService->initiateStkPush($tenant['id'], $phone, (float)$plan['price_kes'], $planId);
 
-        $_SESSION['success'] = 'M-Pesa payment prompt sent to your phone! Complete the PIN prompt to activate your subscription.';
+        if (($res['status'] ?? '') === 'completed_mock') {
+            $_SESSION['success'] = 'Payment verified! Your Benchero subscription has been activated and your public club profile is now visible.';
+        } else {
+            $_SESSION['success'] = 'M-Pesa payment prompt sent to ' . htmlspecialchars($phone) . '! Complete the PIN prompt on your phone to activate your subscription.';
+        }
+
         return Response::redirect("/o/{$tenant['slug']}/billing");
     }
 }

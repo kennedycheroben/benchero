@@ -28,6 +28,12 @@ class PublicClubController extends Controller
             return $this->render('errors/404', ['title' => 'Club Not Found'], 404);
         }
 
+        // Check backend subscription public profile visibility
+        $subService = new \Benchero\Services\SubscriptionService();
+        if (!$subService->isPublicProfileVisible($org['id'])) {
+            return $this->render('public/locked_profile', ['org' => $org]);
+        }
+
         // Fetch active sports for this organization
         $sportsStmt = $db->prepare("
             SELECT s.id, s.name, s.slug
