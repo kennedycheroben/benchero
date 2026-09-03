@@ -31,6 +31,7 @@ class Database
                 self::$instance = new PDO($dsn, $user, $pass, $options);
             } catch (PDOException $e) {
                 // Do not leak credentials in exception message
+                echo $e->getMessage() . "\n";
                 throw new RuntimeException('Database connection failed.');
             }
         }
