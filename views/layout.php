@@ -6,7 +6,7 @@
     <title><?= $this->e($title ?? 'Benchero — Your Club. Your Teams. Your Players. Your Game. Your Platform.') ?></title>
     <meta name="description" content="<?= $this->e($description ?? 'Benchero gives sports organizations one simple place to manage their clubs, teams, players, staff, seasons, fixtures and results.') ?>">
     <meta property="og:title" content="<?= $this->e($title ?? 'Benchero — Sports Club Management Platform') ?>">
-    <meta property="og:description" content="Benchero is the modern multi-sport SaaS platform for clubs, teams, players, fixtures and results.">
+    <meta property="og:description" content="Benchero is the modern multi-sport site platform for clubs, teams, players, fixtures and results.">
     <meta property="og:type" content="website">
     
     <link rel="icon" type="image/x-icon" href="<?= url('/favicon.ico') ?>">
@@ -126,7 +126,7 @@
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="<?= url('/') ?>">
                     <span class="navbar-brand-text">BENCHERO</span>
-                    <span class="navbar-brand-badge">SaaS</span>
+                    <span class="navbar-brand-badge">sports</span>
                 </a>
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#bencheroNavbar" aria-controls="bencheroNavbar" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
