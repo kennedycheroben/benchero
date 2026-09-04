@@ -7,12 +7,19 @@ return new class {
     {
         $db = Database::getConnection();
 
-        // 1. Add country and timezone to organizations
-        $db->exec("
-            ALTER TABLE `organizations`
-            ADD COLUMN `country` CHAR(2) NULL AFTER `name`,
-            ADD COLUMN `timezone` VARCHAR(64) NULL AFTER `country`
-        ");
+        // 1. Add country and timezone to organizations if missing
+        $cols = $db->query("SHOW COLUMNS FROM `organizations` LIKE 'country'")->fetchAll();
+        if (empty($cols)) {
+            try {
+                $db->exec("
+                    ALTER TABLE `organizations`
+                    ADD COLUMN `country` CHAR(2) NULL AFTER `name`,
+                    ADD COLUMN `timezone` VARCHAR(64) NULL AFTER `country`
+                ");
+            } catch (\PDOException $e) {
+                // Ignore if column already exists
+            }
+        }
 
         // 2. Ensure a default 'standard' plan exists to support onboarding trials
         $stmt = $db->prepare("SELECT id FROM `plans` WHERE `slug` = 'standard'");
