@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/xqtrqexj/benchero.co.ke
+    - /bin/cp -R * $DEPLOYPATH
+    - cd $DEPLOYPATH && php bin/migrate.php
