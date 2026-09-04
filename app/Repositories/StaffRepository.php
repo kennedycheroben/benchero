@@ -8,10 +8,17 @@ use Benchero\Core\Ulid;
 
 class StaffRepository extends Repository
 {
+    protected PDO $pdo;
+
+    public function __construct(?PDO $db = null)
+    {
+        $this->pdo = $db ?? Database::getConnection();
+    }
+
     public function getByOrganization(string $orgId): array
     {
         $stmt = $this->pdo->prepare("
-            SELECT s.*, t.name as team_name
+            SELECT s.*, CONCAT(COALESCE(s.first_name,''), ' ', COALESCE(s.last_name,'')) as name, t.name as team_name
             FROM staff s
             LEFT JOIN teams t ON s.team_id = t.id
             WHERE s.organization_id = ? AND s.deleted_at IS NULL

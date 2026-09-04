@@ -44,21 +44,33 @@
         </div>
     <?php endif; ?>
 
-    <!-- Dashboard Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-        <div>
-            <h2 class="display-6 fw-bold mb-0"><?= htmlspecialchars($tenant['name']) ?> Management</h2>
-            <p class="text-muted mb-0">Sports Club Control Center & Overview</p>
+    <!-- Website Status & Readiness Card -->
+    <?php if (!empty($websiteReadiness)): ?>
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4 border-start border-4 border-<?= $websiteReadiness['score'] >= 80 ? 'success' : 'primary' ?>">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="text-center bg-light p-3 rounded-4 border" style="min-width: 120px;">
+                        <span class="text-muted small fw-bold text-uppercase d-block mb-1">Website Readiness</span>
+                        <div class="display-6 fw-black text-<?= $websiteReadiness['score'] >= 80 ? 'success' : ($websiteReadiness['score'] >= 50 ? 'warning' : 'danger') ?>">
+                            <?= $websiteReadiness['score'] ?>%
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="bi bi-globe2 text-primary me-2"></i>Official Club Website Status</h4>
+                        <p class="text-muted mb-0">Your public site is live at <code>https://benchero.co.ke/club/<?= htmlspecialchars($tenant['slug']) ?></code>.</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/customize" class="btn btn-primary fw-bold rounded-3">
+                        <i class="bi bi-magic me-1"></i> Customize Website
+                    </a>
+                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website" class="btn btn-outline-dark fw-semibold rounded-3">
+                        <i class="bi bi-sliders me-1"></i> Readiness Overview
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="d-flex gap-2">
-            <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/profile" class="btn btn-outline-primary fw-semibold rounded-3">
-                <i class="bi bi-sliders me-1"></i> Club Branding
-            </a>
-            <a href="/club/<?= htmlspecialchars($tenant['slug']) ?>" target="_blank" class="btn btn-primary fw-bold rounded-3">
-                <i class="bi bi-globe me-1"></i> View Website <i class="bi bi-box-arrow-up-right small ms-1"></i>
-            </a>
-        </div>
-    </div>
+    <?php endif; ?>
 
     <!-- Quick Stats Metric Cards -->
     <div class="row g-3 mb-4">

@@ -38,6 +38,11 @@ class Response
         return $this;
     }
 
+    public function getContent(): string
+    {
+        return $this->content;
+    }
+
     public function send(): void
     {
         if (!headers_sent()) {

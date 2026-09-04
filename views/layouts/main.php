@@ -123,7 +123,30 @@
                             </a>
                         <?php endif; ?>
 
+                        <div class="text-uppercase text-muted fw-bold fs-7 mt-3 mb-2 px-2">Club Website</div>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/website') ?>">
+                            <i class="bi bi-globe2"></i> Website Status
+                        </a>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/customize') ?>">
+                            <i class="bi bi-paint-bucket"></i> Customize & Crest
+                        </a>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/homepage') ?>">
+                            <i class="bi bi-layout-split"></i> Homepage Builder
+                        </a>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/navigation') ?>">
+                            <i class="bi bi-compass"></i> Nav & Visibility
+                        </a>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/themes') ?>">
+                            <i class="bi bi-brush"></i> Themes
+                        </a>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/history') ?>">
+                            <i class="bi bi-clock-history"></i> Club Timeline
+                        </a>
+
                         <div class="text-uppercase text-muted fw-bold fs-7 mt-3 mb-2 px-2">Media & Platform</div>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/media') ?>">
+                            <i class="bi bi-folder2-open"></i> Media Library
+                        </a>
                         <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/content') ?>">
                             <i class="bi bi-newspaper"></i> News & Gallery
                         </a>

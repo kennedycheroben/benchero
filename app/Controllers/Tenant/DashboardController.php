@@ -5,7 +5,9 @@ namespace Benchero\Controllers\Tenant;
 use Benchero\Core\Database\Database;
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
+use Benchero\Services\OrganizationService;
 use Benchero\Services\SubscriptionService;
+use Benchero\Services\WebsiteService;
 use PDO;
 
 class DashboardController
@@ -45,6 +47,12 @@ class DashboardController
         $subService = new SubscriptionService();
         $subscriptionStatus = $subService->getSubscriptionStatus($tenant['id']);
 
+        $orgService = new OrganizationService();
+        $org = $orgService->getOrganizationById($tenant['id']);
+
+        $websiteService = new WebsiteService($db);
+        $websiteReadiness = $websiteService->calculateCompletionScore($tenant['id'], $org ?: $tenant);
+
         return Response::view('tenant/dashboard', [
             'tenant' => $tenant,
             'role' => $role,
@@ -56,7 +64,8 @@ class DashboardController
                 'staff' => $staffCount,
                 'fixtures' => $fixturesCount
             ],
-            'recentFixtures' => $recentFixtures
+            'recentFixtures' => $recentFixtures,
+            'websiteReadiness' => $websiteReadiness
         ]);
     }
 }

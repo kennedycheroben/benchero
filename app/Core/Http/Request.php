@@ -84,6 +84,11 @@ class Request
         return $this->get;
     }
 
+    public function get(string $key, mixed $default = null): mixed
+    {
+        return $this->get[$key] ?? $default;
+    }
+
     public function body(): array
     {
         if ($this->parsedBody !== null) {

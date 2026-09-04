@@ -47,6 +47,27 @@ class PlayerRepository
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function findPublicPlayerBySlugOrId(string $orgId, string $identifier): ?array
+    {
+        $stmt = $this->db->prepare("
+            SELECT p.*, 
+                   ra.jersey_number, ra.position, ra.is_captain, ra.is_vice_captain,
+                   t.name as team_name, t.slug as team_slug,
+                   s.name as sport_name, s.slug as sport_slug
+            FROM players p
+            LEFT JOIN roster_assignments ra ON ra.player_id = p.id AND ra.deleted_at IS NULL AND ra.status = 'active'
+            LEFT JOIN teams t ON ra.team_id = t.id AND t.deleted_at IS NULL
+            LEFT JOIN sports s ON p.sport_id = s.id
+            WHERE p.organization_id = :org_id
+              AND (p.id = :identifier OR LOWER(REPLACE(CONCAT(p.first_name, '-', p.last_name), ' ', '-')) = LOWER(:identifier))
+              AND p.deleted_at IS NULL
+            LIMIT 1
+        ");
+        $stmt->execute(['org_id' => $orgId, 'identifier' => $identifier]);
+        $player = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $player ?: null;
+    }
+
     public function findById(string $id, string $orgId, string $sportId = ''): ?array
     {
         $sql = "SELECT * FROM players WHERE id = :id AND organization_id = :org_id AND deleted_at IS NULL";

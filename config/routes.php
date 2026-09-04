@@ -35,8 +35,25 @@ $router->addRoute('GET', '/organizations', ['Benchero\Controllers\OrganizationSe
 $router->addRoute('GET', '/onboarding', ['Benchero\Controllers\OnboardingController', 'index']);
 $router->addRoute('POST', '/onboarding', ['Benchero\Controllers\OnboardingController', 'store']);
 
-// Public Club Profile Page
+// Public Multi-Page Club Website Routes
 $router->addRoute('GET', '/club/{slug}', ['Benchero\Controllers\Public\PublicClubController', 'show']);
+$router->addRoute('GET', '/club/{slug}/about', ['Benchero\Controllers\Public\PublicClubController', 'about']);
+$router->addRoute('GET', '/club/{slug}/teams', ['Benchero\Controllers\Public\PublicClubController', 'teams']);
+$router->addRoute('GET', '/club/{slug}/teams/{team_slug}', ['Benchero\Controllers\Public\PublicClubController', 'teamDetail']);
+$router->addRoute('GET', '/club/{slug}/players', ['Benchero\Controllers\Public\PublicClubController', 'players']);
+$router->addRoute('GET', '/club/{slug}/players/{player_slug}', ['Benchero\Controllers\Public\PublicClubController', 'playerDetail']);
+$router->addRoute('GET', '/club/{slug}/staff', ['Benchero\Controllers\Public\PublicClubController', 'staff']);
+$router->addRoute('GET', '/club/{slug}/fixtures', ['Benchero\Controllers\Public\PublicClubController', 'fixtures']);
+$router->addRoute('GET', '/club/{slug}/results', ['Benchero\Controllers\Public\PublicClubController', 'results']);
+$router->addRoute('GET', '/club/{slug}/standings', ['Benchero\Controllers\Public\PublicClubController', 'standings']);
+$router->addRoute('GET', '/club/{slug}/news', ['Benchero\Controllers\Public\PublicClubController', 'news']);
+$router->addRoute('GET', '/club/{slug}/news/{article_slug}', ['Benchero\Controllers\Public\PublicClubController', 'newsDetail']);
+$router->addRoute('GET', '/club/{slug}/gallery', ['Benchero\Controllers\Public\PublicClubController', 'gallery']);
+$router->addRoute('GET', '/club/{slug}/history', ['Benchero\Controllers\Public\PublicClubController', 'history']);
+$router->addRoute('GET', '/club/{slug}/sponsors', ['Benchero\Controllers\Public\PublicClubController', 'sponsors']);
+$router->addRoute('GET', '/club/{slug}/contact', ['Benchero\Controllers\Public\PublicClubController', 'contact']);
+$router->addRoute('POST', '/club/{slug}/contact', ['Benchero\Controllers\Public\PublicClubController', 'contactSubmit']);
+
 $router->addRoute('GET', '/{org_slug}/{sport_slug}/fixtures', ['Benchero\Controllers\Public\FixtureController', 'index']);
 
 // Tenant Context Routes
@@ -45,6 +62,25 @@ $router->addRoute('GET', '/o/{slug}/dashboard', ['Benchero\Controllers\Tenant\Da
 // Tenant Club Profile & Branding
 $router->addRoute('GET', '/o/{slug}/profile', ['Benchero\Controllers\Tenant\ClubProfileController', 'edit']);
 $router->addRoute('POST', '/o/{slug}/profile', ['Benchero\Controllers\Tenant\ClubProfileController', 'update']);
+
+// Tenant Website Builder & CMS Management
+$router->addRoute('GET', '/o/{slug}/website', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'overview']);
+$router->addRoute('GET', '/o/{slug}/website/customize', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'customizeForm']);
+$router->addRoute('POST', '/o/{slug}/website/customize', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'customizeSave']);
+$router->addRoute('GET', '/o/{slug}/website/homepage', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'homepageForm']);
+$router->addRoute('POST', '/o/{slug}/website/homepage', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'homepageSave']);
+$router->addRoute('GET', '/o/{slug}/website/navigation', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'navigationForm']);
+$router->addRoute('POST', '/o/{slug}/website/navigation', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'navigationSave']);
+$router->addRoute('GET', '/o/{slug}/website/themes', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'themesForm']);
+$router->addRoute('POST', '/o/{slug}/website/themes', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'themesSave']);
+$router->addRoute('GET', '/o/{slug}/website/history', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'historyIndex']);
+$router->addRoute('POST', '/o/{slug}/website/history', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'historySave']);
+$router->addRoute('POST', '/o/{slug}/website/history/{id}/delete', ['Benchero\Controllers\Tenant\WebsiteBuilderController', 'historyDelete']);
+
+// Tenant Media Library Management
+$router->addRoute('GET', '/o/{slug}/media', ['Benchero\Controllers\Tenant\MediaController', 'index']);
+$router->addRoute('POST', '/o/{slug}/media', ['Benchero\Controllers\Tenant\MediaController', 'store']);
+$router->addRoute('POST', '/o/{slug}/media/{id}/delete', ['Benchero\Controllers\Tenant\MediaController', 'delete']);
 
 // Tenant Content & Media Management (News, Gallery, Sponsors)
 $router->addRoute('GET', '/o/{slug}/content', ['Benchero\Controllers\Tenant\ContentController', 'index']);
