@@ -80,13 +80,20 @@ class PlayerController
         $dob = trim($_POST['date_of_birth'] ?? '');
         $isActive = isset($_POST['is_active']);
 
+        $extra = [
+            'photo_url' => trim($_POST['photo_url'] ?? ''),
+            'nationality' => trim($_POST['nationality'] ?? ''),
+            'preferred_foot' => trim($_POST['preferred_foot'] ?? ''),
+            'emergency_contact' => trim($_POST['emergency_contact'] ?? '')
+        ];
+
         if (empty($firstName) || empty($lastName)) {
             $_SESSION['error'] = 'First name and last name are required.';
             return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/players/create");
         }
 
         try {
-            $this->service->createPlayer($tenant['id'], $sport['id'], $firstName, $lastName, $displayName, $bio, $dob, $isActive);
+            $this->service->createPlayer($tenant['id'], $sport['id'], $firstName, $lastName, $displayName, $bio, $dob, $isActive, $extra);
             return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/players");
         } catch (\Exception $e) {
             $_SESSION['error'] = $e->getMessage();
@@ -157,13 +164,20 @@ class PlayerController
         $dob = trim($_POST['date_of_birth'] ?? '');
         $isActive = isset($_POST['is_active']);
 
+        $extra = [
+            'photo_url' => trim($_POST['photo_url'] ?? ''),
+            'nationality' => trim($_POST['nationality'] ?? ''),
+            'preferred_foot' => trim($_POST['preferred_foot'] ?? ''),
+            'emergency_contact' => trim($_POST['emergency_contact'] ?? '')
+        ];
+
         if (empty($firstName) || empty($lastName)) {
             $_SESSION['error'] = 'First name and last name are required.';
             return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/players/{$playerId}/edit");
         }
 
         try {
-            $this->service->updatePlayer($playerId, $tenant['id'], $sport['id'], $firstName, $lastName, $displayName, $bio, $dob, $isActive);
+            $this->service->updatePlayer($playerId, $tenant['id'], $sport['id'], $firstName, $lastName, $displayName, $bio, $dob, $isActive, $extra);
             return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/players/{$playerId}");
         } catch (\Exception $e) {
             $_SESSION['error'] = $e->getMessage();

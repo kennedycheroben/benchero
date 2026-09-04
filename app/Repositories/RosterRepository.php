@@ -17,7 +17,7 @@ class RosterRepository
     public function findByTeamAndSeason(string $teamId, string $seasonId, string $orgId, string $sportId): array
     {
         $stmt = $this->db->prepare("
-            SELECT r.*, p.first_name, p.last_name, p.display_name
+            SELECT r.*, p.first_name, p.last_name, p.display_name, p.photo_url
             FROM roster_assignments r
             JOIN players p ON r.player_id = p.id
             WHERE r.team_id = :team_id
@@ -82,8 +82,8 @@ class RosterRepository
     {
         $id = Ulid::generate();
         $stmt = $this->db->prepare("
-            INSERT INTO roster_assignments (id, organization_id, sport_id, player_id, team_id, season_id, jersey_number, position, status, joined_at) 
-            VALUES (:id, :org_id, :sport_id, :player_id, :team_id, :season_id, :jersey_number, :position, :status, :joined_at)
+            INSERT INTO roster_assignments (id, organization_id, sport_id, player_id, team_id, season_id, jersey_number, position, status, is_captain, is_vice_captain, joined_at) 
+            VALUES (:id, :org_id, :sport_id, :player_id, :team_id, :season_id, :jersey_number, :position, :status, :is_captain, :is_vice_captain, :joined_at)
         ");
         $stmt->execute([
             'id' => $id,
@@ -95,7 +95,9 @@ class RosterRepository
             'jersey_number' => $data['jersey_number'] ?? null,
             'position' => $data['position'] ?? null,
             'status' => $data['status'] ?? 'active',
-            'joined_at' => $data['joined_at'] ?? null
+            'is_captain' => !empty($data['is_captain']) ? 1 : 0,
+            'is_vice_captain' => !empty($data['is_vice_captain']) ? 1 : 0,
+            'joined_at' => $data['joined_at'] ?? date('Y-m-d')
         ]);
         return $id;
     }
@@ -104,13 +106,19 @@ class RosterRepository
     {
         $stmt = $this->db->prepare("
             UPDATE roster_assignments 
-            SET jersey_number = :jersey_number, position = :position, status = :status 
+            SET jersey_number = :jersey_number, 
+                position = :position, 
+                status = :status,
+                is_captain = :is_captain,
+                is_vice_captain = :is_vice_captain
             WHERE id = :id AND organization_id = :org_id AND sport_id = :sport_id
         ");
         return $stmt->execute([
             'jersey_number' => $data['jersey_number'] ?? null,
             'position' => $data['position'] ?? null,
             'status' => $data['status'] ?? 'active',
+            'is_captain' => !empty($data['is_captain']) ? 1 : 0,
+            'is_vice_captain' => !empty($data['is_vice_captain']) ? 1 : 0,
             'id' => $id,
             'org_id' => $orgId,
             'sport_id' => $sportId

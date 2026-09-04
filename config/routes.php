@@ -42,6 +42,19 @@ $router->addRoute('GET', '/{org_slug}/{sport_slug}/fixtures', ['Benchero\Control
 // Tenant Context Routes
 $router->addRoute('GET', '/o/{slug}/dashboard', ['Benchero\Controllers\Tenant\DashboardController', 'index']);
 
+// Tenant Club Profile & Branding
+$router->addRoute('GET', '/o/{slug}/profile', ['Benchero\Controllers\Tenant\ClubProfileController', 'edit']);
+$router->addRoute('POST', '/o/{slug}/profile', ['Benchero\Controllers\Tenant\ClubProfileController', 'update']);
+
+// Tenant Content & Media Management (News, Gallery, Sponsors)
+$router->addRoute('GET', '/o/{slug}/content', ['Benchero\Controllers\Tenant\ContentController', 'index']);
+$router->addRoute('POST', '/o/{slug}/content/news', ['Benchero\Controllers\Tenant\ContentController', 'storeNews']);
+$router->addRoute('POST', '/o/{slug}/content/news/{id}/delete', ['Benchero\Controllers\Tenant\ContentController', 'deleteNews']);
+$router->addRoute('POST', '/o/{slug}/content/gallery', ['Benchero\Controllers\Tenant\ContentController', 'storeGallery']);
+$router->addRoute('POST', '/o/{slug}/content/gallery/{id}/delete', ['Benchero\Controllers\Tenant\ContentController', 'deleteGallery']);
+$router->addRoute('POST', '/o/{slug}/content/sponsors', ['Benchero\Controllers\Tenant\ContentController', 'storeSponsor']);
+$router->addRoute('POST', '/o/{slug}/content/sponsors/{id}/delete', ['Benchero\Controllers\Tenant\ContentController', 'deleteSponsor']);
+
 // Tenant Sports
 $router->addRoute('GET', '/o/{slug}/sports', ['Benchero\Controllers\Tenant\SportController', 'index']);
 $router->addRoute('POST', '/o/{slug}/sports/toggle', ['Benchero\Controllers\Tenant\SportController', 'toggle']);
@@ -82,6 +95,8 @@ $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/teams/{team_id}/rosters/{sea
 $router->addRoute('GET', '/o/{slug}/staff', ['Benchero\Controllers\Tenant\StaffController', 'index']);
 $router->addRoute('GET', '/o/{slug}/staff/create', ['Benchero\Controllers\Tenant\StaffController', 'create']);
 $router->addRoute('POST', '/o/{slug}/staff', ['Benchero\Controllers\Tenant\StaffController', 'store']);
+$router->addRoute('GET', '/o/{slug}/staff/{id}/edit', ['Benchero\Controllers\Tenant\StaffController', 'edit']);
+$router->addRoute('POST', '/o/{slug}/staff/{id}', ['Benchero\Controllers\Tenant\StaffController', 'update']);
 $router->addRoute('POST', '/o/{slug}/staff/{id}/delete', ['Benchero\Controllers\Tenant\StaffController', 'delete']);
 
 // Tenant Fixtures & Results

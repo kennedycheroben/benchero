@@ -18,14 +18,20 @@ class StaffService
         return $this->repository->getByOrganization($orgId);
     }
 
-    public function createStaff(string $orgId, string $firstName, string $lastName, string $role): string
+    public function getStaffById(string $id, string $orgId): ?array
     {
-        return $this->repository->create([
-            'organization_id' => $orgId,
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'role' => $role
-        ]);
+        return $this->repository->findById($id, $orgId);
+    }
+
+    public function createStaff(string $orgId, array $data): string
+    {
+        $data['organization_id'] = $orgId;
+        return $this->repository->create($data);
+    }
+
+    public function updateStaff(string $id, string $orgId, array $data): bool
+    {
+        return $this->repository->update($id, $orgId, $data);
     }
 
     public function deleteStaff(string $id, string $orgId): bool

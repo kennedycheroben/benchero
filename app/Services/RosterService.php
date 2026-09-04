@@ -19,7 +19,7 @@ class RosterService
         $this->teamRepo = new TeamRepository();
     }
 
-    public function assignPlayerToRoster(string $orgId, string $sportId, string $playerId, string $teamId, string $seasonId, ?string $jerseyNumber, ?string $position, string $status = 'active', ?string $joinedAt = null): string
+    public function assignPlayerToRoster(string $orgId, string $sportId, string $playerId, string $teamId, string $seasonId, ?string $jerseyNumber, ?string $position, string $status = 'active', ?string $joinedAt = null, bool $isCaptain = false, bool $isViceCaptain = false): string
     {
         // Validate player belongs to this org & sport
         $player = $this->playerRepo->findById($playerId, $orgId, $sportId);
@@ -48,20 +48,24 @@ class RosterService
             'jersey_number' => $jerseyNumber ? trim($jerseyNumber) : null,
             'position' => $position ? trim($position) : null,
             'status' => $status,
-            'joined_at' => $joinedAt ?: date('Y-m-d')
+            'joined_at' => $joinedAt ?: date('Y-m-d'),
+            'is_captain' => $isCaptain,
+            'is_vice_captain' => $isViceCaptain
         ]);
     }
 
-    public function updateAssignment(string $assignmentId, string $orgId, string $sportId, ?string $jerseyNumber, ?string $position, string $status): void
+    public function updateAssignment(string $assignmentId, string $orgId, string $sportId, ?string $jerseyNumber, ?string $position, string $status, bool $isCaptain = false, bool $isViceCaptain = false): void
     {
         $this->rosterRepo->update($assignmentId, [
             'jersey_number' => $jerseyNumber ? trim($jerseyNumber) : null,
             'position' => $position ? trim($position) : null,
-            'status' => $status
+            'status' => $status,
+            'is_captain' => $isCaptain,
+            'is_vice_captain' => $isViceCaptain
         ], $orgId, $sportId);
     }
 
-    public function archiveAssignment(string $assignmentId, string $orgId, string $sportId): void
+    public function removeFromRoster(string $assignmentId, string $orgId, string $sportId): void
     {
         $this->rosterRepo->archive($assignmentId, $orgId, $sportId);
     }
