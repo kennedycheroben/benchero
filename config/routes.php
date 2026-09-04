@@ -12,6 +12,9 @@ $router->addRoute('GET', '/contact', ['Benchero\Controllers\HomeController', 'co
 $router->addRoute('POST', '/contact', ['Benchero\Controllers\HomeController', 'contactSubmit']);
 $router->addRoute('GET', '/terms', ['Benchero\Controllers\HomeController', 'terms']);
 $router->addRoute('GET', '/privacy', ['Benchero\Controllers\HomeController', 'privacy']);
+$router->addRoute('GET', '/cookies', ['Benchero\Controllers\HomeController', 'cookies']);
+$router->addRoute('GET', '/sitemap.xml', ['Benchero\Controllers\Public\SitemapController', 'sitemap']);
+$router->addRoute('GET', '/robots.txt', ['Benchero\Controllers\Public\SitemapController', 'robots']);
 $router->addRoute('GET', '/health', ['Benchero\Controllers\HealthController', 'check']);
 
 // Auth - Registration & Verification

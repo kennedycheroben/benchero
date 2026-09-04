@@ -6,14 +6,19 @@ $baseUrl = 'http://localhost/benchero/public';
 $ch = curl_init("$baseUrl/register");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HEADER, true);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 $response = curl_exec($ch);
 $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
 $header = substr($response, 0, $header_size);
 $body = substr($response, $header_size);
 curl_close($ch);
 
-preg_match('/tmsess=([^;]+)/', $header, $matches);
+preg_match('/benchero_session=([^;]+)/', $header, $matches);
+if (empty($matches[1])) {
+    preg_match('/tmsess=([^;]+)/', $header, $matches);
+}
 $sessionId = $matches[1] ?? '';
+
 preg_match('/name="_csrf" value="([^"]+)"/', $body, $matches);
 $csrfToken = $matches[1] ?? '';
 
@@ -30,7 +35,8 @@ function post($url, $data, $csrf = true) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-    curl_setopt($ch, CURLOPT_COOKIE, "tmsess=$sessionId");
+    curl_setopt($ch, CURLOPT_COOKIE, "benchero_session=$sessionId; tmsess=$sessionId");
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
@@ -98,7 +104,7 @@ $res = post('/register', [
 ]);
 echo "Expected 400 (Mismatch pass), got: " . $res['code'] . "\n";
 if (strpos($res['body'], 'Passwords do not match') !== false) {
-    echo "Password mismatch error found.\n";
+    echo "Passwords do not match error found.\n";
 } else {
     echo "MISMATCH PASSWORD TEST FAILED!\n";
 }

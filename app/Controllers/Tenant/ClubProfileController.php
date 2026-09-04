@@ -5,16 +5,23 @@ namespace Benchero\Controllers\Tenant;
 use Benchero\Core\Controller;
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
+use Benchero\Services\CacheService;
+use Benchero\Services\MediaService;
 use Benchero\Services\OrganizationService;
+use InvalidArgumentException;
 
 class ClubProfileController extends Controller
 {
     private OrganizationService $orgService;
+    private MediaService $mediaService;
+    private CacheService $cacheService;
 
     public function __construct()
     {
         parent::__construct();
         $this->orgService = new OrganizationService();
+        $this->mediaService = new MediaService();
+        $this->cacheService = new CacheService();
     }
 
     private function requireOwnerOrAdmin(Request $request): void
@@ -68,6 +75,23 @@ class ClubProfileController extends Controller
         }
 
         $tenant = $request->getAttribute('tenant');
+        $org = $this->orgService->getOrganizationById($tenant['id']);
+
+        $logoUrl = trim((string)$request->input('logo_url'));
+
+        // Handle direct secure file upload for logo
+        if (!empty($_FILES['logo_file']['name']) && isset($_FILES['logo_file']['error']) && $_FILES['logo_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            try {
+                $uploadResult = $this->mediaService->uploadLogo($tenant['id'], $_FILES['logo_file'], $org['logo_url'] ?? null);
+                $logoUrl = $uploadResult['url'];
+            } catch (InvalidArgumentException $e) {
+                $_SESSION['error'] = 'Logo Upload Failed: ' . $e->getMessage();
+                return Response::redirect("/o/{$tenant['slug']}/profile");
+            } catch (\Exception $e) {
+                $_SESSION['error'] = 'Logo Upload Error: Could not save uploaded image.';
+                return Response::redirect("/o/{$tenant['slug']}/profile");
+            }
+        }
 
         $socialLinks = [
             'facebook' => trim((string)$request->input('facebook')),
@@ -82,7 +106,7 @@ class ClubProfileController extends Controller
             'name' => trim((string)$request->input('name')),
             'country' => trim((string)$request->input('country')),
             'timezone' => trim((string)$request->input('timezone')),
-            'logo_url' => trim((string)$request->input('logo_url')),
+            'logo_url' => $logoUrl,
             'cover_url' => trim((string)$request->input('cover_url')),
             'description' => trim((string)$request->input('description')),
             'founded_year' => trim((string)$request->input('founded_year')),
@@ -99,8 +123,14 @@ class ClubProfileController extends Controller
             return Response::redirect("/o/{$tenant['slug']}/profile");
         }
 
-        $this->orgService->updateClubProfile($tenant['id'], $data);
-        $_SESSION['success'] = 'Club profile updated successfully!';
+        $success = $this->orgService->updateOrganization($tenant['id'], $data);
+
+        if ($success) {
+            $this->cacheService->flushOrgCache($tenant['id']);
+            $_SESSION['success'] = 'Club profile updated successfully!';
+        } else {
+            $_SESSION['error'] = 'Failed to update club profile. Please try again.';
+        }
 
         return Response::redirect("/o/{$tenant['slug']}/profile");
     }

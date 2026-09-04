@@ -12,6 +12,7 @@ use Benchero\Core\Ulid;
 $db = Database::getConnection();
 $db->exec("DELETE FROM teams");
 $db->exec("DELETE FROM organization_sports");
+$db->exec("DELETE FROM payments");
 $db->exec("DELETE FROM subscriptions");
 $db->exec("DELETE FROM organization_user");
 $db->exec("DELETE FROM organizations");

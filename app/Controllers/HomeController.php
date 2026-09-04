@@ -6,10 +6,19 @@ use Benchero\Core\Controller;
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
 use Benchero\Core\Database\Database;
+use Benchero\Core\RateLimiter;
 use PDO;
 
 class HomeController extends Controller
 {
+    private RateLimiter $rateLimiter;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->rateLimiter = new RateLimiter(Database::getConnection());
+    }
+
     public function index(Request $request): Response
     {
         return $this->render('home', [
@@ -20,7 +29,7 @@ class HomeController extends Controller
     public function about(Request $request): Response
     {
         return $this->render('public/about', [
-            'title' => 'About Benchero — Your Club Management Platform'
+            'title' => 'About Benchero — Complete Sports Club Management Platform'
         ]);
     }
 
@@ -47,6 +56,14 @@ class HomeController extends Controller
 
     public function contactSubmit(Request $request): Response
     {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        if (!$this->rateLimiter->hit("contact_form_{$ip}", 5, 3600)) {
+            return $this->render('public/contact', [
+                'title' => 'Contact Benchero Team',
+                'error' => 'Too many contact form submissions. Please try again later.'
+            ], 429);
+        }
+
         $name = trim((string)$request->input('name'));
         $email = trim((string)$request->input('email'));
         $subject = trim((string)$request->input('subject'));
@@ -68,8 +85,7 @@ class HomeController extends Controller
             ], 400);
         }
 
-        // Email abstraction dispatch placeholder using CONTACT_EMAIL config
-        $recipient = env('BRAND_CONTACT_EMAIL', 'hello@benchero.com');
+        $recipient = env('BRAND_CONTACT_EMAIL', 'contact@benchero.co.ke');
         error_log("Contact message received from {$name} ({$email}) to {$recipient}: {$subject}");
 
         return new Response('', 302, ['Location' => url('/contact?success=1')]);
@@ -86,6 +102,13 @@ class HomeController extends Controller
     {
         return $this->render('public/privacy', [
             'title' => 'Benchero — Privacy Policy'
+        ]);
+    }
+
+    public function cookies(Request $request): Response
+    {
+        return $this->render('public/cookies', [
+            'title' => 'Benchero — Cookie Policy'
         ]);
     }
 }

@@ -1,6 +1,21 @@
 Options -MultiViews -Indexes
 RewriteEngine On
 
+# Enable GZIP Compression for text resources
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json image/svg+xml
+</IfModule>
+
+# Browser Caching Headers for Static Assets
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff|woff2|ttf|eot|svg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(png|jpg|jpeg|webp|gif|ico)$">
+        Header set Cache-Control "public, max-age=2592000, max-age=31536000"
+    </FilesMatch>
+</IfModule>
+
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [L]

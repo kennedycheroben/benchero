@@ -28,7 +28,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/profile" class="needs-validation">
+    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/profile" enctype="multipart/form-data" class="needs-validation">
         <?= csrf_field() ?>
 
         <div class="row g-4">
@@ -78,9 +78,16 @@
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="logo_url" class="form-label fw-semibold">Club Logo Image URL</label>
-                                <input type="url" class="form-control" id="logo_url" name="logo_url" placeholder="https://example.com/logo.png" value="<?= htmlspecialchars($org['logo_url'] ?? '') ?>">
-                                <div class="form-text">Square ratio (e.g. 400x400) PNG or JPG image URL.</div>
+                                <label for="logo_file" class="form-label fw-semibold">Upload Club Logo File</label>
+                                <input type="file" class="form-control" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/webp">
+                                <input type="hidden" name="logo_url" value="<?= htmlspecialchars($org['logo_url'] ?? '') ?>">
+                                <div class="form-text">PNG, JPG, WEBP formats. Max file size: 2 MB (2,097,152 bytes).</div>
+                                <?php if (!empty($org['logo_url'])): ?>
+                                    <div class="mt-2 d-flex align-items-center">
+                                        <span class="me-2 small text-muted">Current Logo:</span>
+                                        <img src="<?= htmlspecialchars($org['logo_url']) ?>" alt="Club Logo" class="rounded border" style="height: 40px; width: 40px; object-fit: contain;">
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <div class="col-md-6">
                                 <label for="cover_url" class="form-label fw-semibold">Hero Banner Cover URL</label>

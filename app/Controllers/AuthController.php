@@ -105,7 +105,7 @@ class AuthController extends Controller
         }
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        if (!$this->rateLimiter->hit("login_{$ip}", 10, 900) || !$this->rateLimiter->hit("login_email_{$email}", 10, 900)) {
+        if (!$this->rateLimiter->hit("login_{$ip}", 5, 900) || !$this->rateLimiter->hit("login_email_{$email}", 5, 900)) {
             return $this->render('auth/login', ['error' => 'Too many login attempts. Please try again later.'], 429);
         }
 
@@ -125,6 +125,10 @@ class AuthController extends Controller
         if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
             $this->authService->updatePassword($user['id'], $password);
         }
+
+        // Clear rate limiter on successful login
+        $this->rateLimiter->clear("login_{$ip}");
+        $this->rateLimiter->clear("login_email_{$email}");
 
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
@@ -163,8 +167,8 @@ class AuthController extends Controller
         }
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        if (!$this->rateLimiter->hit("forgot_pass_{$ip}", 3, 900)) {
-            return $this->render('auth/forgot_password', ['error' => 'Too many reset attempts. Please try again later.'], 429);
+        if (!$this->rateLimiter->hit("forgot_pass_{$ip}", 5, 3600) || !$this->rateLimiter->hit("forgot_pass_email_{$email}", 5, 3600)) {
+            return $this->render('auth/forgot_password', ['error' => 'Too many password reset requests. Please try again later.'], 429);
         }
 
         $user = $this->authService->findUserByEmail($email);
@@ -195,6 +199,11 @@ class AuthController extends Controller
         $token = $request->input('token') ?? '';
         $password = $request->input('password') ?? '';
         $confirm = $request->input('password_confirmation') ?? '';
+
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        if (!$this->rateLimiter->hit("reset_pass_sub_{$ip}", 5, 900)) {
+            return $this->render('auth/reset_password', ['error' => 'Too many reset attempts. Please try again later.', 'token' => $token], 429);
+        }
 
         if (empty($token) || empty($password)) {
             return $this->render('auth/reset_password', ['error' => 'Token and password are required.', 'token' => $token], 400);
@@ -282,8 +291,8 @@ class AuthController extends Controller
         }
 
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        if (!$this->rateLimiter->hit("resend_verify_{$ip}", 3, 900)) {
-            return $this->render('auth/resend_verification', ['error' => 'Too many requests. Please try again later.'], 429);
+        if (!$this->rateLimiter->hit("resend_verify_{$ip}", 3, 3600) || !$this->rateLimiter->hit("resend_verify_email_{$email}", 3, 3600)) {
+            return $this->render('auth/resend_verification', ['error' => 'Too many verification email requests. Please try again later.'], 429);
         }
 
         $user = $this->authService->findUserByEmail($email);
@@ -299,12 +308,44 @@ class AuthController extends Controller
     private function sendVerificationEmail(string $userId, string $email, string $name): void
     {
         $plaintextToken = $this->tokenService->generateToken($userId, AuthTokenService::TYPE_EMAIL_VERIFICATION, 86400);
-        $appUrl = env('APP_URL', 'http://localhost');
-        $verifyUrl = rtrim($appUrl, '/') . "/verify-email/{$userId}/{$plaintextToken}";
+        $appUrl = rtrim(env('APP_URL', 'https://benchero.co.ke'), '/');
+        $verifyUrl = "{$appUrl}/verify-email/{$userId}/{$plaintextToken}";
+        $safeName = htmlspecialchars($name);
 
-        $subject = 'Verify your email address';
-        $htmlBody = "<p>Hello {$name},</p><p>Please verify your email address by clicking the link below:</p><p><a href=\"{$verifyUrl}\">{$verifyUrl}</a></p><p>This link will expire in 24 hours.</p>";
-        $textBody = "Hello {$name},\n\nPlease verify your email address by opening the following link:\n{$verifyUrl}\n\nThis link will expire in 24 hours.";
+        $subject = 'Verify Your Benchero Account Email';
+        
+        $htmlBody = <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Your Email</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f8fafc; color: #334155; margin: 0; padding: 20px;">
+<div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+  <div style="background-color: #0f172a; padding: 24px; text-align: center;">
+    <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Benchero</h1>
+  </div>
+  <div style="padding: 32px;">
+    <p style="font-size: 16px; margin-top: 0;">Hello {$safeName},</p>
+    <p style="font-size: 15px; line-height: 1.5;">Thank you for registering with Benchero! To complete your registration and activate your sports organization account, please verify your email address by clicking the button below:</p>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="{$verifyUrl}" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; display: inline-block;">Verify Email Address</a>
+    </div>
+    <p style="font-size: 14px; color: #64748b;">If the button does not work, copy and paste the following link into your web browser:</p>
+    <p style="font-size: 13px; word-break: break-all; color: #2563eb;"><a href="{$verifyUrl}">{$verifyUrl}</a></p>
+    <p style="font-size: 13px; color: #94a3b8; margin-top: 32px;">This verification link expires in 24 hours. If you did not create an account on Benchero, please ignore this email.</p>
+  </div>
+  <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #64748b;">
+    &copy; Benchero Platform &bull; contact@benchero.co.ke
+  </div>
+</div>
+</body>
+</html>
+HTML;
+
+        $textBody = "Hello {$name},\n\nThank you for registering with Benchero! Please verify your email address by opening the following link in your browser:\n{$verifyUrl}\n\nThis link will expire in 24 hours.\n\nIf you did not register for a Benchero account, please ignore this email.\n\n-- Benchero Platform (contact@benchero.co.ke)";
 
         $this->mailer->send($email, $subject, $htmlBody, $textBody);
     }
