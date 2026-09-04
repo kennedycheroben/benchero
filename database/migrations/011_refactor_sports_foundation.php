@@ -14,26 +14,34 @@ use Benchero\Core\Ulid;
 return new class {
     public function up(\PDO $pdo): void
     {
-        // 1. Drop fk and modify teams
-        $pdo->exec("ALTER TABLE teams DROP FOREIGN KEY fk_team_sport");
-        $pdo->exec("ALTER TABLE teams MODIFY sport_id CHAR(26) NOT NULL");
-        
-        // 2. Recreate sports
-        $pdo->exec("DROP TABLE IF EXISTS sports");
-        $pdo->exec("
-            CREATE TABLE sports (
-                id CHAR(26) PRIMARY KEY,
-                name VARCHAR(100) NOT NULL UNIQUE,
-                slug VARCHAR(100) NOT NULL UNIQUE,
-                description TEXT NULL,
-                is_active TINYINT(1) NOT NULL DEFAULT 1,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        ");
+        // 1. Drop fk and modify teams defensively
+        try {
+            $pdo->exec("ALTER TABLE teams DROP FOREIGN KEY fk_team_sport");
+        } catch (\PDOException $e) {}
 
-        // 3. Re-add fk on teams
-        $pdo->exec("ALTER TABLE teams ADD CONSTRAINT fk_team_sport FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE RESTRICT");
+        try {
+            $pdo->exec("ALTER TABLE teams MODIFY sport_id CHAR(26) NOT NULL");
+        } catch (\PDOException $e) {}
+        
+        // 2. Recreate sports if missing
+        try {
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS sports (
+                    id CHAR(26) PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL UNIQUE,
+                    slug VARCHAR(100) NOT NULL UNIQUE,
+                    description TEXT NULL,
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+        } catch (\PDOException $e) {}
+
+        // 3. Re-add fk on teams defensively
+        try {
+            $pdo->exec("ALTER TABLE teams ADD CONSTRAINT fk_team_sport FOREIGN KEY (sport_id) REFERENCES sports(id) ON DELETE RESTRICT");
+        } catch (\PDOException $e) {}
 
         // 4. Create organization_sports pivot table
         $pdo->exec("
