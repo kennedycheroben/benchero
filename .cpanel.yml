@@ -4,4 +4,6 @@ deployment:
     - export DEPLOYPATH=/home/xqtrqexj/public_html
     - /bin/cp -R * $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH/
+    - test -f .env && /bin/cp .env $DEPLOYPATH/ || true
     - cd $DEPLOYPATH && php bin/migrate.php
+
