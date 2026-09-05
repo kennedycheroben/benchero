@@ -26,7 +26,7 @@
     <?php endif; ?>
 
     <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/customize" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf_token ?? '') ?>">
+        <?= csrf_field() ?>
 
         <!-- Identity & Crest -->
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">

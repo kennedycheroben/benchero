@@ -31,7 +31,7 @@
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                 <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle text-danger me-2"></i>Add / Edit Milestone</h5>
                 <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/history" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf_token ?? '') ?>">
+                    <?= csrf_field() ?>
                     <input type="hidden" name="id" value="">
 
                     <div class="mb-3">
@@ -99,7 +99,7 @@
                                 </div>
 
                                 <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/history/<?= htmlspecialchars($h['id']) ?>/delete" method="POST" onsubmit="return confirm('Delete milestone?');">
-                                    <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf_token ?? '') ?>">
+                                    <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle p-2">
                                         <i class="bi bi-trash"></i>
                                     </button>

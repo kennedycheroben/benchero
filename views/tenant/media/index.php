@@ -44,7 +44,7 @@
                             <small class="text-muted d-block mb-2"><?= round($media['file_size'] / 1024, 1) ?> KB</small>
                             
                             <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/media/<?= htmlspecialchars($media['id']) ?>/delete" method="POST" onsubmit="return confirm('Delete media file?');">
-                                <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf_token ?? '') ?>">
+                                <?= csrf_field() ?>
                                 <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill w-100 fw-bold">
                                     <i class="bi bi-trash me-1"></i> Delete
                                 </button>
@@ -66,7 +66,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/media" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf_token ?? '') ?>">
+                <?= csrf_field() ?>
 
                 <div class="modal-body p-4">
                     <div class="mb-3">

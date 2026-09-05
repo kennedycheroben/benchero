@@ -19,7 +19,7 @@
     <?php endif; ?>
 
     <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/homepage" method="POST">
-        <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf_token ?? '') ?>">
+        <?= csrf_field() ?>
 
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
             <h5 class="fw-bold mb-3"><i class="bi bi-layers text-success me-2"></i>Homepage Sections Manager</h5>

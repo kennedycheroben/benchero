@@ -19,7 +19,7 @@
     <?php endif; ?>
 
     <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/themes" method="POST">
-        <input type="hidden" name="_csrf" value="<?= htmlspecialchars($csrf_token ?? '') ?>">
+        <?= csrf_field() ?>
 
         <div class="row g-4 mb-4">
             <?php $activeTheme = $settings['theme_id'] ?? 'modern_sport'; ?>
