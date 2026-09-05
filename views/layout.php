@@ -11,7 +11,7 @@
     
     <link rel="icon" type="image/x-icon" href="<?= url('/favicon.ico') ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= url('/favicon.png') ?>">
-    <link rel="apple-touch-icon" href="<?= url('/images/logo.png') ?>">
+    <link rel="apple-touch-icon" href="<?= url('/images/benchero_logo.png') ?>">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,6 +125,7 @@
         <nav class="navbar navbar-expand-lg navbar-benchero sticky-top">
             <div class="container">
                 <a class="navbar-brand d-flex align-items-center gap-2" href="<?= url('/') ?>">
+                    <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="34" class="rounded-2">
                     <span class="navbar-brand-text">BENCHERO</span>
                     <span class="navbar-brand-badge">sports</span>
                 </a>
@@ -171,7 +172,10 @@
         <div class="container">
             <div class="row g-4 mb-4">
                 <div class="col-lg-4">
-                    <div class="fw-bold text-white fs-4 mb-2">BENCHERO</div>
+                    <div class="d-flex align-items-center gap-2 fw-bold text-white fs-4 mb-2">
+                        <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="32" class="rounded-2">
+                        BENCHERO
+                    </div>
                     <p class="small text-slate-400 mb-3">Your Club. Your Teams. Your Players. Your Game. Your Platform.</p>
                     <p class="small text-muted mb-0">The modern multi-sport platform for sports organizations, clubs, and academies.</p>
                 </div>

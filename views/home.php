@@ -8,9 +8,12 @@
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-3">
                     <i class="bi bi-trophy-fill me-1"></i> Multi-Sport Club Management Platform
                 </span>
-                <h1 class="display-4 fw-extrabold text-slate-900 tracking-tight mb-3">
-                    BENCHERO
-                </h1>
+                <div class="d-flex align-items-center gap-3 justify-content-center justify-content-lg-start mb-3">
+                    <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="64" class="rounded-3 shadow">
+                    <h1 class="display-4 fw-extrabold text-slate-900 tracking-tight mb-0">
+                        BENCHERO
+                    </h1>
+                </div>
                 <p class="fs-4 fw-medium text-primary mb-4">
                     Your Club. Your Teams. Your Players. Your Game. Your Platform.
                 </p>
@@ -30,6 +33,7 @@
                 <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-dark text-white p-4">
                     <div class="d-flex align-items-center justify-content-between mb-4 border-bottom border-secondary pb-3">
                         <div class="d-flex align-items-center gap-2">
+                            <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="28" class="rounded-2">
                             <span class="fw-extrabold fs-4 tracking-tight">BENCHERO</span>
                             <span class="badge bg-success">Live Dashboard</span>
                         </div>

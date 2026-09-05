@@ -6,7 +6,7 @@
             <div class="card shadow-sm border-0 rounded-4">
                 <div class="card-body p-4 p-md-5">
                     <div class="text-center mb-4">
-                        <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1 rounded-pill mb-2">BENCHERO</span>
+                        <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="56" class="mb-3 rounded-3 shadow-sm">
                         <h2 class="fw-bold mb-1">Create Your Account</h2>
                         <p class="text-muted small">Start managing your sports club and teams today.</p>
                     </div>

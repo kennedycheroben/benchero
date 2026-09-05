@@ -27,6 +27,9 @@
     <?php endif; ?>
 
     <!-- Favicon & Fonts -->
+    <link rel="icon" type="image/x-icon" href="<?= !empty($org['logo_url']) ? htmlspecialchars($org['logo_url']) : url('/favicon.ico') ?>">
+    <link rel="icon" type="image/png" sizes="32x32" href="<?= !empty($org['logo_url']) ? htmlspecialchars($org['logo_url']) : url('/favicon.png') ?>">
+    <link rel="apple-touch-icon" href="<?= !empty($org['logo_url']) ? htmlspecialchars($org['logo_url']) : url('/images/benchero_logo.png') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">

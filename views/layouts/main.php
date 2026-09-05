@@ -6,7 +6,7 @@
     <title><?= htmlspecialchars(($tenant['name'] ?? 'Benchero') . ' — Benchero Management') ?></title>
     <link rel="icon" type="image/x-icon" href="<?= url('/favicon.ico') ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= url('/favicon.png') ?>">
-    <link rel="apple-touch-icon" href="<?= url('/images/logo.png') ?>">
+    <link rel="apple-touch-icon" href="<?= url('/images/benchero_logo.png') ?>">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,6 +57,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid px-4">
             <a class="navbar-brand d-flex align-items-center gap-2" href="<?= url('/') ?>">
+                <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="30" class="rounded-2">
                 <span class="navbar-brand-text text-white">BENCHERO</span>
                 <span class="badge bg-primary fs-7"><?= htmlspecialchars($tenant['name'] ?? 'Club') ?></span>
             </a>
