@@ -1,7 +1,7 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/xqtrqexj/benchero.co.ke
+    - export DEPLOYPATH=/home/xqtrqexj/benchero
     - /bin/cp -R * $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH/
     - cd $DEPLOYPATH && php bin/migrate.php
