@@ -1,8 +1,9 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/xqtrqexj/benchero
+    - export DEPLOYPATH=/home/xqtrqexj/public_html
     - /bin/cp -R * $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH/
     - cd $DEPLOYPATH && php bin/migrate.php
+
 
