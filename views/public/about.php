@@ -3,7 +3,7 @@
 <!-- SECTION 1: HERO -->
 <section class="py-5 bg-gradient text-white position-relative" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
     <div class="container py-lg-5 text-center">
-        <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill text-uppercase mb-3">About Benchero</span>
+        <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill mb-3">About Us</span>
         <h1 class="display-4 fw-extrabold mb-3" style="max-width: 800px; color: black;">Everything for Your Club, In One Place.</h1>
         <p class="lead max-w-3xl mx-auto opacity-90 mb-4" style="max-width: 800px; color: black;">
            Benchero is your complete sports club management platform — designed for clubs, academies, coaches, managers, and supporters. We bring everything together in one simple, organized system.
