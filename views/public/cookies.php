@@ -2,8 +2,8 @@
 
 <div class="bg-light py-5 border-bottom">
     <div class="container">
-        <h1 class="display-5 fw-bold mb-2">Cookie Policy</h1>
-        <p class="lead text-muted mb-0">How Benchero uses cookies to keep your account secure and provide a reliable experience.</p>
+        <h1 class="display-5 fw-bold mb-2" style="max-width: 800px; color: black;">Cookie Policy</h1>
+        <p class="lead text-muted mb-0"style="max-width: 800px; color: black;">How Benchero uses cookies to keep your account secure and provide a reliable experience.</p>
     </div>
 </div>
 
@@ -13,10 +13,10 @@
             <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
                 
                 <h3 class="fw-bold mb-3"><i class="bi bi-cookie text-warning me-2"></i>1. What Are Cookies?</h3>
-                <p class="text-muted">Cookies are small text files placed on your browser or device when you visit websites. They help websites remember your session, login status, and security preferences so you don't have to re-enter credentials on every page.</p>
+                <p class="text-black">Cookies are small text files placed on your browser or device when you visit websites. They help websites remember your session, login status, and security preferences so you don't have to re-enter credentials on every page.</p>
 
                 <h3 class="fw-bold mt-4 mb-3"><i class="bi bi-shield-check text-success me-2"></i>2. Essential Cookies We Use</h3>
-                <p class="text-muted">Benchero uses essential, first-party cookies necessary for core authentication and platform security. Without these cookies, the application cannot function properly.</p>
+                <p class="text-black">Benchero uses essential, first-party cookies necessary for core authentication and platform security. Without these cookies, the application cannot function properly.</p>
 
                 <div class="table-responsive my-3">
                     <table class="table table-bordered align-middle">
