@@ -1,7 +1,8 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/xqtrqexj/public_html
+    - export DEPLOYPATH=/home/xqtrqexj/benchero.co.ke
+    - mkdir -p $DEPLOYPATH
     - /bin/cp -R * $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH/
     - test -f .env && /bin/cp .env $DEPLOYPATH/ || true
