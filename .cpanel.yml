@@ -5,6 +5,6 @@ deployment:
     - /bin/cp -R * $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH/
     - test -f .env && /bin/cp .env $DEPLOYPATH/ || true
-    - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader
-    - cd $DEPLOYPATH && php bin/migrate.php
+    - cd $DEPLOYPATH && export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --optimize-autoloader --no-interaction > deploy_composer.log 2>&1
+    - cd $DEPLOYPATH && php bin/migrate.php > deploy_migrate.log 2>&1
 
