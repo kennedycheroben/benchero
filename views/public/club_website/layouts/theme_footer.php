@@ -94,7 +94,7 @@
                     &copy; <?= date('Y') ?> <strong><?= htmlspecialchars($org['name']) ?></strong>. All rights reserved.
                 </div>
                 <div>
-                    Powered by <a href="https://benchero.co.ke" target="_blank" class="text-white text-decoration-none fw-bold"><img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero" height="18" class="me-1 rounded-1 align-text-bottom">BENCHERO</a> — Sports SaaS Platform
+                    Powered by <a href="https://benchero.co.ke" target="_blank" class="text-white text-decoration-none fw-bold"><img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero" height="18" class="me-1 rounded-1 align-text-bottom">BENCHERO</a>
                 </div>
             </div>
         </div>
