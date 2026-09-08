@@ -5,5 +5,6 @@ deployment:
     - /bin/cp -R * $DEPLOYPATH
     - /bin/cp .htaccess $DEPLOYPATH/
     - test -f .env && /bin/cp .env $DEPLOYPATH/ || true
+    - cd $DEPLOYPATH && composer install --no-dev --optimize-autoloader
     - cd $DEPLOYPATH && php bin/migrate.php
 
