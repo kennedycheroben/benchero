@@ -32,7 +32,7 @@
             <p>All data is stored in isolated multi-tenant databases utilizing prepared statements, CSRF protection, and session security headers. Inactive data is retained as needed for compliance and accounting purposes.</p>
 
             <h4 class="fw-bold text-dark mt-4 mb-3">6. Your Data Rights</h4>
-            <p>Under the Kenya Data Protection Act, users and organizations have the right to request access to, correction of, or deletion of their personal information. To exercise these rights, email <a href="mailto:privacy@benchero.com" class="text-primary">privacy@benchero.com</a>.</p>
+            <p>Under the Kenya Data Protection Act, users and organizations have the right to request access to, correction of, or deletion of their personal information.</p>
         </div>
     </div>
 </section>
