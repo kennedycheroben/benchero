@@ -12,6 +12,7 @@ class MediaService
     private PDO $db;
     private string $uploadBaseDir;
     private CacheService $cacheService;
+    private EntitlementService $entitlementService;
 
     private array $allowedLogoMimeTypes = [
         'image/jpeg' => 'jpg',
@@ -26,14 +27,22 @@ class MediaService
         'image/gif'  => 'gif'
     ];
 
+    private array $allowedVideoMimeTypes = [
+        'video/mp4'       => 'mp4',
+        'video/webm'      => 'webm',
+        'video/quicktime' => 'mov',
+        'video/x-msvideo' => 'avi'
+    ];
+
     public const MAX_LOGO_SIZE = 2097152; // Exactly 2 MB (2,097,152 bytes)
     public const MAX_GENERAL_SIZE = 5242880; // 5 MB
 
-    public function __construct(?PDO $db = null, ?string $uploadBaseDir = null)
+    public function __construct(?PDO $db = null, ?string $uploadBaseDir = null, ?EntitlementService $entitlementService = null)
     {
         $this->db = $db ?? Database::getConnection();
         $this->uploadBaseDir = $uploadBaseDir ?? (__DIR__ . '/../../public/uploads');
         $this->cacheService = new CacheService();
+        $this->entitlementService = $entitlementService ?? new EntitlementService($this->db);
         $this->ensureUploadDirectorySecurity();
     }
 
@@ -178,6 +187,13 @@ HTACCESS;
             throw new InvalidArgumentException('Corrupted or invalid image file content.');
         }
 
+        // Check storage quota
+        $usage = $this->getStorageUsage($orgId);
+        $newTotalMb = ($usage['total_bytes'] + $file['size']) / (1024 * 1024);
+        if ($newTotalMb > $usage['total_quota_mb']) {
+            throw new InvalidArgumentException("Media storage limit exceeded. Your plan allows up to {$usage['total_quota_mb']} MB.");
+        }
+
         $extension = $this->allowedGeneralMimeTypes[$realMimeType];
         $safeOrgId = preg_replace('/[^a-zA-Z0-9_-]/', '', $orgId);
         $filename = $category . '_' . $safeOrgId . '_' . Ulid::generate() . '.' . $extension;
@@ -214,14 +230,122 @@ HTACCESS;
         ];
     }
 
-    public function getMediaByOrg(string $orgId, ?string $category = null, int $limit = 50): array
+    /**
+     * Controlled Video Upload — Pro Feature only.
+     */
+    public function uploadVideo(string $orgId, array $file, string $category = 'matches', ?string $altText = null, ?string $caption = null): array
+    {
+        if (!$this->entitlementService->hasCapability($orgId, EntitlementService::CAP_VIDEO_UPLOADS)) {
+            throw new InvalidArgumentException('Video uploads require a Benchero Pro subscription plan.');
+        }
+
+        if (empty($file) || !isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+            throw new InvalidArgumentException('Video upload failed or no file provided.');
+        }
+
+        if (!is_uploaded_file($file['tmp_name'])) {
+            throw new InvalidArgumentException('Invalid video upload source.');
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $realMimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!array_key_exists($realMimeType, $this->allowedVideoMimeTypes)) {
+            throw new InvalidArgumentException('Invalid video format. Allowed formats: MP4, WEBM, MOV, AVI.');
+        }
+
+        $usage = $this->getStorageUsage($orgId);
+        $videoQuotaBytes = $usage['video_quota_mb'] * 1024 * 1024;
+        
+        if ($videoQuotaBytes > 0 && ($usage['video_bytes'] + $file['size']) > $videoQuotaBytes) {
+            throw new InvalidArgumentException("Video storage quota exceeded. Your plan allows up to {$usage['video_quota_mb']} MB of video content.");
+        }
+
+        $extension = $this->allowedVideoMimeTypes[$realMimeType];
+        $safeOrgId = preg_replace('/[^a-zA-Z0-9_-]/', '', $orgId);
+        $filename = 'video_' . $category . '_' . $safeOrgId . '_' . Ulid::generate() . '.' . $extension;
+
+        $targetDir = $this->uploadBaseDir . '/videos/' . $safeOrgId;
+        if (!is_dir($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
+        $targetPath = $targetDir . '/' . $filename;
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            throw new InvalidArgumentException('Failed to save uploaded video file.');
+        }
+
+        $fileUrl = '/uploads/videos/' . $safeOrgId . '/' . $filename;
+        $mediaId = Ulid::generate();
+
+        $stmt = $this->db->prepare("
+            INSERT INTO media (id, organization_id, filename, file_path, file_url, mime_type, file_size, alt_text, caption, category, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        ");
+        $stmt->execute([
+            $mediaId, $orgId, $filename, $targetPath, $fileUrl, $realMimeType, $file['size'], $altText, $caption, 'video_' . $category
+        ]);
+
+        $this->cacheService->flushOrgCache($orgId);
+
+        return [
+            'id' => $mediaId,
+            'url' => $fileUrl,
+            'filename' => $filename,
+            'mime_type' => $realMimeType,
+            'file_size' => $file['size']
+        ];
+    }
+
+    public function getStorageUsage(string $orgId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT mime_type, SUM(file_size) as total_bytes
+            FROM media
+            WHERE organization_id = ?
+            GROUP BY mime_type
+        ");
+        $stmt->execute([$orgId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $imageBytes = 0;
+        $videoBytes = 0;
+
+        foreach ($rows as $row) {
+            $mime = strtolower($row['mime_type']);
+            $bytes = (int)$row['total_bytes'];
+            if (str_starts_with($mime, 'video/')) {
+                $videoBytes += $bytes;
+            } else {
+                $imageBytes += $bytes;
+            }
+        }
+
+        $totalBytes = $imageBytes + $videoBytes;
+        $totalQuotaMb = $this->entitlementService->getQuota($orgId, 'total_storage_mb', 500);
+        $videoQuotaMb = $this->entitlementService->getQuota($orgId, 'video_storage_mb', 0);
+
+        return [
+            'image_bytes' => $imageBytes,
+            'video_bytes' => $videoBytes,
+            'total_bytes' => $totalBytes,
+            'image_mb' => round($imageBytes / (1024 * 1024), 2),
+            'video_mb' => round($videoBytes / (1024 * 1024), 2),
+            'total_mb' => round($totalBytes / (1024 * 1024), 2),
+            'total_quota_mb' => $totalQuotaMb,
+            'video_quota_mb' => $videoQuotaMb,
+        ];
+    }
+
+    public function getMediaByOrg(string $orgId, ?string $category = null, int $limit = 100): array
     {
         if ($category) {
             $stmt = $this->db->prepare("
-                SELECT * FROM media WHERE organization_id = ? AND category = ?
+                SELECT * FROM media WHERE organization_id = ? AND (category = ? OR category LIKE ?)
                 ORDER BY created_at DESC LIMIT ?
             ");
-            $stmt->execute([$orgId, $category, $limit]);
+            $stmt->execute([$orgId, $category, $category . '%', $limit]);
         } else {
             $stmt = $this->db->prepare("
                 SELECT * FROM media WHERE organization_id = ?

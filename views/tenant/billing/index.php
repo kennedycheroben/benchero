@@ -121,7 +121,7 @@
 
 <!-- M-Pesa Modal -->
 <div class="modal fade" id="mpesaModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 p-3">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title fw-bold"><i class="bi bi-phone text-success me-2"></i>M-Pesa Subscription Payment</h5>
@@ -132,24 +132,37 @@
                     <?= csrf_field() ?>
                     
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Select Subscription Plan</label>
-                        <div class="d-grid gap-2">
+                        <label class="form-label fw-semibold">Select Commercial Subscription Plan</label>
+                        <div class="d-grid gap-3">
                             <?php foreach ($plans as $p): ?>
                                 <?php if (($p['price_kes'] ?? 0) > 0): ?>
-                                    <div class="form-check card p-3 border rounded-3 position-relative">
-                                        <input class="form-check-input mt-1" type="radio" name="plan_id" id="plan_<?= $p['id'] ?>" value="<?= $p['id'] ?>" <?= $p['billing_interval'] === 'yearly' ? 'checked' : '' ?> required>
+                                    <?php 
+                                        $isPro = (str_contains(strtolower($p['name']), 'pro') || $p['id'] == 4);
+                                    ?>
+                                    <div class="form-check card p-3 border rounded-3 position-relative <?= $isPro ? 'border-primary bg-primary bg-opacity-10' : '' ?>">
+                                        <input class="form-check-input mt-1" type="radio" name="plan_id" id="plan_<?= $p['id'] ?>" value="<?= $p['id'] ?>" <?= $isPro ? 'checked' : '' ?> required>
                                         <label class="form-check-label w-100 cursor-pointer" for="plan_<?= $p['id'] ?>">
-                                            <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <div>
-                                                    <strong class="d-block text-dark"><?= htmlspecialchars($p['name']) ?></strong>
+                                                    <strong class="d-block text-dark fs-5"><?= htmlspecialchars($p['name']) ?></strong>
                                                     <span class="text-muted small">KSh <?= number_format($p['price_kes']) ?> / <?= htmlspecialchars($p['billing_interval']) ?></span>
                                                 </div>
-                                                <?php if ($p['billing_interval'] === 'yearly'): ?>
+                                                <?php if ($isPro): ?>
+                                                    <span class="badge bg-primary px-3 py-1 fw-bold">
+                                                        <i class="bi bi-star-fill me-1"></i>BENCHERO PRO
+                                                    </span>
+                                                <?php elseif ($p['billing_interval'] === 'yearly'): ?>
                                                     <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
                                                         Save KSh 2,000
                                                     </span>
                                                 <?php endif; ?>
                                             </div>
+
+                                            <?php if ($isPro): ?>
+                                                <p class="small text-muted mb-0 mt-1">
+                                                    <strong>Pro Features:</strong> Custom Domain (<code>www.myclub.co.ke</code>), Controlled Video Uploads (2 GB), Club Media Center (5 GB), Digital Club Card & QR Codes, Data Exports (CSV/JSON), Advanced Stats & Standings, Custom OG Images & Social Sharing, Additional Admins, Priority Support, and Removal of Benchero Branding.
+                                                </p>
+                                            <?php endif; ?>
                                         </label>
                                     </div>
                                 <?php endif; ?>

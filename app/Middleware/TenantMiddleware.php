@@ -11,6 +11,16 @@ class TenantMiddleware implements MiddlewareInterface
     public function handle(Request $request, callable $next): Response
     {
         $path = $request->path();
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+
+        // Custom Domain Host Resolution
+        if (!empty($host) && !str_contains($host, 'benchero.co.ke') && !str_starts_with($host, '127.0.0.1') && !str_starts_with($host, 'localhost')) {
+            $domainService = new \Benchero\Services\DomainService();
+            $customOrg = $domainService->getOrgByDomain($host);
+            if ($customOrg) {
+                $request->setAttribute('custom_domain_org', $customOrg);
+            }
+        }
 
         // Check if the route is a tenant route
         if (strpos($path, '/o/') === 0) {

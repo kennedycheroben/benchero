@@ -10,7 +10,7 @@ use Benchero\Core\Database\Database;
 
 class E2EAutomationTester
 {
-    private string $baseUrl = 'http://localhost/benchero';
+    private string $baseUrl = 'http://127.0.0.1:8000';
     private string $cookieFile;
     private PDO $db;
     private array $results = [];

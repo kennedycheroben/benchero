@@ -5,97 +5,104 @@ namespace Benchero\Controllers\Tenant;
 use Benchero\Core\Controller;
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
+use Benchero\Services\EntitlementService;
 use Benchero\Services\MediaService;
+use Benchero\Services\OrganizationService;
+use InvalidArgumentException;
 
 class MediaController extends Controller
 {
+    private OrganizationService $orgService;
     private MediaService $mediaService;
+    private EntitlementService $entitlementService;
 
     public function __construct()
     {
         parent::__construct();
+        $this->orgService = new OrganizationService();
         $this->mediaService = new MediaService();
+        $this->entitlementService = new EntitlementService();
     }
 
-    private function requireOwnerOrAdmin(Request $request): void
+    public function index(Request $request, string $slug): Response
     {
-        $role = $request->getAttribute('tenant_role');
-        if (!in_array($role, ['owner', 'admin', 'manager'])) {
-            throw new \Exception('403 Forbidden - Access denied.');
-        }
-    }
-
-    public function index(Request $request): Response
-    {
-        try {
-            $this->requireOwnerOrAdmin($request);
-        } catch (\Exception $e) {
-            return new Response($e->getMessage(), 403);
+        $org = $this->orgService->getOrganizationBySlug($slug);
+        if (!$org) {
+            return $this->error('Organization not found', 404);
         }
 
-        $tenant = $request->getAttribute('tenant');
-        $category = $request->get('category');
-        $mediaList = $this->mediaService->getMediaByOrg($tenant['id'], $category);
+        $category = $request->get('category', '');
+        $mediaList = $this->mediaService->getMediaByOrg($org['id'], $category ?: null, 100);
+        $storageUsage = $this->mediaService->getStorageUsage($org['id']);
+        $hasVideoPro = $this->entitlementService->hasCapability($org['id'], EntitlementService::CAP_VIDEO_UPLOADS);
 
         return $this->render('tenant/media/index', [
-            'tenant' => $tenant,
+            'org' => $org,
             'mediaList' => $mediaList,
-            'currentCategory' => $category
+            'storageUsage' => $storageUsage,
+            'currentCategory' => $category,
+            'hasVideoPro' => $hasVideoPro,
+            'error' => $request->getFlash('error'),
+            'success' => $request->getFlash('success')
         ]);
     }
 
-    public function store(Request $request): Response
+    public function store(Request $request, string $slug): Response
     {
-        try {
-            $this->requireOwnerOrAdmin($request);
-        } catch (\Exception $e) {
-            return new Response($e->getMessage(), 403);
+        $org = $this->orgService->getOrganizationBySlug($slug);
+        if (!$org) {
+            return $this->error('Organization not found', 404);
         }
 
         if (!$request->validateCsrf()) {
-            return new Response('403 Forbidden - CSRF failed', 403);
+            return $this->error('403 Forbidden - CSRF validation failed', 403);
         }
 
-        $tenant = $request->getAttribute('tenant');
-        $category = trim((string)$request->input('category', 'general'));
-        $altText = trim((string)$request->input('alt_text'));
-        $caption = trim((string)$request->input('caption'));
+        $type = $request->post('type', 'image');
+        $category = trim($request->post('category', 'general'));
+        $altText = trim($request->post('alt_text', ''));
+        $caption = trim($request->post('caption', ''));
 
-        if (empty($_FILES['file']['name'])) {
-            $_SESSION['error'] = 'No image file selected.';
-            return Response::redirect("/o/{$tenant['slug']}/media");
+        if (empty($_FILES['file']['name']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            $request->setFlash('error', 'Please select a valid file to upload.');
+            return $this->redirect("/o/{$slug}/media");
         }
 
         try {
-            $this->mediaService->uploadImage($tenant['id'], $_FILES['file'], $category, $altText, $caption);
-            $_SESSION['success'] = 'Media file uploaded successfully!';
+            if ($type === 'video') {
+                $this->mediaService->uploadVideo($org['id'], $_FILES['file'], $category, $altText, $caption);
+                $request->setFlash('success', 'Video successfully uploaded to Media Library!');
+            } else {
+                $this->mediaService->uploadImage($org['id'], $_FILES['file'], $category, $altText, $caption);
+                $request->setFlash('success', 'Image successfully uploaded to Media Library!');
+            }
+        } catch (InvalidArgumentException $e) {
+            $request->setFlash('error', 'Upload failed: ' . $e->getMessage());
         } catch (\Exception $e) {
-            $_SESSION['error'] = 'Upload failed: ' . $e->getMessage();
+            $request->setFlash('error', 'Server error uploading file: ' . $e->getMessage());
         }
 
-        return Response::redirect("/o/{$tenant['slug']}/media");
+        return $this->redirect("/o/{$slug}/media");
     }
 
-    public function delete(Request $request, array $params): Response
+    public function delete(Request $request, string $slug, string $id): Response
     {
-        try {
-            $this->requireOwnerOrAdmin($request);
-        } catch (\Exception $e) {
-            return new Response($e->getMessage(), 403);
+        $org = $this->orgService->getOrganizationBySlug($slug);
+        if (!$org) {
+            return $this->error('Organization not found', 404);
         }
 
         if (!$request->validateCsrf()) {
-            return new Response('403 Forbidden - CSRF failed', 403);
+            return $this->error('403 Forbidden - CSRF validation failed', 403);
         }
 
-        $tenant = $request->getAttribute('tenant');
-        $id = $params['id'] ?? '';
-
-        if ($id) {
-            $this->mediaService->deleteMedia($tenant['id'], $id);
-            $_SESSION['success'] = 'Media file deleted.';
+        $deleted = $this->mediaService->deleteMedia($org['id'], $id);
+        if ($deleted) {
+            $request->setFlash('success', 'Media file successfully removed.');
+        } else {
+            $request->setFlash('error', 'Failed to delete media asset or asset not found.');
         }
 
-        return Response::redirect("/o/{$tenant['slug']}/media");
+        return $this->redirect("/o/{$slug}/media");
     }
 }

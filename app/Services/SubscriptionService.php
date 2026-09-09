@@ -47,8 +47,8 @@ class SubscriptionService
             $stmt = $this->db->prepare("SELECT * FROM plans WHERE id = ? AND deleted_at IS NULL");
             $stmt->execute([(int)$idOrSlug]);
         } else {
-            $stmt = $this->db->prepare("SELECT * FROM plans WHERE slug = ? AND deleted_at IS NULL");
-            $stmt->execute([(string)$idOrSlug]);
+            $stmt = $this->db->prepare("SELECT * FROM plans WHERE (slug = ? OR billing_interval = ?) AND deleted_at IS NULL ORDER BY id ASC LIMIT 1");
+            $stmt->execute([(string)$idOrSlug, (string)$idOrSlug]);
         }
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }

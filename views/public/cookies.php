@@ -1,68 +1,54 @@
 <?php $this->layout('layout', ['title' => 'Cookie Policy — Benchero']) ?>
 
-<div class="bg-light py-5 border-bottom">
-    <div class="container">
-        <h1 class="display-5 fw-bold mb-2" style="max-width: 800px; color: black;">Cookie Policy</h1>
-        <p class="lead text-muted mb-0"style="max-width: 800px; color: black;">How Benchero uses cookies to keep your account secure and provide a reliable experience.</p>
+<section class="py-5 bg-white border-bottom">
+    <div class="container py-lg-4">
+        <span class="badge bg-secondary-subtle text-secondary fw-semibold px-3 py-2 rounded-pill mb-3">Cookies & Security</span>
+        <h1 class="display-5 fw-extrabold mb-2">Cookie Policy</h1>
+        <p class="text-muted">Last Updated: September 9, 2026</p>
     </div>
-</div>
+</section>
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
-                
-                <h3 class="fw-bold mb-3"><i class="bi bi-cookie text-warning me-2"></i>1. What Are Cookies?</h3>
-                <p class="text-black">Cookies are small text files placed on your browser or device when you visit websites. They help websites remember your session, login status, and security preferences so you don't have to re-enter credentials on every page.</p>
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-secondary leading-relaxed max-w-4xl mx-auto">
+            
+            <h4 class="fw-bold text-dark mb-3">1. What Are Cookies?</h4>
+            <p>Cookies are small text files stored on your browser or device when you visit web pages. Benchero uses cookies to maintain secure user sessions, prevent Cross-Site Request Forgery (CSRF) attacks, and preserve user preferences.</p>
 
-                <h3 class="fw-bold mt-4 mb-3"><i class="bi bi-shield-check text-success me-2"></i>2. Essential Cookies We Use</h3>
-                <p class="text-black">Benchero uses essential, first-party cookies necessary for core authentication and platform security. Without these cookies, the application cannot function properly.</p>
-
-                <div class="table-responsive my-3">
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Cookie Name</th>
-                                <th>Category</th>
-                                <th>Purpose</th>
-                                <th>Expiration</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><code>benchero_session</code></td>
-                                <td><span class="badge bg-success">Essential</span></td>
-                                <td>Maintains secure user login session and tenant context.</td>
-                                <td>8 Hours (Session)</td>
-                            </tr>
-                            <tr>
-                                <td><code>_csrf</code></td>
-                                <td><span class="badge bg-success">Essential Security</span></td>
-                                <td>Protects forms against Cross-Site Request Forgery (CSRF) attacks.</td>
-                                <td>Session</td>
-                            </tr>
-                            <tr>
-                                <td><code>benchero_cookie_consent</code></td>
-                                <td><span class="badge bg-info text-dark">Preferences</span></td>
-                                <td>Remembers your cookie notification acknowledgment choice.</td>
-                                <td>1 Year</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3 class="fw-bold mt-4 mb-3"><i class="bi bi-eye-slash text-danger me-2"></i>3. No Unnecessary Tracking Cookies</h3>
-                <p class="text-muted">Benchero does <strong>NOT</strong> use invasive third-party tracking cookies, advertising networks, or user profiling scripts. We prioritize user privacy and data security.</p>
-
-                <h3 class="fw-bold mt-4 mb-3"><i class="bi bi-sliders text-primary me-2"></i>4. Managing Your Cookie Preferences</h3>
-                <p class="text-muted">You can control or disable cookies through your browser settings. However, disabling essential cookies (such as <code>benchero_session</code>) will prevent you from logging into your Benchero dashboard or managing your sports club.</p>
-
-                <div class="mt-4 p-4 rounded-3 bg-light border">
-                    <h5 class="fw-bold mb-2">Have Questions?</h5>
-                    <p class="text-muted mb-0">If you have any questions regarding our cookie policy or privacy practices, please contact our support team at <a href="mailto:contact@benchero.co.ke" class="fw-bold text-decoration-none">contact@benchero.co.ke</a>.</p>
-                </div>
-
+            <h4 class="fw-bold text-dark mt-4 mb-3">2. Essential & Strictly Necessary Cookies</h4>
+            <p>These cookies are required for the basic functionality and security of the Benchero software platform:</p>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm small align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Cookie Name</th>
+                            <th>Purpose</th>
+                            <th>Duration</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>PHPSESSID</code></td>
+                            <td>Maintains authenticated user session and tenant context</td>
+                            <td>Session (480 mins)</td>
+                            <td>Essential</td>
+                        </tr>
+                        <tr>
+                            <td><code>_csrf</code> / <code>csrf_token</code></td>
+                            <td>Protects forms against Cross-Site Request Forgery (CSRF) attacks</td>
+                            <td>Session</td>
+                            <td>Security</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
+            <h4 class="fw-bold text-dark mt-4 mb-3">3. Cookie Management & Consent</h4>
+            <p>Because Benchero only uses essential session and security cookies necessary to deliver account services and tenant protection, third-party tracking or advertising cookies are not deployed on public club websites.</p>
+
+            <h4 class="fw-bold text-dark mt-4 mb-3">4. Contact Information</h4>
+            <p>If you have questions about our Cookie Policy, please contact <a href="mailto:contact@benchero.co.ke" class="text-primary">contact@benchero.co.ke</a>.</p>
         </div>
     </div>
-</div>
+</section>

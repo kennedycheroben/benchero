@@ -478,6 +478,35 @@ class PublicClubController extends Controller
         return $this->redirect("/club/{$slug}/contact?sent=1");
     }
 
+    public function card(Request $request, array $params): Response
+    {
+        $slug = $params['slug'] ?? '';
+        $ctx = $this->getPublicContext($slug, 'card');
+        if ($ctx instanceof Response) return $ctx;
+
+        $org = $ctx['org'];
+        $appUrl = env('APP_URL', 'https://benchero.co.ke');
+        $cardUrl = rtrim($appUrl, '/') . '/club/' . $org['slug'] . '/card';
+
+        $qrCodeSvg = \Benchero\Services\QrCodeService::generateSvg($cardUrl, 200);
+
+        $seoService = new \Benchero\Services\SeoService();
+        $seo = $seoService->generateMeta([
+            'club_name' => $org['name'],
+            'title' => $org['name'] . ' — Digital Club Card',
+            'description' => 'Official Benchero Digital Identity & Card for ' . $org['name'],
+            'path' => "/club/{$slug}/card",
+            'logo_url' => $org['logo_url'],
+            'pro_og_image' => $org['og_image_url'] ?? null
+        ]);
+
+        return $this->render('public/club_website/card', array_merge($ctx, [
+            'cardUrl' => $cardUrl,
+            'qr_code_svg' => $qrCodeSvg,
+            'seo' => $seo
+        ]));
+    }
+
     private function getSportTerminology(string $sportSlug): array
     {
         switch ($sportSlug) {

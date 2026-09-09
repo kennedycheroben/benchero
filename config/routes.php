@@ -56,6 +56,7 @@ $router->addRoute('GET', '/club/{slug}/history', ['Benchero\Controllers\Public\P
 $router->addRoute('GET', '/club/{slug}/sponsors', ['Benchero\Controllers\Public\PublicClubController', 'sponsors']);
 $router->addRoute('GET', '/club/{slug}/contact', ['Benchero\Controllers\Public\PublicClubController', 'contact']);
 $router->addRoute('POST', '/club/{slug}/contact', ['Benchero\Controllers\Public\PublicClubController', 'contactSubmit']);
+$router->addRoute('GET', '/club/{slug}/card', ['Benchero\Controllers\Public\PublicClubController', 'card']);
 
 $router->addRoute('GET', '/{org_slug}/{sport_slug}/fixtures', ['Benchero\Controllers\Public\FixtureController', 'index']);
 
@@ -153,7 +154,20 @@ $router->addRoute('GET', '/o/{slug}/billing', ['Benchero\Controllers\Tenant\Bill
 $router->addRoute('POST', '/o/{slug}/billing/stkpush', ['Benchero\Controllers\Tenant\BillingController', 'stkPush']);
 $router->addRoute('POST', '/billing/mpesa/callback', ['Benchero\Controllers\Public\MpesaCallbackController', 'handle']);
 
+// Tenant Custom Domains Management
+$router->addRoute('GET', '/o/{slug}/domain', ['Benchero\Controllers\Tenant\DomainController', 'index']);
+$router->addRoute('POST', '/o/{slug}/domain', ['Benchero\Controllers\Tenant\DomainController', 'save']);
+$router->addRoute('POST', '/o/{slug}/domain/verify', ['Benchero\Controllers\Tenant\DomainController', 'verify']);
+$router->addRoute('POST', '/o/{slug}/domain/delete', ['Benchero\Controllers\Tenant\DomainController', 'delete']);
+
+// Tenant Digital Club Card & QR Codes
+$router->addRoute('GET', '/o/{slug}/club-card', ['Benchero\Controllers\Tenant\ClubCardController', 'show']);
+
+// Tenant Data Export (Pro Feature)
+$router->addRoute('GET', '/o/{slug}/export/{type}', ['Benchero\Controllers\Tenant\ExportController', 'export']);
+
 // Platform Admin Routes
 $router->addRoute('GET', '/admin', ['Benchero\Controllers\Admin\AdminController', 'index']);
+$router->addRoute('POST', '/admin/plans/update', ['Benchero\Controllers\Admin\AdminController', 'updatePlan']);
 
 return $router;
