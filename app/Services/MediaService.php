@@ -340,18 +340,19 @@ HTACCESS;
 
     public function getMediaByOrg(string $orgId, ?string $category = null, int $limit = 100): array
     {
+        $limitInt = max(1, (int)$limit);
         if ($category) {
             $stmt = $this->db->prepare("
                 SELECT * FROM media WHERE organization_id = ? AND (category = ? OR category LIKE ?)
-                ORDER BY created_at DESC LIMIT ?
+                ORDER BY created_at DESC LIMIT {$limitInt}
             ");
-            $stmt->execute([$orgId, $category, $category . '%', $limit]);
+            $stmt->execute([$orgId, $category, $category . '%']);
         } else {
             $stmt = $this->db->prepare("
                 SELECT * FROM media WHERE organization_id = ?
-                ORDER BY created_at DESC LIMIT ?
+                ORDER BY created_at DESC LIMIT {$limitInt}
             ");
-            $stmt->execute([$orgId, $limit]);
+            $stmt->execute([$orgId]);
         }
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
