@@ -1,0 +1,445 @@
+/**
+ * ==========================================================================
+ * BENCHERO — UNIFIED MOTION & PAGE TRANSITIONS SYSTEM
+ * ==========================================================================
+ * Modern, subtle, fast, accessible motion system for Benchero.
+ * Designed to feel like a high-performance sports SaaS platform.
+ * Supports Cross-Document View Transitions API with seamless fallbacks.
+ * ==========================================================================
+ */
+
+/* --------------------------------------------------------------------------
+   1. Centralized Motion Tokens (CSS Variables)
+   -------------------------------------------------------------------------- */
+:root {
+    /* Timing Tokens */
+    --motion-instant: 80ms;
+    --motion-fast: 150ms;
+    --motion-normal: 220ms;
+    --motion-medium: 320ms;
+    --motion-slow: 450ms;
+
+    /* Professional Easing Curves */
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Elevation Shadows */
+    --benchero-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+    --benchero-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    --benchero-shadow-hover: 0 12px 24px -4px rgba(15, 23, 42, 0.08), 0 6px 12px -3px rgba(15, 23, 42, 0.04);
+}
+
+/* --------------------------------------------------------------------------
+   2. Modern Native View Transitions API (Cross-Document MPAs)
+   -------------------------------------------------------------------------- */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root) {
+    animation: var(--motion-fast) var(--ease-in) both bencheroViewFadeOut;
+}
+
+::view-transition-new(root) {
+    animation: var(--motion-normal) var(--ease-out) both bencheroViewFadeIn;
+}
+
+@keyframes bencheroViewFadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0.94;
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes bencheroViewFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   3. Global Page Enter & Exit Transitions (Universal Fallback)
+   -------------------------------------------------------------------------- */
+/* Page content container default state is always 100% visible to guarantee zero-blank if JS is slow/disabled */
+.benchero-page-content,
+main.flex-grow-1,
+.tenant-main-content {
+    opacity: 1;
+    transform: translateY(0);
+    will-change: opacity, transform;
+}
+
+/* Subtle Page Entrance Animation */
+@keyframes bencheroPageEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+body.benchero-page-entered .benchero-page-content,
+body.benchero-page-entered main.flex-grow-1,
+body.benchero-page-entered .tenant-main-content {
+    animation: bencheroPageEnter var(--motion-normal) var(--ease-out) forwards;
+}
+
+/* Subtle Page Exit Animation (Triggered on internal navigation link click) */
+body.benchero-page-exiting .benchero-page-content,
+body.benchero-page-exiting main.flex-grow-1,
+body.benchero-page-exiting .tenant-main-content {
+    opacity: 0.94 !important;
+    transform: translateY(-3px) !important;
+    transition: opacity var(--motion-fast) var(--ease-in), transform var(--motion-fast) var(--ease-in) !important;
+    pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   4. Top Progress Indicator (Fast, Non-Intrusive)
+   -------------------------------------------------------------------------- */
+#benchero-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 2.5px;
+    z-index: 999999;
+    background: linear-gradient(90deg, #2563eb, #38bdf8, #0ea5e9);
+    box-shadow: 0 1px 6px rgba(37, 99, 235, 0.45);
+    pointer-events: none;
+    transition: width var(--motion-medium) var(--ease-out), opacity var(--motion-fast) var(--ease-standard);
+    opacity: 0;
+}
+
+#benchero-progress-bar.active {
+    opacity: 1;
+}
+
+#benchero-progress-bar.complete {
+    width: 100% !important;
+    opacity: 0;
+    transition: width var(--motion-fast) var(--ease-out), opacity var(--motion-fast) var(--ease-in) var(--motion-fast);
+}
+
+/* --------------------------------------------------------------------------
+   5. Navbar & Navigation Transitions
+   -------------------------------------------------------------------------- */
+.navbar-benchero,
+.club-navbar,
+.tenant-sidebar {
+    transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard);
+}
+
+.navbar-benchero .nav-link,
+.club-navbar .nav-link,
+.tenant-nav-link {
+    position: relative;
+    transition: color var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard);
+}
+
+/* Active Nav Indicator (subtle animated underline for public nav) */
+.navbar-benchero .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background-color: var(--benchero-accent, #2563eb);
+    transition: width var(--motion-fast) var(--ease-standard), left var(--motion-fast) var(--ease-standard);
+}
+
+.navbar-benchero .nav-link:hover::after,
+.navbar-benchero .nav-link.active::after {
+    width: 80%;
+    left: 10%;
+}
+
+/* Smooth Dropdown Transitions */
+.dropdown-menu {
+    border-radius: 10px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: var(--benchero-shadow-hover);
+    animation: bencheroDropdownFadeIn var(--motion-fast) var(--ease-out);
+    transform-origin: top center;
+}
+
+@keyframes bencheroDropdownFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(5px) scale(0.99);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Mobile Offcanvas & Collapse smoothing */
+.navbar-collapse.collapsing {
+    transition: height var(--motion-normal) var(--ease-out);
+}
+
+.offcanvas {
+    transition: transform var(--motion-medium) var(--ease-out);
+}
+
+/* Prevent horizontal scroll during mobile transitions */
+html, body {
+    overflow-x: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   6. Button Motion & Feedback
+   -------------------------------------------------------------------------- */
+.btn,
+.btn-benchero-primary,
+.btn-benchero-outline,
+.btn-club-primary {
+    transition: background-color var(--motion-fast) var(--ease-standard),
+                border-color var(--motion-fast) var(--ease-standard),
+                color var(--motion-fast) var(--ease-standard),
+                box-shadow var(--motion-fast) var(--ease-standard),
+                transform var(--motion-fast) var(--ease-standard) !important;
+}
+
+.btn:hover,
+.btn-benchero-primary:hover,
+.btn-benchero-outline:hover,
+.btn-club-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--benchero-shadow-sm);
+}
+
+.btn:active,
+.btn-benchero-primary:active,
+.btn-benchero-outline:active,
+.btn-club-primary:active {
+    transform: translateY(0);
+}
+
+/* Form Submit Button Loading State (Prevents Double Submit) */
+.btn.is-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.85;
+    cursor: wait;
+}
+
+.btn.is-loading::after {
+    content: '';
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-left: 0.5rem;
+    vertical-align: -0.15em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: bencheroSpin 600ms linear infinite;
+}
+
+@keyframes bencheroSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   7. Card Elevation & Interaction
+   -------------------------------------------------------------------------- */
+.card,
+.pricing-card,
+.feature-card,
+.club-card,
+.stat-card,
+.benchero-interactive-card {
+    transition: transform var(--motion-normal) var(--ease-out),
+                box-shadow var(--motion-normal) var(--ease-out),
+                border-color var(--motion-fast) var(--ease-standard);
+}
+
+.card:hover,
+.pricing-card:hover,
+.feature-card:hover,
+.club-card:hover,
+.stat-card:hover,
+.benchero-interactive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--benchero-shadow-hover);
+}
+
+/* Card Image Subtle Micro-Zoom */
+.card-img-zoom-wrapper {
+    overflow: hidden;
+}
+
+.card-img-zoom-wrapper img,
+.club-card img.object-fit-cover {
+    transition: transform var(--motion-medium) var(--ease-out);
+}
+
+.card:hover .card-img-zoom-wrapper img,
+.club-card:hover img.object-fit-cover {
+    transform: scale(1.02);
+}
+
+/* --------------------------------------------------------------------------
+   8. Image Graceful Loading
+   -------------------------------------------------------------------------- */
+.benchero-img-lazy {
+    opacity: 0;
+    transition: opacity var(--motion-normal) var(--ease-out);
+}
+
+.benchero-img-lazy.is-loaded {
+    opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   9. Hero Entrance Sequence (Homepage & Club Sites)
+   -------------------------------------------------------------------------- */
+@keyframes bencheroFadeUp {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.benchero-hero-item {
+    animation: bencheroFadeUp var(--motion-medium) var(--ease-out) both;
+}
+
+.stagger-1 {
+    animation-delay: 0ms;
+}
+
+.stagger-2 {
+    animation-delay: 60ms;
+}
+
+.stagger-3 {
+    animation-delay: 120ms;
+}
+
+.stagger-4 {
+    animation-delay: 180ms;
+}
+
+/* --------------------------------------------------------------------------
+   10. Section Reveal (IntersectionObserver)
+   -------------------------------------------------------------------------- */
+.benchero-reveal {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity var(--motion-medium) var(--ease-out),
+                transform var(--motion-medium) var(--ease-out);
+    will-change: opacity, transform;
+}
+
+.benchero-reveal.benchero-revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   11. Admin Dashboard Transitions (Lighter & Faster)
+   -------------------------------------------------------------------------- */
+.tenant-sidebar .tenant-nav-link {
+    transition: background-color var(--motion-fast) var(--ease-standard),
+                color var(--motion-fast) var(--ease-standard),
+                transform var(--motion-instant) var(--ease-standard);
+}
+
+.tenant-sidebar .tenant-nav-link:hover {
+    transform: translateX(2px);
+}
+
+.tenant-sidebar .tenant-nav-link.active {
+    transform: translateX(2px);
+    box-shadow: inset 3px 0 0 var(--benchero-accent, #2563eb);
+}
+
+/* Table Row Hover */
+.table tbody tr {
+    transition: background-color var(--motion-fast) var(--ease-standard);
+}
+
+/* --------------------------------------------------------------------------
+   12. Form Feedback & Alerts
+   -------------------------------------------------------------------------- */
+@keyframes bencheroSlideDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert {
+    animation: bencheroSlideDown var(--motion-normal) var(--ease-out) both;
+}
+
+/* --------------------------------------------------------------------------
+   13. Accessibility: Prefers-Reduced-Motion
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    body.benchero-page-entered .benchero-page-content,
+    body.benchero-page-entered main.flex-grow-1,
+    body.benchero-page-entered .tenant-main-content,
+    body.benchero-page-exiting .benchero-page-content,
+    body.benchero-page-exiting main.flex-grow-1,
+    body.benchero-page-exiting .tenant-main-content {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    .benchero-reveal {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    #benchero-progress-bar {
+        display: none !important;
+    }
+
+    .card:hover,
+    .btn:hover,
+    .tenant-sidebar .tenant-nav-link:hover {
+        transform: none !important;
+    }
+}
+

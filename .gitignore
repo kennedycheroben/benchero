@@ -1,0 +1,29 @@
+# Environments
+.env
+.env.testing
+.env.example
+
+# Vendor & dependencies
+/vendor/
+composer.phar
+
+# Logs and Temp
+/logs/
+*.log
+
+# Sessions
+/storage/sessions/
+/storage/framework/sessions/
+/storage/logs/
+
+# Uploads
+/public/uploads/
+/storage/app/public/
+
+# Editor/OS files
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+cookies.txt
+server.pid

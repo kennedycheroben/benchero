@@ -1,0 +1,11 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/xqtrqexj/benchero.co.ke
+    - mkdir -p $DEPLOYPATH
+    - /bin/cp -R * $DEPLOYPATH
+    - /bin/cp .htaccess $DEPLOYPATH/
+    - test -f .env && /bin/cp .env $DEPLOYPATH/ || true
+    - cd $DEPLOYPATH && export COMPOSER_MEMORY_LIMIT=-1 && composer install --no-dev --optimize-autoloader --no-interaction > deploy_composer.log 2>&1
+    - cd $DEPLOYPATH && php bin/migrate.php > deploy_migrate.log 2>&1
+
