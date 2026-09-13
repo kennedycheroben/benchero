@@ -76,8 +76,6 @@
 main.flex-grow-1,
 .tenant-main-content {
     opacity: 1;
-    transform: translateY(0);
-    will-change: opacity, transform;
 }
 
 /* Subtle Page Entrance Animation */
@@ -88,14 +86,14 @@ main.flex-grow-1,
     }
     100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: none;
     }
 }
 
 body.benchero-page-entered .benchero-page-content,
 body.benchero-page-entered main.flex-grow-1,
 body.benchero-page-entered .tenant-main-content {
-    animation: bencheroPageEnter var(--motion-normal) var(--ease-out) forwards;
+    animation: bencheroPageEnter var(--motion-normal) var(--ease-out);
 }
 
 /* Subtle Page Exit Animation (Triggered on internal navigation link click) */

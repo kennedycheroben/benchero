@@ -93,6 +93,23 @@ class ClubProfileController extends Controller
             }
         }
 
+        $coverUrl = trim((string)$request->input('cover_url'));
+
+        // Handle direct secure file upload for hero banner cover
+        $coverFile = !empty($_FILES['cover_file']['name']) ? $_FILES['cover_file'] : (!empty($_FILES['cover_url']['name']) ? $_FILES['cover_url'] : null);
+        if ($coverFile && isset($coverFile['error']) && $coverFile['error'] !== UPLOAD_ERR_NO_FILE) {
+            try {
+                $uploadResult = $this->mediaService->uploadCover($tenant['id'], $coverFile, $org['cover_url'] ?? null);
+                $coverUrl = $uploadResult['url'];
+            } catch (InvalidArgumentException $e) {
+                $_SESSION['error'] = 'Cover Image Upload Failed: ' . $e->getMessage();
+                return Response::redirect("/o/{$tenant['slug']}/profile");
+            } catch (\Exception $e) {
+                $_SESSION['error'] = 'Cover Image Upload Error: Could not save uploaded image.';
+                return Response::redirect("/o/{$tenant['slug']}/profile");
+            }
+        }
+
         $socialLinks = [
             'facebook' => trim((string)$request->input('facebook')),
             'instagram' => trim((string)$request->input('instagram')),
@@ -107,7 +124,7 @@ class ClubProfileController extends Controller
             'country' => trim((string)$request->input('country')),
             'timezone' => trim((string)$request->input('timezone')),
             'logo_url' => $logoUrl,
-            'cover_url' => trim((string)$request->input('cover_url')),
+            'cover_url' => $coverUrl,
             'description' => trim((string)$request->input('description')),
             'founded_year' => trim((string)$request->input('founded_year')),
             'club_colors' => trim((string)$request->input('club_colors')),

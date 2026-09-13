@@ -57,6 +57,7 @@ assertTest(str_contains($js, 'data-no-transition'), "JS supports explicit opt-ou
 assertTest(str_contains($js, '/logout'), "JS excludes sensitive logout requests from animation delays");
 assertTest(str_contains($js, 'pageshow') && str_contains($js, 'persisted'), "JS handles BFCache restoration via pageshow event");
 assertTest(str_contains($js, 'IntersectionObserver') && str_contains($js, 'obs.unobserve'), "JS implements efficient IntersectionObserver with unobserve");
+assertTest(str_contains($js, 'setupModalHandling') && str_contains($js, 'show.bs.modal'), "JS handles Bootstrap modal relocation to body");
 assertTest(str_contains($js, 'safetyTimeout'), "JS includes navigation safety fallback timeout");
 
 // 4. Template Rendering Verification via Plates Engine

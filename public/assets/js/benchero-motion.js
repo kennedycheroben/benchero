@@ -81,6 +81,10 @@
         document.body.classList.remove('benchero-page-exiting');
         document.body.classList.add('benchero-page-entered');
         BencheroProgress.finish();
+
+        setTimeout(function () {
+            document.body.classList.remove('benchero-page-entered');
+        }, 350);
     }
 
     // 4. Link Navigation Interceptor (Page Exit)
@@ -269,6 +273,16 @@
         });
     }
 
+    // 8.5 Bootstrap Modal Stacking Fix (Prevents Modal Trap under Backdrop)
+    function setupModalHandling() {
+        document.addEventListener('show.bs.modal', function (event) {
+            const modal = event.target;
+            if (modal && modal.parentElement && modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
+        }, false);
+    }
+
     // 9. Initializer
     function init() {
         try {
@@ -279,6 +293,7 @@
             setupSectionReveals();
             setupFormFeedback();
             setupImageLoading();
+            setupModalHandling();
         } catch (err) {
             // Fail-safe: ensure page is visible and functional even if an unexpected error occurs
             console.warn('[BencheroMotion] Motion initialization completed with warning:', err);

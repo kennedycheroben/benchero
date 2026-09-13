@@ -158,6 +158,88 @@ HTACCESS;
     }
 
     /**
+     * Dedicated secure club cover / hero banner image upload handler.
+     * Enforces: max 5MB (5242880 bytes), finfo + getimagesize validation, random filename,
+     * delayed deletion of old cover after successful new save.
+     */
+    public function uploadCover(string $orgId, array $file, ?string $oldCoverUrl = null): array
+    {
+        if (empty($file) || !isset($file['error']) || $file['error'] !== UPLOAD_ERR_OK) {
+            throw new InvalidArgumentException('Upload failed or no file provided.');
+        }
+
+        if ($file['size'] > self::MAX_GENERAL_SIZE) {
+            throw new InvalidArgumentException('Cover file size exceeds the maximum allowed limit of 5 MB (5,242,880 bytes).');
+        }
+
+        if (!is_uploaded_file($file['tmp_name'])) {
+            throw new InvalidArgumentException('Invalid file upload source.');
+        }
+
+        // 1. Validate actual MIME type server-side with finfo
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $realMimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+
+        if (!array_key_exists($realMimeType, $this->allowedGeneralMimeTypes)) {
+            throw new InvalidArgumentException('Invalid image format. Allowed formats: PNG, JPG, JPEG, WEBP, GIF.');
+        }
+
+        // 2. Validate actual image dimensions with getimagesize
+        $imageSize = @getimagesize($file['tmp_name']);
+        if ($imageSize === false || $imageSize[0] <= 0 || $imageSize[1] <= 0) {
+            throw new InvalidArgumentException('Corrupted or invalid image file content.');
+        }
+
+        $extension = $this->allowedGeneralMimeTypes[$realMimeType];
+        $safeOrgId = preg_replace('/[^a-zA-Z0-9_-]/', '', $orgId);
+        $randomFilename = 'cover_' . $safeOrgId . '_' . Ulid::generate() . '.' . $extension;
+
+        $targetDir = $this->uploadBaseDir . '/covers/' . $safeOrgId;
+        if (!is_dir($targetDir)) {
+            @mkdir($targetDir, 0755, true);
+        }
+
+        $targetPath = $targetDir . '/' . $randomFilename;
+
+        // Move newly uploaded file to target location
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            throw new InvalidArgumentException('Failed to store uploaded cover image on server.');
+        }
+
+        $fileUrl = '/uploads/covers/' . $safeOrgId . '/' . $randomFilename;
+        $mediaId = Ulid::generate();
+
+        // Database record
+        $stmt = $this->db->prepare("
+            INSERT INTO media (id, organization_id, filename, file_path, file_url, mime_type, file_size, alt_text, category, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'Club Hero Banner Cover', 'cover', NOW(), NOW())
+        ");
+        $stmt->execute([
+            $mediaId, $orgId, $randomFilename, $targetPath, $fileUrl, $realMimeType, $file['size']
+        ]);
+
+        // 3. Delete old cover ONLY after new upload is completely validated and saved successfully
+        if (!empty($oldCoverUrl) && str_starts_with($oldCoverUrl, '/uploads/')) {
+            $oldPath = __DIR__ . '/../../public' . $oldCoverUrl;
+            if (file_exists($oldPath) && is_file($oldPath) && $oldPath !== $targetPath) {
+                @unlink($oldPath);
+            }
+        }
+
+        // 4. Invalidate public club website cache
+        $this->cacheService->flushOrgCache($orgId);
+
+        return [
+            'id' => $mediaId,
+            'url' => $fileUrl,
+            'filename' => $randomFilename,
+            'mime_type' => $realMimeType,
+            'file_size' => $file['size']
+        ];
+    }
+
+    /**
      * General image upload (for team photos, gallery, staff, etc.).
      */
     public function uploadImage(string $orgId, array $file, string $category = 'general', ?string $altText = null, ?string $caption = null): array

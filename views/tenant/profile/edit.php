@@ -90,9 +90,16 @@
                                 <?php endif; ?>
                             </div>
                             <div class="col-md-6">
-                                <label for="cover_url" class="form-label fw-semibold">Hero Banner Cover URL</label>
-                                <input type="url" class="form-control" id="cover_url" name="cover_url" placeholder="https://example.com/cover.jpg" value="<?= htmlspecialchars($org['cover_url'] ?? '') ?>">
-                                <div class="form-text">Wide ratio (e.g. 1920x600) cover photo URL for top header.</div>
+                                <label for="cover_file" class="form-label fw-semibold">Upload Hero Banner Cover File</label>
+                                <input type="file" class="form-control" id="cover_file" name="cover_file" accept="image/png,image/jpeg,image/webp">
+                                <input type="hidden" name="cover_url" value="<?= htmlspecialchars($org['cover_url'] ?? '') ?>">
+                                <div class="form-text">Wide ratio (e.g. 1920x600) cover photo for top header. Max file size: 5 MB.</div>
+                                <?php if (!empty($org['cover_url'])): ?>
+                                    <div class="mt-2 d-flex align-items-center">
+                                        <span class="me-2 small text-muted">Current Cover:</span>
+                                        <img src="<?= htmlspecialchars($org['cover_url']) ?>" alt="Hero Banner Cover" class="rounded border" style="height: 40px; width: 80px; object-fit: cover;">
+                                    </div>
+                                <?php endif; ?>
                             </div>
                             <div class="col-12">
                                 <label for="featured_video_url" class="form-label fw-semibold">Featured Video Link (YouTube / Vimeo)</label>
