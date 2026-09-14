@@ -9,11 +9,11 @@
                     <p class="text-muted small mb-0"><?= htmlspecialchars($sport['name']) ?></p>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action">Seasons</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action">Teams</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players" class="list-group-item list-group-item-action active">Players</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action">Seasons</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action">Teams</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players" class="list-group-item list-group-item-action active">Players</a>
                 </div>
             </div>
         </div>
@@ -31,7 +31,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($player['id']) ?>" enctype="multipart/form-data">
+                    <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($player['id']) ?>" enctype="multipart/form-data">
                         <?= csrf_field() ?>
                         
                         <div class="row mb-3">
@@ -79,7 +79,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary">Save Changes</button>
-                        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players" class="btn btn-outline-secondary">Cancel</a>
                     </form>
                 </div>
             </div>

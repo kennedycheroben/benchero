@@ -4,6 +4,8 @@ namespace Benchero\Services;
 
 use Benchero\Core\Database\Database;
 use Benchero\Core\Ulid;
+use Benchero\Services\Gateways\PaymentGatewayFactory;
+use Benchero\Services\Gateways\ImBankPaymentGateway;
 use PDO;
 use Exception;
 
@@ -18,153 +20,314 @@ class MpesaService
         $this->subscriptionService = new SubscriptionService();
     }
 
-    public function initiateStkPush(string $orgId, string $phoneNumber, float $amount, int $planId): array
+    /**
+     * Map server-side plan IDs to official pricing (in KES).
+     */
+    public function getServerPlanPrice(int $planId): ?float
     {
-        $consumerKey = env('MPESA_CONSUMER_KEY', '');
-        $consumerSecret = env('MPESA_CONSUMER_SECRET', '');
+        return match ($planId) {
+            1 => 0.0,
+            2 => 1000.0,
+            3 => 10000.0,
+            4 => 20000.0,
+            default => null,
+        };
+    }
 
-        // Standardize phone number format (254...)
-        $phone = preg_replace('/[^0-9]/', '', $phoneNumber);
-        if (str_starts_with($phone, '0')) {
-            $phone = '254' . substr($phone, 1);
+    /**
+     * Create a pending payment intent record.
+     */
+    public function createPaymentIntent(string $orgId, ?string $userId, int $planId, string $phone, ?float $customAmount = null): array
+    {
+        $normalizedPhone = ImBankPaymentGateway::normalizePhoneNumber($phone);
+        if (!$normalizedPhone) {
+            return [
+                'success' => false,
+                'error' => 'Invalid phone number. Must be a valid Kenyan mobile number (e.g., 0712345678 or 254712345678).'
+            ];
         }
 
-        // Record pending payment in database first
-        $paymentId = Ulid::generate();
+        $serverAmount = $this->getServerPlanPrice($planId);
+        if ($serverAmount === null) {
+            return [
+                'success' => false,
+                'error' => 'Invalid or unknown plan selected.'
+            ];
+        }
+
+        if ($customAmount !== null && abs($customAmount - $serverAmount) > 0.01) {
+            return [
+                'success' => false,
+                'error' => 'Submitted payment amount does not match official plan pricing.'
+            ];
+        }
+
+        $intentId = Ulid::generate();
+        $paymentIntentId = 'PI-' . strtoupper(substr(md5(uniqid('', true)), 0, 12));
+        $reference = 'CHK-' . strtoupper(substr(md5(uniqid('', true)), 0, 12));
+
         $stmt = $this->db->prepare("
-            INSERT INTO payments (id, organization_id, amount, currency, status, metadata, created_at, updated_at)
-            VALUES (?, ?, ?, 'KES', 'pending', ?, NOW(), NOW())
+            INSERT INTO payment_intents (
+                id, organization_id, user_id, payment_intent_id, reference, plan_id,
+                amount, currency, phone_number, provider, status, expires_at, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'KES', ?, 'imbank', 'pending', DATE_ADD(NOW(), INTERVAL 10 MINUTE), NOW(), NOW())
         ");
         $stmt->execute([
-            $paymentId,
+            $intentId,
             $orgId,
-            $amount,
-            json_encode(['phone' => $phone, 'plan_id' => $planId])
+            $userId,
+            $paymentIntentId,
+            $reference,
+            $planId,
+            $serverAmount,
+            $normalizedPhone
         ]);
 
-        if (env('APP_ENV') === 'testing' || empty($consumerKey) || empty($consumerSecret) || $phone === '254712345678') {
-            $receipt = 'MP' . strtoupper(substr(md5(uniqid()), 0, 8));
-            $this->confirmPaymentAndActivate($paymentId, $receipt);
+        return [
+            'success' => true,
+            'intent_id' => $intentId,
+            'payment_intent_id' => $paymentIntentId,
+            'reference' => $reference,
+            'amount' => (float)$serverAmount,
+            'phone_number' => $normalizedPhone,
+            'status' => 'pending'
+        ];
+    }
+
+    /**
+     * Retrieve payment intent status.
+     */
+    public function getIntentStatus(string $intentId, ?string $orgId = null): array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM payment_intents WHERE id = ? OR payment_intent_id = ? OR reference = ?");
+        $stmt->execute([$intentId, $intentId, $intentId]);
+        $intent = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$intent) {
+            throw new Exception("Payment intent not found.");
+        }
+
+        // Auto-expire intents older than 10 minutes or past expires_at if still pending/initiated
+        if (in_array($intent['status'], ['pending', 'initiated'], true)) {
+            $createdTime = strtotime($intent['created_at']);
+            $expiresTime = !empty($intent['expires_at']) ? strtotime($intent['expires_at']) : null;
+
+            if (($expiresTime && $expiresTime <= time()) || (time() - $createdTime > 600)) {
+                $up = $this->db->prepare("UPDATE payment_intents SET status = 'expired', updated_at = NOW() WHERE id = ?");
+                $up->execute([$intent['id']]);
+                $intent['status'] = 'expired';
+            }
+        }
+
+        $intent['amount'] = (float)$intent['amount'];
+        $intent['intent_id'] = $intent['id'];
+        $intent['success'] = true;
+
+        return $intent;
+    }
+
+    /**
+     * Initiate STK Push via I&M Gateway adapter.
+     */
+    public function initiateStkPush(string $intentIdOrOrgId, string $phone, ?float $amount = null, ?int $planId = null): array
+    {
+        $intent = null;
+        try {
+            $intent = $this->getIntentStatus($intentIdOrOrgId);
+        } catch (\Throwable $e) {
+            $intent = null;
+        }
+
+        if (!$intent) {
+            $pId = $planId ?? 2;
+            $intentRes = $this->createPaymentIntent($intentIdOrOrgId, null, $pId, $phone, $amount);
+            if (!($intentRes['success'] ?? false)) {
+                return $intentRes;
+            }
+            $intent = $this->getIntentStatus($intentRes['intent_id']);
+        }
+
+        if (in_array($intent['status'], ['completed', 'failed', 'cancelled', 'expired'], true)) {
+            throw new Exception("Payment intent is already in terminal state: " . $intent['status']);
+        }
+
+        $normalizedPhone = ImBankPaymentGateway::normalizePhoneNumber($phone);
+        if (!$normalizedPhone) {
+            return ['success' => false, 'error' => 'Invalid phone number format.'];
+        }
+
+        // Check testing mode or mock bypass (STRICTLY NON-PRODUCTION ONLY)
+        $isMockTestPhone = ($phone === '254712345678' || $phone === '0712345678');
+        if (env('APP_ENV') !== 'production' && (env('APP_ENV') === 'testing' || $isMockTestPhone)) {
+            $receipt = 'REC_MOCK_' . rand(100000, 999999);
+            $this->processCallback([
+                'Body' => [
+                    'stkCallback' => [
+                        'ResultCode' => 0,
+                        'ResultDesc' => 'Success',
+                        'CheckoutRequestID' => $intent['reference'],
+                        'CallbackMetadata' => [
+                            'Item' => [
+                                ['Name' => 'MpesaReceiptNumber', 'Value' => $receipt],
+                                ['Name' => 'Amount', 'Value' => (float)$intent['amount']]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
             return [
                 'status' => 'completed_mock',
-                'payment_id' => $paymentId,
+                'success' => true,
+                'intent_id' => $intent['id'],
+                'reference' => $intent['reference'],
                 'receipt' => $receipt,
                 'message' => 'Development mock payment processed successfully.'
             ];
         }
 
-        // Production API STK Push logic
-        return [
-            'status' => 'initiated',
-            'payment_id' => $paymentId,
-            'message' => 'STK Push sent to ' . $phone
-        ];
+        $gateway = PaymentGatewayFactory::create('imbank');
+
+        $result = $gateway->initiatePayment([
+            'intent_id' => $intent['id'],
+            'payment_intent_id' => $intent['payment_intent_id'] ?? $intent['reference'],
+            'amount' => (float)$intent['amount'],
+            'phone_number' => $normalizedPhone,
+            'organization_id' => $intent['organization_id']
+        ]);
+
+        $newStatus = ($result['success'] ?? false) ? 'initiated' : 'failed';
+
+        $up = $this->db->prepare("
+            UPDATE payment_intents 
+            SET phone_number = ?, provider_reference = ?, status = ?, updated_at = NOW() 
+            WHERE id = ?
+        ");
+        $up->execute([
+            $normalizedPhone,
+            $result['provider_reference'] ?? null,
+            $newStatus,
+            $intent['id']
+        ]);
+
+        return array_merge($result, [
+            'status' => $newStatus,
+            'success' => true,
+            'intent_id' => $intent['id'],
+            'reference' => $intent['reference'] ?? $intent['payment_intent_id']
+        ]);
     }
 
     /**
-     * Confirms a payment record and activates the subscription idempotently.
+     * Process asynchronous M-PESA Callback from Gateway.
      */
-    public function confirmPaymentAndActivate(string $paymentId, string $receiptNumber): bool
+    public function processCallback(array $payload, array $headers = []): bool
     {
-        // Check idempotency on receipt number
-        $checkStmt = $this->db->prepare("SELECT id FROM payments WHERE mpesa_receipt_number = ? AND status = 'completed'");
-        $checkStmt->execute([$receiptNumber]);
-        if ($checkStmt->fetch()) {
-            return true; // Already processed safely
+        // Handle standard Gateway payload format
+        $checkoutId = $payload['Body']['stkCallback']['CheckoutRequestID'] ?? $payload['CheckoutRequestID'] ?? $payload['intent_id'] ?? null;
+        $resultCode = $payload['Body']['stkCallback']['ResultCode'] ?? $payload['ResultCode'] ?? $payload['result_code'] ?? 1;
+        $resultDesc = $payload['Body']['stkCallback']['ResultDesc'] ?? $payload['ResultDesc'] ?? $payload['result_desc'] ?? 'Unknown';
+        
+        $receipt = null;
+        $callbackAmount = null;
+
+        if (isset($payload['Body']['stkCallback']['CallbackMetadata']['Item'])) {
+            foreach ($payload['Body']['stkCallback']['CallbackMetadata']['Item'] as $item) {
+                if (($item['Name'] ?? '') === 'MpesaReceiptNumber') {
+                    $receipt = $item['Value'] ?? null;
+                }
+                if (($item['Name'] ?? '') === 'Amount') {
+                    $callbackAmount = (float)($item['Value'] ?? 0);
+                }
+            }
+        }
+        if (!$receipt) {
+            $receipt = $payload['mpesa_receipt_number'] ?? $payload['receipt'] ?? null;
         }
 
-        $stmt = $this->db->prepare("SELECT * FROM payments WHERE id = ?");
-        $stmt->execute([$paymentId]);
-        $payment = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$payment) {
-            return false;
-        }
-
-        $meta = json_decode($payment['metadata'] ?? '{}', true);
-        $planId = (int)($meta['plan_id'] ?? 2);
-
-        // Mark payment completed
-        $updateStmt = $this->db->prepare("
-            UPDATE payments
-            SET status = 'completed', mpesa_receipt_number = ?, updated_at = NOW()
-            WHERE id = ?
+        $stmt = $this->db->prepare("
+            SELECT * FROM payment_intents 
+            WHERE reference = ? OR payment_intent_id = ? OR id = ? OR provider_reference = ? 
+            LIMIT 1
         ");
-        $updateStmt->execute([$receiptNumber, $paymentId]);
+        $stmt->execute([$checkoutId, $checkoutId, $checkoutId, $checkoutId]);
+        $intent = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Activate / Extend Subscription via central service
-        return $this->subscriptionService->activateSubscription(
-            $payment['organization_id'],
-            $planId,
-            $receiptNumber,
-            $paymentId
-        );
-    }
-
-    public function processCallback(array $callbackData): bool
-    {
-        $stkCallback = $callbackData['Body']['stkCallback'] ?? null;
-        if (!$stkCallback) {
+        if (!$intent) {
             return false;
         }
 
-        $resultCode = $stkCallback['ResultCode'] ?? -1;
-
-        if ($resultCode !== 0) {
-            // Transaction failed or cancelled
-            return false;
+        // Amount validation: reject if callback amount is provided and doesn't match intent amount
+        if ($callbackAmount !== null && (int)$resultCode === 0) {
+            if (abs($callbackAmount - (float)$intent['amount']) > 0.01) {
+                return false;
+            }
         }
 
-        $items = $stkCallback['CallbackMetadata']['Item'] ?? [];
-        $mpesaReceiptNumber = null;
-        $amount = 0.0;
-        $phoneNumber = '';
-
-        foreach ($items as $item) {
-            $name = $item['Name'] ?? '';
-            $val = $item['Value'] ?? null;
-            if ($name === 'MpesaReceiptNumber') $mpesaReceiptNumber = (string)$val;
-            if ($name === 'Amount') $amount = (float)$val;
-            if ($name === 'PhoneNumber') $phoneNumber = (string)$val;
-        }
-
-        if (empty($mpesaReceiptNumber)) {
-            return false;
-        }
-
-        // Idempotency check: if mpesa_receipt_number already completed, return true
-        $checkStmt = $this->db->prepare("SELECT id FROM payments WHERE mpesa_receipt_number = ? AND status = 'completed'");
-        $checkStmt->execute([$mpesaReceiptNumber]);
-        if ($checkStmt->fetch()) {
+        // Idempotency check: if already completed, return true safely
+        if ($intent['status'] === 'completed') {
             return true;
         }
 
-        // Find pending payment record matching amount
-        $findStmt = $this->db->prepare("
-            SELECT id, organization_id, metadata FROM payments
-            WHERE status = 'pending' AND amount = ?
-            ORDER BY created_at DESC LIMIT 1
-        ");
-        $findStmt->execute([$amount]);
-        $payment = $findStmt->fetch(PDO::FETCH_ASSOC);
+        $finalStatus = match ((int)$resultCode) {
+            0 => 'completed',
+            1032 => 'cancelled',
+            default => 'failed'
+        };
 
-        if ($payment) {
-            return $this->confirmPaymentAndActivate($payment['id'], $mpesaReceiptNumber);
+        if (!$this->db->inTransaction()) {
+            $this->db->beginTransaction();
         }
+        try {
+            $up = $this->db->prepare("
+                UPDATE payment_intents 
+                SET status = ?, result_code = ?, result_desc = ?, mpesa_receipt_number = ?, updated_at = NOW() 
+                WHERE id = ?
+            ");
+            $up->execute([
+                $finalStatus,
+                $resultCode,
+                $resultDesc,
+                $receipt,
+                $intent['id']
+            ]);
 
-        // Fallback for untracked callback payment
-        $paymentId = Ulid::generate();
-        $insStmt = $this->db->prepare("
-            INSERT INTO payments (id, organization_id, amount, currency, status, mpesa_receipt_number, metadata, created_at, updated_at)
-            VALUES (?, 'UNKNOWN_ORG', ?, 'KES', 'completed', ?, ?, NOW(), NOW())
-        ");
-        $insStmt->execute([
-            $paymentId,
-            $amount,
-            $mpesaReceiptNumber,
-            json_encode(['phone' => $phoneNumber])
-        ]);
+            if ($finalStatus === 'completed') {
+                $paymentId = Ulid::generate();
+                $payStmt = $this->db->prepare("
+                    INSERT INTO payments (
+                        id, organization_id, user_id, amount, currency, status,
+                        payment_method, mpesa_receipt_number, provider, provider_reference,
+                        metadata, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, 'KES', 'completed', 'mpesa', ?, 'imbank', ?, ?, NOW(), NOW())
+                ");
+                $payStmt->execute([
+                    $paymentId,
+                    $intent['organization_id'],
+                    $intent['user_id'],
+                    $intent['amount'],
+                    $receipt ?? ('REC-' . time()),
+                    $intent['provider_reference'] ?? $checkoutId,
+                    json_encode(['intent_id' => $intent['id'], 'phone' => $intent['phone_number']])
+                ]);
 
-        return true;
+                // Activate subscription
+                $this->subscriptionService->upgradeSubscription(
+                    $intent['organization_id'],
+                    (int)$intent['plan_id'],
+                    $receipt
+                );
+            }
+
+            if ($this->db->inTransaction()) {
+                $this->db->commit();
+            }
+            return true;
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
     }
 }

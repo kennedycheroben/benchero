@@ -41,8 +41,8 @@ class AuthService
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO users (id, name, email, password_hash, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO users (id, name, email, password_hash, role, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, 'member', NOW(), NOW())
         ");
         $stmt->execute([$id, $name, $email, $passwordHash]);
 

@@ -65,7 +65,7 @@
             <div class="col-lg-7">
                 <div class="card border-0 shadow-lg rounded-4 p-4 bg-white">
                     <h4 class="fw-bold text-uppercase mb-3">Send Us A Message</h4>
-                    <form action="/club/<?= $orgSlug ?>/contact" method="POST">
+                    <form action="<?= url("/club/") ?><?= $orgSlug ?>/contact" method="POST">
                         <?= csrf_field() ?>
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-uppercase">Your Full Name</label>

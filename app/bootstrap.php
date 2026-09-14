@@ -32,3 +32,6 @@ if (env('APP_DEBUG', false)) {
 
 // Set timezone
 date_default_timezone_set(env('APP_TIMEZONE', 'Africa/Nairobi'));
+
+// Require global helper functions
+require_once __DIR__ . '/Core/helpers.php';

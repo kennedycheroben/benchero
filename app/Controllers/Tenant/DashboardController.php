@@ -44,6 +44,20 @@ class DashboardController
         $recentFixturesStmt->execute([$tenant['id']]);
         $recentFixtures = $recentFixturesStmt->fetchAll(PDO::FETCH_ASSOC);
 
+        // 3. Fetch Contact Messages Stats & Recent Messages
+        $unreadMessagesCount = (int)$db->query("SELECT COUNT(*) FROM contact_messages WHERE organization_id = {$db->quote($tenant['id'])} AND status = 'unread' AND deleted_at IS NULL")->fetchColumn();
+        $totalMessagesCount = (int)$db->query("SELECT COUNT(*) FROM contact_messages WHERE organization_id = {$db->quote($tenant['id'])} AND deleted_at IS NULL")->fetchColumn();
+        
+        $recentMessagesStmt = $db->prepare("
+            SELECT id, name, email, subject, message, status, created_at
+            FROM contact_messages
+            WHERE organization_id = ? AND deleted_at IS NULL
+            ORDER BY created_at DESC
+            LIMIT 5
+        ");
+        $recentMessagesStmt->execute([$tenant['id']]);
+        $recentMessages = $recentMessagesStmt->fetchAll(PDO::FETCH_ASSOC);
+
         $subService = new SubscriptionService();
         $subscriptionStatus = $subService->getSubscriptionStatus($tenant['id']);
 
@@ -62,9 +76,12 @@ class DashboardController
                 'teams' => $teamsCount,
                 'players' => $playersCount,
                 'staff' => $staffCount,
-                'fixtures' => $fixturesCount
+                'fixtures' => $fixturesCount,
+                'unread_messages' => $unreadMessagesCount,
+                'total_messages' => $totalMessagesCount
             ],
             'recentFixtures' => $recentFixtures,
+            'recentMessages' => $recentMessages,
             'websiteReadiness' => $websiteReadiness
         ]);
     }

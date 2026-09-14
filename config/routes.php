@@ -149,10 +149,16 @@ $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Benchero\C
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/status', ['Benchero\Controllers\Tenant\FixtureController', 'status']);
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/result', ['Benchero\Controllers\Tenant\FixtureController', 'saveResult']);
 
-// Tenant Billing & M-Pesa
+// Tenant Billing & M-Pesa STK Push
 $router->addRoute('GET', '/o/{slug}/billing', ['Benchero\Controllers\Tenant\BillingController', 'index']);
+$router->addRoute('POST', '/o/{slug}/billing/payment-intent', ['Benchero\Controllers\Tenant\BillingController', 'createPaymentIntent']);
+$router->addRoute('POST', '/o/{slug}/billing/payment-intent/{id}/initiate', ['Benchero\Controllers\Tenant\BillingController', 'initiatePayment']);
+$router->addRoute('GET', '/o/{slug}/billing/payment-intent/{id}/status', ['Benchero\Controllers\Tenant\BillingController', 'getPaymentStatus']);
 $router->addRoute('POST', '/o/{slug}/billing/stkpush', ['Benchero\Controllers\Tenant\BillingController', 'stkPush']);
+$router->addRoute('POST', '/o/{slug}/billing/test-activate', ['Benchero\Controllers\Tenant\BillingController', 'testActivatePlan']);
 $router->addRoute('POST', '/billing/mpesa/callback', ['Benchero\Controllers\Public\MpesaCallbackController', 'handle']);
+$router->addRoute('POST', '/billing/imbank/callback', ['Benchero\Controllers\Public\MpesaCallbackController', 'handle']);
+
 
 // Tenant Custom Domains Management
 $router->addRoute('GET', '/o/{slug}/domain', ['Benchero\Controllers\Tenant\DomainController', 'index']);
@@ -163,11 +169,19 @@ $router->addRoute('POST', '/o/{slug}/domain/delete', ['Benchero\Controllers\Tena
 // Tenant Digital Club Card & QR Codes
 $router->addRoute('GET', '/o/{slug}/club-card', ['Benchero\Controllers\Tenant\ClubCardController', 'show']);
 
+// Tenant Contact Messages
+$router->addRoute('GET', '/o/{slug}/contact-messages', ['Benchero\Controllers\Tenant\ContactMessageController', 'index']);
+$router->addRoute('POST', '/o/{slug}/contact-messages/{id}/status', ['Benchero\Controllers\Tenant\ContactMessageController', 'updateStatus']);
+$router->addRoute('POST', '/o/{slug}/contact-messages/{id}/delete', ['Benchero\Controllers\Tenant\ContactMessageController', 'delete']);
+
 // Tenant Data Export (Pro Feature)
 $router->addRoute('GET', '/o/{slug}/export/{type}', ['Benchero\Controllers\Tenant\ExportController', 'export']);
 
 // Platform Admin Routes
 $router->addRoute('GET', '/admin', ['Benchero\Controllers\Admin\AdminController', 'index']);
+$router->addRoute('POST', '/admin/users/role', ['Benchero\Controllers\Admin\AdminController', 'updateUserRole']);
+$router->addRoute('GET', '/admin/payments', ['Benchero\Controllers\Admin\AdminController', 'payments']);
+$router->addRoute('POST', '/admin/payments/reconcile', ['Benchero\Controllers\Admin\AdminController', 'reconcile']);
 $router->addRoute('POST', '/admin/plans/update', ['Benchero\Controllers\Admin\AdminController', 'updatePlan']);
 
 return $router;

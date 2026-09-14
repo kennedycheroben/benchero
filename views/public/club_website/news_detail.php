@@ -24,7 +24,7 @@
                     <?= nl2br(htmlspecialchars($article['content'])) ?>
                 </div>
 
-                <a href="/club/<?= $orgSlug ?>/news" class="btn btn-outline-dark rounded-pill fw-bold">
+                <a href="<?= url("/club/") ?><?= $orgSlug ?>/news" class="btn btn-outline-dark rounded-pill fw-bold">
                     <i class="bi bi-arrow-left me-1"></i> Back to News Archive
                 </a>
             </div>
@@ -39,7 +39,7 @@
                             <?php foreach ($relatedNews as $rel): ?>
                                 <div class="border-bottom pb-2">
                                     <small class="text-muted d-block"><?= date('M j, Y', strtotime($rel['published_at'])) ?></small>
-                                    <a href="/club/<?= $orgSlug ?>/news/<?= htmlspecialchars($rel['slug']) ?>" class="fw-bold text-dark text-decoration-none hover-primary">
+                                    <a href="<?= url("/club/") ?><?= $orgSlug ?>/news/<?= htmlspecialchars($rel['slug']) ?>" class="fw-bold text-dark text-decoration-none hover-primary">
                                         <?= htmlspecialchars($rel['title']) ?>
                                     </a>
                                 </div>

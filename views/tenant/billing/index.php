@@ -128,7 +128,23 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/billing/stkpush') ?>" method="POST">
+                <div id="stkAlert" class="alert d-none rounded-3 mb-3"></div>
+
+                <div id="stkStatusContainer" class="d-none text-center py-4">
+                    <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-dark" id="stkStatusTitle">M-Pesa Payment Request Sent</h5>
+                    <p class="text-muted small mb-3" id="stkStatusMsg">
+                        Check your phone. Enter your M-Pesa PIN on the prompt to complete the payment.
+                    </p>
+                    <div class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 text-uppercase fs-7 rounded-pill mb-3" id="stkStatusBadge">
+                        Waiting for confirmation...
+                    </div>
+                    <p class="text-muted fs-8 mb-0">Do not close this window while payment is processing.</p>
+                </div>
+
+                <form id="stkForm" action="<?= url('/o/' . urlencode($tenant['slug']) . '/billing/stkpush') ?>" method="POST">
                     <?= csrf_field() ?>
                     
                     <div class="mb-3">
@@ -178,10 +194,160 @@
 
                     <div class="d-flex justify-content-end gap-2 mt-4">
                         <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success fw-bold px-4 rounded-3"><i class="bi bi-shield-check me-1"></i>Pay & Activate Now</button>
+                        <button type="submit" id="paySubmitBtn" class="btn btn-success fw-bold px-4 rounded-3">
+                            <i class="bi bi-shield-check me-1"></i>Pay & Activate Now
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const stkForm = document.getElementById('stkForm');
+    const paySubmitBtn = document.getElementById('paySubmitBtn');
+    const stkAlert = document.getElementById('stkAlert');
+    const stkStatusContainer = document.getElementById('stkStatusContainer');
+    const stkStatusTitle = document.getElementById('stkStatusTitle');
+    const stkStatusMsg = document.getElementById('stkStatusMsg');
+    const stkStatusBadge = document.getElementById('stkStatusBadge');
+    
+    let pollInterval = null;
+    let pollCount = 0;
+    const maxPolls = 30; // 30 * 3s = 90 seconds max
+
+    if (!stkForm) return;
+
+    stkForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        
+        const phone = document.getElementById('phone_number').value.trim();
+        const planRadio = stkForm.querySelector('input[name="plan_id"]:checked');
+        const planId = planRadio ? planRadio.value : null;
+
+        if (!phone || !planId) {
+            showAlert('danger', 'Please provide a valid phone number and select a plan.');
+            return;
+        }
+
+        paySubmitBtn.disabled = true;
+        paySubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Initiating Payment...';
+
+        // Step 1: Create payment intent via AJAX
+        const formData = new FormData();
+        formData.append('phone_number', phone);
+        formData.append('plan_id', planId);
+
+        fetch('<?= url('/o/' . urlencode($tenant['slug']) . '/billing/payment-intent') ?>', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                paySubmitBtn.disabled = false;
+                paySubmitBtn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay & Activate Now';
+                showAlert('danger', data.error || 'Failed to create payment request.');
+                return;
+            }
+
+            const intentId = data.intent_id;
+
+            // Step 2: Initiate STK push
+            fetch('<?= url('/o/' . urlencode($tenant['slug']) . '/billing/payment-intent/') ?>' + intentId + '/initiate', {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(initRes => {
+                stkForm.classList.add('d-none');
+                stkStatusContainer.classList.remove('d-none');
+
+                if (initRes.status === 'completed_mock' || initRes.status === 'completed') {
+                    showSuccessState('Payment Verified! Subscription Active.');
+                    setTimeout(() => window.location.reload(), 1500);
+                    return;
+                }
+
+                // Step 3: Begin status polling
+                startPolling(intentId);
+            })
+            .catch(err => {
+                resetForm();
+                showAlert('danger', 'Network error while sending STK push request.');
+            });
+        })
+        .catch(err => {
+            paySubmitBtn.disabled = false;
+            paySubmitBtn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay & Activate Now';
+            showAlert('danger', 'An error occurred. Please check your phone number and try again.');
+        });
+    });
+
+    function startPolling(intentId) {
+        pollCount = 0;
+        if (pollInterval) clearInterval(pollInterval);
+
+        pollInterval = setInterval(function () {
+            pollCount++;
+            if (pollCount > maxPolls) {
+                clearInterval(pollInterval);
+                showErrorState('Payment confirmation timed out. If you completed payment, your account will update automatically within 1 minute.');
+                return;
+            }
+
+            fetch('<?= url('/o/' . urlencode($tenant['slug']) . '/billing/payment-intent/') ?>' + intentId + '/status', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'completed') {
+                    clearInterval(pollInterval);
+                    showSuccessState('Payment Verified! Your Benchero subscription is now active.');
+                    setTimeout(() => window.location.reload(), 1800);
+                } else if (data.status === 'failed' || data.status === 'cancelled' || data.status === 'expired') {
+                    clearInterval(pollInterval);
+                    const msg = data.status === 'cancelled' ? 'Payment was cancelled.' : (data.result_desc || 'Payment could not be completed.');
+                    showErrorState(msg);
+                }
+            })
+            .catch(() => {});
+        }, 3000);
+    }
+
+    function showAlert(type, msg) {
+        stkAlert.className = `alert alert-${type} rounded-3 mb-3`;
+        stkAlert.textContent = msg;
+        stkAlert.classList.remove('d-none');
+    }
+
+    function showSuccessState(msg) {
+        stkStatusTitle.textContent = '✓ Payment Successful';
+        stkStatusMsg.textContent = msg;
+        stkStatusBadge.className = 'badge bg-success px-3 py-2 text-uppercase fs-7 rounded-pill mb-3';
+        stkStatusBadge.textContent = 'Active Subscription';
+    }
+
+    function showErrorState(msg) {
+        stkStatusTitle.textContent = 'Payment Unsuccessful';
+        stkStatusMsg.textContent = msg;
+        stkStatusBadge.className = 'badge bg-danger px-3 py-2 text-uppercase fs-7 rounded-pill mb-3';
+        stkStatusBadge.textContent = 'Failed';
+
+        setTimeout(() => {
+            resetForm();
+            showAlert('danger', msg);
+        }, 3000);
+    }
+
+    function resetForm() {
+        stkForm.classList.remove('d-none');
+        stkStatusContainer.classList.add('d-none');
+        paySubmitBtn.disabled = false;
+        paySubmitBtn.innerHTML = '<i class="bi bi-shield-check me-1"></i>Pay & Activate Now';
+    }
+});
+</script>

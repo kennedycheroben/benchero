@@ -47,7 +47,7 @@
                                 <small class="text-club-primary font-heading text-uppercase d-block mb-3 fw-bold"><?= htmlspecialchars($p['team_name']) ?></small>
                             <?php endif; ?>
 
-                            <a href="/club/<?= $orgSlug ?>/players/<?= htmlspecialchars($p['id']) ?>" class="btn btn-outline-primary btn-sm rounded-pill mt-auto fw-bold">
+                            <a href="<?= url("/club/") ?><?= $orgSlug ?>/players/<?= htmlspecialchars($p['id']) ?>" class="btn btn-outline-primary btn-sm rounded-pill mt-auto fw-bold">
                                 View Profile
                             </a>
                         </div>

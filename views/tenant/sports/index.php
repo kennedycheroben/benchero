@@ -9,7 +9,7 @@
                     <p class="text-muted small mb-0">Manage Sports</p>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Back to Dashboard</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Back to Dashboard</a>
                 </div>
             </div>
         </div>
@@ -28,12 +28,12 @@
                                     <h5 class="card-title mb-1"><?= htmlspecialchars($sport['name']) ?></h5>
                                     <?php if ($sport['org_active']): ?>
                                         <span class="badge bg-primary">Active</span>
-                                        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="btn btn-sm btn-link text-decoration-none">Manage Teams</a>
+                                        <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="btn btn-sm btn-link text-decoration-none">Manage Teams</a>
                                     <?php else: ?>
                                         <span class="badge bg-secondary">Inactive</span>
                                     <?php endif; ?>
                                 </div>
-                                <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/sports/toggle">
+                                <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/sports/toggle">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="sport_id" value="<?= htmlspecialchars($sport['id']) ?>">
                                     

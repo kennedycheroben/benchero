@@ -8,7 +8,7 @@
         <p class="lead max-w-3xl mx-auto opacity-90 mb-4" style="max-width: 800px; color: black;">
            Benchero is your complete sports club management platform — designed for clubs, academies, coaches, managers, and supporters. We bring everything together in one simple, organized system.
         </p>
-        <a href="/register" class="btn btn-primary btn-lg fw-bold rounded-pill px-4 shadow-sm">
+        <a href="<?= url("/register") ?>" class="btn btn-primary btn-lg fw-bold rounded-pill px-4 shadow-sm">
             <i class="bi bi-rocket-takeoff me-2"></i>Start Your Free Trial
         </a>
     </div>
@@ -372,7 +372,7 @@
             </div>
         </div>
         <div class="mt-5">
-            <a href="/register" class="btn btn-primary btn-lg fw-bold rounded-pill px-5 shadow">
+            <a href="<?= url("/register") ?>" class="btn btn-primary btn-lg fw-bold rounded-pill px-5 shadow">
                 Create Your Club Website Today
             </a>
         </div>

@@ -4,8 +4,8 @@
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard"><?= htmlspecialchars($tenant['name']) ?></a></li>
-            <li class="breadcrumb-item"><a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams"><?= htmlspecialchars($sport['name']) ?> Teams</a></li>
+            <li class="breadcrumb-item"><a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard"><?= htmlspecialchars($tenant['name']) ?></a></li>
+            <li class="breadcrumb-item"><a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams"><?= htmlspecialchars($sport['name']) ?> Teams</a></li>
             <li class="breadcrumb-item active" aria-current="page"><?= htmlspecialchars($team['name']) ?></li>
         </ol>
     </nav>
@@ -22,7 +22,7 @@
         </div>
         <?php if (in_array($request->getAttribute('tenant_role'), ['owner', 'admin', 'manager'])): ?>
             <div>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/edit" class="btn btn-outline-primary">Edit Team Settings</a>
+                <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/edit" class="btn btn-outline-primary">Edit Team Settings</a>
             </div>
         <?php endif; ?>
     </div>

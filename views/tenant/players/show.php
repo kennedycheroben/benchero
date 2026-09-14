@@ -3,8 +3,8 @@
 <div class="container mt-5">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard"><?= htmlspecialchars($tenant['name']) ?></a></li>
-            <li class="breadcrumb-item"><a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players"><?= htmlspecialchars($sport['name']) ?> Players</a></li>
+            <li class="breadcrumb-item"><a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard"><?= htmlspecialchars($tenant['name']) ?></a></li>
+            <li class="breadcrumb-item"><a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players"><?= htmlspecialchars($sport['name']) ?> Players</a></li>
             <li class="breadcrumb-item active" aria-current="page"><?= htmlspecialchars($player['first_name'] . ' ' . $player['last_name']) ?></li>
         </ol>
     </nav>
@@ -23,7 +23,7 @@
         </div>
         <?php if (in_array($request->getAttribute('tenant_role'), ['owner', 'admin', 'manager'])): ?>
             <div>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($player['id']) ?>/edit" class="btn btn-outline-primary">Edit Profile</a>
+                <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($player['id']) ?>/edit" class="btn btn-outline-primary">Edit Profile</a>
             </div>
         <?php endif; ?>
     </div>
@@ -76,7 +76,7 @@
                                         <tr>
                                             <td><?= htmlspecialchars($a['season_name']) ?></td>
                                             <td>
-                                                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($a['team_id']) ?>">
+                                                <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($a['team_id']) ?>">
                                                     <?= htmlspecialchars($a['team_name']) ?>
                                                 </a>
                                             </td>

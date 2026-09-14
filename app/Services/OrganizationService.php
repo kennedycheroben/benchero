@@ -17,16 +17,51 @@ class OrganizationService
         return $org ?: null;
     }
 
+    public function generateUniqueSlug(string $baseString): string
+    {
+        $db = Database::getConnection();
+        $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $baseString), '-'));
+        if (empty($slug)) {
+            $slug = 'club';
+        }
+        $slug = mb_substr($slug, 0, 80);
+
+        $candidate = $slug;
+        $counter = 1;
+
+        $stmt = $db->prepare("SELECT COUNT(*) FROM `organizations` WHERE `slug` = ?");
+        while (true) {
+            $stmt->execute([$candidate]);
+            if ((int)$stmt->fetchColumn() === 0) {
+                return $candidate;
+            }
+            $candidate = mb_substr($slug, 0, 75) . '-' . $counter;
+            $counter++;
+        }
+    }
+
     public function createOrganization(string $name, string $slug, string $country, string $timezone, string $userId): string
     {
         $db = Database::getConnection();
+
+        // 1. Verify target user exists
+        $userCheck = $db->prepare("SELECT `id`, `role` FROM `users` WHERE `id` = ? AND `deleted_at` IS NULL");
+        $userCheck->execute([$userId]);
+        $userRecord = $userCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$userRecord) {
+            throw new \Exception('User account not found. Please log in again.');
+        }
+
+        // 2. Generate clean & unique slug
+        $uniqueSlug = $this->generateUniqueSlug(!empty($slug) ? $slug : $name);
         
         try {
             $db->beginTransaction();
 
             $orgId = Ulid::generate();
 
-            // 1. Create Organization
+            // 3. Create Organization
             $stmt = $db->prepare("
                 INSERT INTO `organizations` (`id`, `name`, `slug`, `country`, `timezone`, `created_at`, `updated_at`) 
                 VALUES (:id, :name, :slug, :country, :timezone, NOW(), NOW())
@@ -34,12 +69,12 @@ class OrganizationService
             $stmt->execute([
                 'id' => $orgId,
                 'name' => $name,
-                'slug' => $slug,
+                'slug' => $uniqueSlug,
                 'country' => $country,
                 'timezone' => $timezone
             ]);
 
-            // 2. Create Owner Role
+            // 4. Create Owner Role in pivot table
             $stmt = $db->prepare("
                 INSERT INTO `organization_user` (`organization_id`, `user_id`, `role`, `created_at`) 
                 VALUES (:org_id, :user_id, 'owner', NOW())
@@ -49,18 +84,28 @@ class OrganizationService
                 'user_id' => $userId
             ]);
 
-            // 3. Initialize Trial Subscription using central SubscriptionService
+            // 5. Automatically set user role in users table to 'owner' (unless super_admin)
+            if (($userRecord['role'] ?? '') !== 'super_admin') {
+                $roleStmt = $db->prepare("UPDATE `users` SET `role` = 'owner', `updated_at` = NOW() WHERE `id` = ?");
+                $roleStmt->execute([$userId]);
+            }
+
+            // 6. Initialize Trial Subscription using central SubscriptionService
             $subService = new SubscriptionService();
             $subService->initializeTrialSubscription($orgId);
 
             $db->commit();
             
-            return $slug;
+            return $uniqueSlug;
             
         } catch (\PDOException $e) {
-            $db->rollBack();
-            if ($e->getCode() == 23000) {
-                throw new \Exception('The slug is already in use.');
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw new \Exception('Could not create organization: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
             }
             throw $e;
         }

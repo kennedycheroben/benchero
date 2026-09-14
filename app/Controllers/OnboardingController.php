@@ -28,22 +28,31 @@ class OnboardingController
         $country = trim($request->input('country') ?? '');
         $timezone = trim($request->input('timezone') ?? '');
 
-        if (empty($name) || empty($slug) || empty($country) || empty($timezone)) {
-            $_SESSION['error'] = 'All fields are required.';
+        // Auto-generate slug from name if empty
+        if (empty($slug) && !empty($name)) {
+            $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
+        }
+
+        if (empty($name) || empty($country) || empty($timezone)) {
+            $_SESSION['error'] = 'Please fill in all required fields.';
+            $_SESSION['old_onboarding_input'] = ['name' => $name, 'slug' => $slug, 'country' => $country, 'timezone' => $timezone];
             return Response::redirect('/onboarding');
         }
         
-        if (!preg_match('/^[a-z0-9\-]+$/', $slug)) {
-            $_SESSION['error'] = 'Slug can only contain lowercase letters, numbers, and hyphens.';
-            return Response::redirect('/onboarding');
+        $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9\-]+/', '-', $slug), '-'));
+        if (empty($slug)) {
+            $slug = 'club';
         }
+        $slug = mb_substr($slug, 0, 80);
 
         $service = new OrganizationService();
         try {
             $createdSlug = $service->createOrganization($name, $slug, $country, $timezone, $_SESSION['_user_id']);
+            unset($_SESSION['old_onboarding_input']);
             return Response::redirect('/o/' . $createdSlug . '/dashboard');
         } catch (\Exception $e) {
             $_SESSION['error'] = $e->getMessage();
+            $_SESSION['old_onboarding_input'] = ['name' => $name, 'slug' => $slug, 'country' => $country, 'timezone' => $timezone];
             return Response::redirect('/onboarding');
         }
     }

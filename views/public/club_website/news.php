@@ -31,7 +31,7 @@
                                 </div>
                                 <h4 class="fw-bold text-dark text-uppercase mb-2"><?= htmlspecialchars($article['title']) ?></h4>
                                 <p class="small text-muted mb-4"><?= htmlspecialchars($article['excerpt'] ?: substr(strip_tags($article['content']), 0, 140) . '...') ?></p>
-                                <a href="/club/<?= $orgSlug ?>/news/<?= htmlspecialchars($article['slug']) ?>" class="btn btn-club-primary btn-sm rounded-pill mt-auto fw-bold">
+                                <a href="<?= url("/club/") ?><?= $orgSlug ?>/news/<?= htmlspecialchars($article['slug']) ?>" class="btn btn-club-primary btn-sm rounded-pill mt-auto fw-bold">
                                     Read Article <i class="bi bi-arrow-right ms-1"></i>
                                 </a>
                             </div>

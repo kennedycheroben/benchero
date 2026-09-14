@@ -146,6 +146,9 @@
                         </a>
 
                         <div class="text-uppercase text-muted fw-bold fs-7 mt-3 mb-2 px-2">Media & Platform</div>
+                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages') ?>">
+                            <i class="bi bi-envelope-open"></i> Contact Messages
+                        </a>
                         <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/media') ?>">
                             <i class="bi bi-folder2-open"></i> Media Library
                         </a>

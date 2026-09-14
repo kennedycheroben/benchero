@@ -9,10 +9,10 @@
                     <p class="text-muted small mb-0"><?= htmlspecialchars($sport['name']) ?></p>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action">Seasons</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action active">Teams</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action">Seasons</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action active">Teams</a>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams">
+                    <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams">
                         <?= csrf_field() ?>
                         
                         <div class="mb-3">
@@ -60,7 +60,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary">Create Team</button>
-                        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="btn btn-outline-secondary">Cancel</a>
                     </form>
                 </div>
             </div>

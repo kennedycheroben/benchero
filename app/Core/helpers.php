@@ -114,3 +114,48 @@ if (!function_exists('url')) {
         return $base . $path;
     }
 }
+
+if (!function_exists('is_test_account')) {
+    /**
+     * Check if an email or user ID (or current logged-in user) is a production test account.
+     */
+    function is_test_account(?string $emailOrUserId = null): bool
+    {
+        $testEmailsConfig = env('TEST_ACCOUNT_EMAILS', 'cherobenkennedy34@gmail.com');
+        $testEmails = array_map('strtolower', array_map('trim', explode(',', (string)$testEmailsConfig)));
+
+        if (empty($emailOrUserId)) {
+            $emailOrUserId = $_SESSION['_user_email'] ?? $_SESSION['user_email'] ?? null;
+            if (empty($emailOrUserId) && !empty($_SESSION['_user_id'] ?? $_SESSION['user_id'] ?? null)) {
+                $emailOrUserId = $_SESSION['_user_id'] ?? $_SESSION['user_id'];
+            }
+        }
+
+        if (empty($emailOrUserId)) {
+            return false;
+        }
+
+        $target = strtolower(trim((string)$emailOrUserId));
+
+        if (in_array($target, $testEmails, true)) {
+            return true;
+        }
+
+        if (strlen($target) === 26) {
+            try {
+                $db = \Benchero\Core\Database\Database::getConnection();
+                $stmt = $db->prepare("SELECT email FROM users WHERE id = ?");
+                $stmt->execute([$target]);
+                $user = $stmt->fetch(\PDO::FETCH_ASSOC);
+                if ($user && in_array(strtolower($user['email']), $testEmails, true)) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+                // Ignore DB error
+            }
+        }
+
+        return false;
+    }
+}
+

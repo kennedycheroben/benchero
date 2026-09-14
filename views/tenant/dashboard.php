@@ -24,7 +24,7 @@
                     </p>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/billing" class="btn btn-danger fw-bold rounded-3 text-nowrap">
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/billing" class="btn btn-danger fw-bold rounded-3 text-nowrap">
                         <i class="bi bi-credit-card me-1"></i>Renew Subscription
                     </a>
                 </div>
@@ -37,7 +37,7 @@
                     <h5 class="fw-bold mb-1"><i class="bi bi-clock-history me-2"></i>Subscription Expiring Soon</h5>
                     <p class="mb-0 text-dark"><?= htmlspecialchars($statusInfo['warning_message']) ?></p>
                 </div>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/billing" class="btn btn-warning fw-bold rounded-3 text-nowrap">
+                <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/billing" class="btn btn-warning fw-bold rounded-3 text-nowrap">
                     <i class="bi bi-arrow-repeat me-1"></i>Renew Subscription
                 </a>
             </div>
@@ -61,10 +61,10 @@
                     </div>
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/customize" class="btn btn-primary fw-bold rounded-3">
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/website/customize" class="btn btn-primary fw-bold rounded-3">
                         <i class="bi bi-magic me-1"></i> Customize Website
                     </a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website" class="btn btn-outline-dark fw-semibold rounded-3">
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/website" class="btn btn-outline-dark fw-semibold rounded-3">
                         <i class="bi bi-sliders me-1"></i> Readiness Overview
                     </a>
                 </div>
@@ -74,7 +74,7 @@
 
     <!-- Quick Stats Metric Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-4 col-lg-2-4">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-primary border-4">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
@@ -88,7 +88,7 @@
             </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-4 col-lg-2-4">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-success border-4">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
@@ -102,11 +102,11 @@
             </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-4 col-lg-2-4">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-info border-4">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase">Staff & Coaches</div>
+                        <div class="text-muted small fw-semibold text-uppercase">Staff</div>
                         <div class="display-6 fw-bold text-dark mt-1"><?= (int)$s['staff'] ?></div>
                     </div>
                     <div class="bg-info-subtle text-info p-3 rounded-3">
@@ -116,11 +116,11 @@
             </div>
         </div>
 
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-4 col-lg-2-4">
             <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-warning border-4">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold text-uppercase">Matches Scheduled</div>
+                        <div class="text-muted small fw-semibold text-uppercase">Matches</div>
                         <div class="display-6 fw-bold text-dark mt-1"><?= (int)$s['fixtures'] ?></div>
                     </div>
                     <div class="bg-warning-subtle text-warning p-3 rounded-3">
@@ -128,6 +128,27 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2-4">
+            <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/contact-messages" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-danger border-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Inquiries</div>
+                            <div class="display-6 fw-bold text-dark mt-1">
+                                <?= (int)($s['unread_messages'] ?? 0) ?>
+                                <?php if (!empty($s['unread_messages'])): ?>
+                                    <span class="fs-7 badge bg-danger text-white align-middle ms-1">New</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="bg-danger-subtle text-danger p-3 rounded-3">
+                            <i class="bi bi-envelope-open fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
 
@@ -157,7 +178,7 @@
                     <?php endif; ?>
                 </ul>
 
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/billing" class="btn btn-outline-primary fw-semibold rounded-3 w-100 py-2">
+                <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/billing" class="btn btn-outline-primary fw-semibold rounded-3 w-100 py-2">
                     <i class="bi bi-credit-card me-1"></i>Manage Subscription & Payments
                 </a>
             </div>
@@ -166,16 +187,16 @@
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                 <h5 class="fw-bold mb-3"><i class="bi bi-lightning-charge text-warning me-2"></i>Quick Tasks</h5>
                 <div class="d-grid gap-2">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/profile" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/profile" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
                         <i class="bi bi-sliders me-2 text-primary"></i> Edit Club Profile & Logo
                     </a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/staff" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/staff" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
                         <i class="bi bi-person-plus me-2 text-info"></i> Manage Coaches & Staff
                     </a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/content" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/content" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
                         <i class="bi bi-newspaper me-2 text-success"></i> Post News & Matchday Photos
                     </a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/sports" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/sports" class="btn btn-light text-start p-3 rounded-3 fw-semibold text-dark">
                         <i class="bi bi-trophy me-2 text-warning"></i> Active Sports Setup
                     </a>
                 </div>
@@ -230,6 +251,64 @@
                                             <?php endif; ?>
                                         </td>
                                         <td class="small text-muted"><?= htmlspecialchars($f['venue_name'] ?: 'TBD') ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Recent Contact Messages -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mt-4">
+                <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-envelope-paper text-danger me-2"></i>Contact Messages Received
+                    </h5>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/contact-messages" class="btn btn-sm btn-outline-primary fw-bold rounded-3">
+                        View All Messages
+                    </a>
+                </div>
+
+                <?php if (empty($recentMessages)): ?>
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-inbox display-5 mb-2 d-block text-secondary"></i>
+                        <p class="mb-0 small">No contact messages received yet from website visitors.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Sender</th>
+                                    <th>Subject & Message</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recentMessages as $msg): ?>
+                                    <tr>
+                                        <td>
+                                            <?php if ($msg['status'] === 'unread'): ?>
+                                                <span class="badge bg-warning text-dark">New</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted border">Read</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark small"><?= htmlspecialchars($msg['name']) ?></div>
+                                            <div class="text-muted fs-7"><?= htmlspecialchars($msg['email']) ?></div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-dark small"><?= htmlspecialchars($msg['subject'] ?: '(No Subject)') ?></div>
+                                            <div class="text-muted fs-7 text-truncate" style="max-width: 260px;">
+                                                <?= htmlspecialchars(mb_strimwidth($msg['message'], 0, 70, '...')) ?>
+                                            </div>
+                                        </td>
+                                        <td class="small text-muted fs-7">
+                                            <?= date('M j, H:i', strtotime($msg['created_at'])) ?>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

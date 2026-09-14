@@ -79,4 +79,104 @@ class BillingController extends Controller
 
         return Response::redirect("/o/{$tenant['slug']}/billing");
     }
+
+    public function createPaymentIntent(Request $request): Response
+    {
+        $tenant = $request->getAttribute('tenant');
+        $planId = (int)($request->input('plan_id') ?? $request->post('plan_id'));
+        $phone = trim((string)($request->input('phone_number') ?? $request->post('phone_number')));
+        $userId = $_SESSION['_user_id'] ?? $_SESSION['user_id'] ?? null;
+
+        if (empty($phone) || empty($planId)) {
+            return Response::json([
+                'success' => false,
+                'error' => 'Please provide a valid M-Pesa phone number and plan selection.'
+            ], 400);
+        }
+
+        $res = $this->mpesaService->createPaymentIntent($tenant['id'], $userId, $planId, $phone);
+
+        if (!($res['success'] ?? false)) {
+            return Response::json($res, 400);
+        }
+
+        return Response::json($res);
+    }
+
+    public function initiatePayment(Request $request): Response
+    {
+        $tenant = $request->getAttribute('tenant');
+        $intentId = $request->getAttribute('id') ?? $request->input('id');
+
+        if (empty($intentId)) {
+            return Response::json(['success' => false, 'error' => 'Missing payment intent ID.'], 400);
+        }
+
+        try {
+            $intent = $this->mpesaService->getIntentStatus($intentId);
+            if ($intent['organization_id'] !== $tenant['id']) {
+                return Response::json(['success' => false, 'error' => 'Unauthorized payment intent access.'], 403);
+            }
+
+            $res = $this->mpesaService->initiateStkPush($intent['id'], $intent['phone_number']);
+            return Response::json($res);
+        } catch (\Throwable $e) {
+            return Response::json(['success' => false, 'error' => 'Failed to initiate payment: ' . $e->getMessage()], 400);
+        }
+    }
+
+    public function getPaymentStatus(Request $request): Response
+    {
+        $tenant = $request->getAttribute('tenant');
+        $intentId = $request->getAttribute('id') ?? $request->input('id');
+
+        if (empty($intentId)) {
+            return Response::json(['success' => false, 'error' => 'Missing payment intent ID.'], 400);
+        }
+
+        try {
+            $intent = $this->mpesaService->getIntentStatus($intentId);
+            if ($intent['organization_id'] !== $tenant['id']) {
+                return Response::json(['success' => false, 'error' => 'Unauthorized payment intent access.'], 403);
+            }
+
+            return Response::json([
+                'success' => true,
+                'status' => $intent['status'],
+                'intent_id' => $intent['id'],
+                'payment_intent_id' => $intent['payment_intent_id'] ?? $intent['reference'],
+                'reference' => $intent['reference'],
+                'amount' => (float)$intent['amount'],
+                'mpesa_receipt_number' => $intent['mpesa_receipt_number'] ?? null,
+                'result_desc' => $intent['result_desc'] ?? null,
+                'created_at' => $intent['created_at'],
+                'updated_at' => $intent['updated_at']
+            ]);
+        } catch (\Throwable $e) {
+            return Response::json(['success' => false, 'error' => 'Payment intent not found.'], 440);
+        }
+    }
+
+    public function testActivatePlan(Request $request): Response
+    {
+        if (env('APP_ENV') === 'production') {
+            return Response::json(['success' => false, 'error' => 'Testing endpoints are disabled in production.'], 403);
+        }
+
+        $tenant = $request->getAttribute('tenant');
+        $planId = (int)($request->input('plan_id') ?? $request->post('plan_id') ?? 2);
+
+        $activated = $this->subscriptionService->activateSubscription(
+            $tenant['id'],
+            $planId,
+            'DEV_TEST_' . time()
+        );
+
+        if ($activated) {
+            $_SESSION['success'] = 'Development Test Mode: Plan activated successfully!';
+            return Response::json(['success' => true, 'message' => 'Test subscription activated.']);
+        }
+
+        return Response::json(['success' => false, 'error' => 'Failed to activate test subscription.'], 400);
+    }
 }

@@ -7,6 +7,7 @@ use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
 use Benchero\Core\Database\Database;
 use Benchero\Core\RateLimiter;
+use Benchero\Core\Ulid;
 use PDO;
 
 class HomeController extends Controller
@@ -87,6 +88,20 @@ class HomeController extends Controller
 
         $recipient = env('BRAND_CONTACT_EMAIL', 'contact@benchero.co.ke');
         error_log("Contact message received from {$name} ({$email}) to {$recipient}: {$subject}");
+
+        // Insert into contact_messages
+        $db = Database::getConnection();
+        $stmt = $db->prepare("
+            INSERT INTO contact_messages (id, organization_id, name, email, subject, message, status, created_at)
+            VALUES (?, NULL, ?, ?, ?, ?, 'unread', NOW())
+        ");
+        $stmt->execute([
+            Ulid::generate(),
+            $name,
+            $email,
+            $subject,
+            $message
+        ]);
 
         return new Response('', 302, ['Location' => url('/contact?success=1')]);
     }

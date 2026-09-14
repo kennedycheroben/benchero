@@ -53,7 +53,7 @@ $seo = $seo ?? [];
         <?php if (!empty($org['contact_phone'])): ?>
             <a href="tel:<?= htmlspecialchars($org['contact_phone']) ?>" class="btn btn-outline-light btn-sm rounded-pill"><i class="bi bi-telephone me-1"></i> Call</a>
         <?php endif; ?>
-        <a href="/club/<?= htmlspecialchars($org['slug']) ?>" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-globe me-1"></i> Full Website</a>
+        <a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>" class="btn btn-primary btn-sm rounded-pill px-3"><i class="bi bi-globe me-1"></i> Full Website</a>
     </div>
 
     <!-- Web Share API / Copy Link -->

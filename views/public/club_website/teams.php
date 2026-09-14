@@ -27,7 +27,7 @@
                             <h3 class="fw-bold text-uppercase mb-2"><?= htmlspecialchars($t['name']) ?></h3>
                             <span class="badge bg-light text-dark border mb-3 w-auto mx-auto"><?= htmlspecialchars($t['team_type'] ?: 'Senior Team') ?></span>
                             <p class="text-muted small mb-4"><?= htmlspecialchars($t['description'] ?: 'Official division squad representing ' . $org['name'] . '.') ?></p>
-                            <a href="/club/<?= $orgSlug ?>/teams/<?= htmlspecialchars($t['slug']) ?>" class="btn btn-club-primary rounded-pill fw-bold mt-auto">
+                            <a href="<?= url("/club/") ?><?= $orgSlug ?>/teams/<?= htmlspecialchars($t['slug']) ?>" class="btn btn-club-primary rounded-pill fw-bold mt-auto">
                                 View Team Roster & Details <i class="bi bi-arrow-right ms-1"></i>
                             </a>
                         </div>

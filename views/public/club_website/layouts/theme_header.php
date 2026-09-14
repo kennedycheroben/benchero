@@ -126,7 +126,7 @@
     <!-- Main Navigation Bar -->
     <nav class="navbar navbar-expand-xl sticky-top club-navbar bg-club-header navbar-dark py-2">
         <div class="container-fluid px-lg-4">
-            <a class="navbar-brand d-flex align-items-center gap-3" href="/club/<?= $orgSlug ?>">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="<?= url("/club/") ?><?= $orgSlug ?>">
                 <?php if (!empty($org['logo_url'])): ?>
                     <img src="<?= htmlspecialchars($org['logo_url']) ?>" alt="<?= htmlspecialchars($org['name']) ?>" height="46" class="rounded-2 bg-white p-1">
                 <?php else: ?>
@@ -155,7 +155,7 @@
                 <div class="offcanvas-body bg-club-header">
                     <ul class="navbar-nav ms-auto align-items-xl-center gap-1">
                         <li class="nav-item">
-                            <a class="nav-link club-nav-link <?= $currentRoute === 'home' ? 'active' : '' ?>" href="/club/<?= $orgSlug ?>">Home</a>
+                            <a class="nav-link club-nav-link <?= $currentRoute === 'home' ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>">Home</a>
                         </li>
 
                         <?php foreach ($navOrder as $pageKey): ?>
@@ -165,7 +165,7 @@
                                 $label = $navLabels[$pageKey] ?? ucfirst($pageKey);
                             ?>
                             <li class="nav-item">
-                                <a class="nav-link club-nav-link <?= $currentRoute === $pageKey ? 'active' : '' ?>" href="/club/<?= $orgSlug ?>/<?= $pageKey ?>">
+                                <a class="nav-link club-nav-link <?= $currentRoute === $pageKey ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>/<?= $pageKey ?>">
                                     <?= htmlspecialchars($label) ?>
                                 </a>
                             </li>

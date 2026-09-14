@@ -34,7 +34,7 @@ $header = substr($response, 0, $header_size);
 $body = substr($response, $header_size);
 curl_close($ch);
 
-preg_match('/tmsess=([^;]+)/', $header, $matches);
+preg_match('/(?:benchero_session|PHPSESSID|tmsess)=([^;]+)/', $header, $matches);
 $sessionId = $matches[1] ?? '';
 preg_match('/name="_csrf" value="([^"]+)"/', $body, $matches);
 $csrfToken = $matches[1] ?? '';
@@ -54,7 +54,7 @@ function post($url, $data, $csrf = true, $follow = false, $headerOut = false) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-    curl_setopt($ch, CURLOPT_COOKIE, "tmsess=$sessionId");
+    curl_setopt($ch, CURLOPT_COOKIE, "benchero_session=$sessionId");
     if ($follow) curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     if ($headerOut) curl_setopt($ch, CURLOPT_HEADER, true);
     
@@ -94,14 +94,26 @@ if ($res['code'] !== 302 || strpos($res['body'], 'onboarding') === false) {
 echo " - Successful login (0 orgs) redirected to /onboarding.\n";
 
 // At this point session ID was regenerated. Let's get new session ID from header.
-preg_match('/tmsess=([^;]+)/', $res['body'], $matches);
+preg_match('/(?:benchero_session|PHPSESSID|tmsess)=([^;]+)/', $res['body'], $matches);
 if (isset($matches[1])) {
     $sessionId = $matches[1];
 }
 
+// Fetch onboarding/dashboard page to get new CSRF token
+$ch = curl_init("$baseUrl/onboarding");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_COOKIE, "benchero_session=$sessionId");
+$onboardingBody = curl_exec($ch);
+curl_close($ch);
+
+preg_match('/name="_csrf" value="([^"]+)"/', $onboardingBody, $csrfMatches);
+if (isset($csrfMatches[1])) {
+    $csrfToken = $csrfMatches[1];
+}
+
 $res = post('/logout', [], true, false, true);
 if ($res['code'] !== 302 || strpos($res['body'], 'login') === false) {
-    die("FAILED: Logout did not redirect to /login.\n");
+    die("FAILED: Logout did not redirect to /login. Got code: {$res['code']}\nBody: {$res['body']}\n");
 }
 echo " - Logout successful.\n";
 

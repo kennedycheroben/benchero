@@ -9,10 +9,10 @@
                     <p class="text-muted small mb-0"><?= htmlspecialchars($sport['name']) ?></p>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action active">Seasons</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action">Teams</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action active">Seasons</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action">Teams</a>
                 </div>
             </div>
         </div>
@@ -21,7 +21,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2>Seasons</h2>
                 <?php if (in_array($role, ['owner', 'admin'])): ?>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/create" class="btn btn-primary">+ New Season</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/create" class="btn btn-primary">+ New Season</a>
                 <?php endif; ?>
             </div>
             <hr>
@@ -59,15 +59,15 @@
                             <?php if (in_array($role, ['owner', 'admin'])): ?>
                                 <div>
                                     <?php if (!$season['is_current']): ?>
-                                        <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/<?= htmlspecialchars($season['id']) ?>/current" class="d-inline">
+                                        <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/<?= htmlspecialchars($season['id']) ?>/current" class="d-inline">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-sm btn-outline-success">Set Current</button>
                                         </form>
                                     <?php endif; ?>
                                     
-                                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/<?= htmlspecialchars($season['id']) ?>/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/<?= htmlspecialchars($season['id']) ?>/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
                                     
-                                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/<?= htmlspecialchars($season['id']) ?>/delete" class="d-inline" onsubmit="return confirm('Archive this season?');">
+                                    <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons/<?= htmlspecialchars($season['id']) ?>/delete" class="d-inline" onsubmit="return confirm('Archive this season?');">
                                         <?= csrf_field() ?>
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Archive</button>
                                     </form>

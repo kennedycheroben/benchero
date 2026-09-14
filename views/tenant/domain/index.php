@@ -6,7 +6,7 @@
             <h1 class="h3 fw-bold mb-1">Custom Domain Connection</h1>
             <p class="text-muted mb-0">Connect your custom domain (e.g. <code>www.myclub.co.ke</code>) to your Benchero public website.</p>
         </div>
-        <a href="/o/<?= htmlspecialchars($org['slug']) ?>/dashboard" class="btn btn-outline-secondary">
+        <a href="<?= url("/o/") ?><?= htmlspecialchars($org['slug']) ?>/dashboard" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
         </a>
     </div>
@@ -33,7 +33,7 @@
                 <p class="text-muted max-w-xl mx-auto mb-3">
                     Custom domain integration is available exclusively on <strong>Benchero Pro</strong> (KSh 20,000/year). Connect <code>www.yourclub.co.ke</code> while keeping your original Benchero link active!
                 </p>
-                <a href="/o/<?= htmlspecialchars($org['slug']) ?>/billing" class="btn btn-primary btn-lg fw-bold px-4 rounded-3">
+                <a href="<?= url("/o/") ?><?= htmlspecialchars($org['slug']) ?>/billing" class="btn btn-primary btn-lg fw-bold px-4 rounded-3">
                     Upgrade to Benchero Pro Now
                 </a>
             </div>
@@ -67,14 +67,14 @@
                         </div>
 
                         <div class="d-flex gap-2 mb-4">
-                            <form action="/o/<?= htmlspecialchars($org['slug']) ?>/domain/verify" method="POST">
+                            <form action="<?= url("/o/") ?><?= htmlspecialchars($org['slug']) ?>/domain/verify" method="POST">
                                 <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_SESSION['_csrf'] ?? '') ?>">
                                 <button type="submit" class="btn btn-success fw-bold px-4">
                                     <i class="bi bi-arrow-repeat me-1"></i> Verify DNS Records Now
                                 </button>
                             </form>
 
-                            <form action="/o/<?= htmlspecialchars($org['slug']) ?>/domain/delete" method="POST" onsubmit="return confirm('Are you sure you want to disconnect this domain?');">
+                            <form action="<?= url("/o/") ?><?= htmlspecialchars($org['slug']) ?>/domain/delete" method="POST" onsubmit="return confirm('Are you sure you want to disconnect this domain?');">
                                 <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_SESSION['_csrf'] ?? '') ?>">
                                 <button type="submit" class="btn btn-outline-danger">
                                     Disconnect Domain
@@ -83,7 +83,7 @@
                         </div>
 
                     <?php else: ?>
-                        <form action="/o/<?= htmlspecialchars($org['slug']) ?>/domain" method="POST" class="mb-3">
+                        <form action="<?= url("/o/") ?><?= htmlspecialchars($org['slug']) ?>/domain" method="POST" class="mb-3">
                             <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_SESSION['_csrf'] ?? '') ?>">
                             <div class="mb-3">
                                 <label for="domain" class="form-label fw-semibold">Enter Custom Domain Name</label>

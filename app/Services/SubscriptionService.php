@@ -201,11 +201,20 @@ class SubscriptionService
         $nowTs = time();
         $interval = strtolower($plan['billing_interval'] ?? 'monthly');
 
-        // Check if existing sub is active and not expired for stacking/extension
+        // Determine base timestamp for expiration calculation.
+        // Only stack onto existingExpiryTs if the SAME active plan is being renewed and existingExpiryTs is reasonably within 1 year from now.
         $existingExpiryStr = $sub['expires_at'] ?? $sub['current_period_end'] ?? null;
         $existingExpiryTs = $existingExpiryStr ? strtotime($existingExpiryStr) : 0;
         
-        $baseTs = ($existingExpiryTs > $nowTs) ? $existingExpiryTs : $nowTs;
+        $isSamePlan = ($sub && (int)($sub['plan_id'] ?? 0) === (int)$plan['id']);
+        $isActive = ($sub && ($sub['status'] ?? '') === 'active');
+        $isReasonableExpiry = ($existingExpiryTs > $nowTs && $existingExpiryTs < strtotime('+1 year', $nowTs));
+
+        if ($isSamePlan && $isActive && $isReasonableExpiry) {
+            $baseTs = $existingExpiryTs;
+        } else {
+            $baseTs = $nowTs;
+        }
 
         if ($interval === 'yearly') {
             $newExpiryTs = strtotime('+1 year', $baseTs);
@@ -259,6 +268,14 @@ class SubscriptionService
         }
 
         return true;
+    }
+
+    /**
+     * Alias method for upgrading or activating subscription.
+     */
+    public function upgradeSubscription(string $orgId, int $planId, ?string $paymentRef = null): bool
+    {
+        return $this->activateSubscription($orgId, $planId, $paymentRef);
     }
 
     /**

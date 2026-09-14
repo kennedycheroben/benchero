@@ -3,9 +3,9 @@
 <div class="container mt-5">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard"><?= htmlspecialchars($tenant['name']) ?></a></li>
-            <li class="breadcrumb-item"><a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams"><?= htmlspecialchars($sport['name']) ?> Teams</a></li>
-            <li class="breadcrumb-item"><a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>"><?= htmlspecialchars($team['name']) ?></a></li>
+            <li class="breadcrumb-item"><a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard"><?= htmlspecialchars($tenant['name']) ?></a></li>
+            <li class="breadcrumb-item"><a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams"><?= htmlspecialchars($sport['name']) ?> Teams</a></li>
+            <li class="breadcrumb-item"><a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>"><?= htmlspecialchars($team['name']) ?></a></li>
             <li class="breadcrumb-item active" aria-current="page">Roster: <?= htmlspecialchars($season['name']) ?></li>
         </ol>
     </nav>
@@ -52,7 +52,7 @@
                                         <tr>
                                             <td><?= htmlspecialchars($r['jersey_number'] ?? '-') ?></td>
                                             <td>
-                                                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($r['player_id']) ?>" class="fw-bold text-decoration-none">
+                                                <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($r['player_id']) ?>" class="fw-bold text-decoration-none">
                                                     <?= htmlspecialchars($r['first_name'] . ' ' . $r['last_name']) ?>
                                                 </a>
                                             </td>
@@ -71,7 +71,7 @@
                                                         Edit
                                                     </button>
                                                     
-                                                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/rosters/<?= htmlspecialchars($season['id']) ?>/assignments/<?= htmlspecialchars($r['id']) ?>/delete" class="d-inline" onsubmit="return confirm('Archive this roster assignment? Historical records will remain intact.');">
+                                                    <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/rosters/<?= htmlspecialchars($season['id']) ?>/assignments/<?= htmlspecialchars($r['id']) ?>/delete" class="d-inline" onsubmit="return confirm('Archive this roster assignment? Historical records will remain intact.');">
                                                         <?= csrf_field() ?>
                                                         <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                                                     </form>
@@ -84,7 +84,7 @@
                                         <div class="modal fade" id="editModal<?= $r['id'] ?>" tabindex="-1" aria-hidden="true">
                                             <div class="modal-dialog">
                                                 <div class="modal-content">
-                                                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/rosters/<?= htmlspecialchars($season['id']) ?>/assignments/<?= htmlspecialchars($r['id']) ?>">
+                                                    <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/rosters/<?= htmlspecialchars($season['id']) ?>/assignments/<?= htmlspecialchars($r['id']) ?>">
                                                         <?= csrf_field() ?>
                                                         <div class="modal-header">
                                                             <h5 class="modal-title">Edit Assignment</h5>
@@ -137,9 +137,9 @@
                     </div>
                     <div class="card-body">
                         <?php if (empty($availablePlayers)): ?>
-                            <p class="text-muted small">No available players to assign. <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/create">Create a new player</a> first.</p>
+                            <p class="text-muted small">No available players to assign. <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/create">Create a new player</a> first.</p>
                         <?php else: ?>
-                            <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/rosters/<?= htmlspecialchars($season['id']) ?>">
+                            <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams/<?= htmlspecialchars($team['id']) ?>/rosters/<?= htmlspecialchars($season['id']) ?>">
                                 <?= csrf_field() ?>
                                 
                                 <div class="mb-3">

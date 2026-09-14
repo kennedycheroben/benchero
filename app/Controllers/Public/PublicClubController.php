@@ -14,6 +14,7 @@ use Benchero\Services\ContentService;
 use Benchero\Services\StandingsService;
 use Benchero\Services\SubscriptionService;
 use Benchero\Services\WebsiteService;
+use Benchero\Core\Ulid;
 use PDO;
 
 class PublicClubController extends Controller
@@ -473,6 +474,22 @@ class PublicClubController extends Controller
                 'formData' => ['name' => $name, 'email' => $email, 'subject' => $subject, 'message' => $message]
             ]));
         }
+
+        // Save contact message to database
+        $msgId = Ulid::generate();
+        $db = Database::getConnection();
+        $stmt = $db->prepare("
+            INSERT INTO contact_messages (id, organization_id, name, email, subject, message, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'unread', NOW())
+        ");
+        $stmt->execute([
+            $msgId,
+            $ctx['org']['id'],
+            $name,
+            $email,
+            $subject,
+            $message
+        ]);
 
         // Redirect back with success status
         return $this->redirect("/club/{$slug}/contact?sent=1");

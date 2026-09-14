@@ -47,7 +47,7 @@
                             </h5>
                             <span class="small text-muted d-block mb-3"><?= htmlspecialchars($p['position'] ?: 'Player') ?></span>
 
-                            <a href="/club/<?= $orgSlug ?>/players/<?= htmlspecialchars($p['id']) ?>" class="btn btn-outline-dark btn-sm rounded-pill mt-auto fw-semibold">
+                            <a href="<?= url("/club/") ?><?= $orgSlug ?>/players/<?= htmlspecialchars($p['id']) ?>" class="btn btn-outline-dark btn-sm rounded-pill mt-auto fw-semibold">
                                 View Profile
                             </a>
                         </div>

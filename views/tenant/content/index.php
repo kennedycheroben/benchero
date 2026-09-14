@@ -7,7 +7,7 @@
             <h2 class="display-6 fw-bold mb-0">Content & Media Center</h2>
             <p class="text-muted mb-0">Publish news, announcements, matchday photos, and sponsor logos on your public website.</p>
         </div>
-        <a href="/club/<?= htmlspecialchars($tenant['slug']) ?>" target="_blank" class="btn btn-outline-primary fw-bold rounded-3">
+        <a href="<?= url("/club/") ?><?= htmlspecialchars($tenant['slug']) ?>" target="_blank" class="btn btn-outline-primary fw-bold rounded-3">
             <i class="bi bi-box-arrow-up-right me-1"></i> Preview Public Page
         </a>
     </div>

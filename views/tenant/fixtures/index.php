@@ -9,12 +9,12 @@
                     <p class="text-muted small mb-0"><?= htmlspecialchars($sport['name']) ?></p>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action">Seasons</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action">Teams</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players" class="list-group-item list-group-item-action">Players</a>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures" class="list-group-item list-group-item-action active">Fixtures</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/dashboard" class="list-group-item list-group-item-action">Dashboard</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/sports" class="list-group-item list-group-item-action">All Sports</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/seasons" class="list-group-item list-group-item-action">Seasons</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="list-group-item list-group-item-action">Teams</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players" class="list-group-item list-group-item-action">Players</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures" class="list-group-item list-group-item-action active">Fixtures</a>
                 </div>
             </div>
         </div>
@@ -23,7 +23,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h2>Fixtures</h2>
                 <?php if (in_array($role, ['owner', 'admin', 'manager'])): ?>
-                    <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures/create<?= $seasonId ? "?season_id={$seasonId}" : '' ?>" class="btn btn-primary">+ New Fixture</a>
+                    <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures/create<?= $seasonId ? "?season_id={$seasonId}" : '' ?>" class="btn btn-primary">+ New Fixture</a>
                 <?php endif; ?>
             </div>
             
@@ -66,7 +66,7 @@
                                         <div class="text-muted small"><?= date('H:i', strtotime($f['scheduled_at_local'])) ?></div>
                                     </td>
                                     <td>
-                                        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures/<?= htmlspecialchars($f['id']) ?>" class="text-decoration-none text-dark fw-bold">
+                                        <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures/<?= htmlspecialchars($f['id']) ?>" class="text-decoration-none text-dark fw-bold">
                                             <?= htmlspecialchars($f['home_team_name']) ?> vs <?= htmlspecialchars($f['away_team_name']) ?>
                                         </a>
                                         <?php if ($f['venue_name']): ?>
@@ -90,7 +90,7 @@
                                         <span class="badge <?= $badgeClass ?>"><?= htmlspecialchars(ucfirst($f['status'])) ?></span>
                                     </td>
                                     <td class="text-end">
-                                        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures/<?= htmlspecialchars($f['id']) ?>" class="btn btn-sm btn-outline-secondary">View</a>
+                                        <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures/<?= htmlspecialchars($f['id']) ?>" class="btn btn-sm btn-outline-secondary">View</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

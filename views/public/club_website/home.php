@@ -30,7 +30,7 @@
                                 <a href="<?= htmlspecialchars($settings['hero_cta_url'] ?: ('/club/' . $orgSlug . '/fixtures')) ?>" class="btn btn-club-primary btn-lg rounded-pill px-4 fw-bold text-uppercase">
                                     <?= htmlspecialchars($settings['hero_cta_text'] ?: 'View Fixtures') ?> <i class="bi bi-arrow-right ms-2"></i>
                                 </a>
-                                <a href="/club/<?= $orgSlug ?>/teams" class="btn btn-outline-light btn-lg rounded-pill px-4 fw-bold text-uppercase">
+                                <a href="<?= url("/club/") ?><?= $orgSlug ?>/teams" class="btn btn-outline-light btn-lg rounded-pill px-4 fw-bold text-uppercase">
                                     Meet The Team
                                 </a>
                             </div>
@@ -56,7 +56,7 @@
                                     <strong class="text-dark">Established:</strong> <?= htmlspecialchars($org['founded_year']) ?>
                                 </div>
                             <?php endif; ?>
-                            <a href="/club/<?= $orgSlug ?>/about" class="btn btn-outline-dark rounded-pill fw-bold px-4">Read Full History & Mission</a>
+                            <a href="<?= url("/club/") ?><?= $orgSlug ?>/about" class="btn btn-outline-dark rounded-pill fw-bold px-4">Read Full History & Mission</a>
                         </div>
                         <div class="col-lg-6 text-center">
                             <?php if (!empty($org['cover_url'])): ?>
@@ -82,7 +82,7 @@
                             <span class="badge bg-warning text-dark text-uppercase px-3 py-2 rounded-pill mb-2">Match Schedule</span>
                             <h2 class="display-6 fw-bold text-uppercase mb-0"><?= htmlspecialchars($sec['title'] ?: 'Upcoming Fixtures') ?></h2>
                         </div>
-                        <a href="/club/<?= $orgSlug ?>/fixtures" class="btn btn-link text-club-primary text-decoration-none fw-bold">All Fixtures <i class="bi bi-arrow-right"></i></a>
+                        <a href="<?= url("/club/") ?><?= $orgSlug ?>/fixtures" class="btn btn-link text-club-primary text-decoration-none fw-bold">All Fixtures <i class="bi bi-arrow-right"></i></a>
                     </div>
 
                     <?php if (empty($upcomingFixtures)): ?>
@@ -132,7 +132,7 @@
                             <span class="badge bg-success text-white text-uppercase px-3 py-2 rounded-pill mb-2">Scores</span>
                             <h2 class="display-6 fw-bold text-uppercase mb-0"><?= htmlspecialchars($sec['title'] ?: 'Latest Match Results') ?></h2>
                         </div>
-                        <a href="/club/<?= $orgSlug ?>/results" class="btn btn-link text-club-primary text-decoration-none fw-bold">Full Results Archive <i class="bi bi-arrow-right"></i></a>
+                        <a href="<?= url("/club/") ?><?= $orgSlug ?>/results" class="btn btn-link text-club-primary text-decoration-none fw-bold">Full Results Archive <i class="bi bi-arrow-right"></i></a>
                     </div>
 
                     <?php if (empty($completedResults)): ?>
@@ -191,7 +191,7 @@
                                         <h4 class="fw-bold text-uppercase mb-2"><?= htmlspecialchars($t['name']) ?></h4>
                                         <span class="badge bg-light text-dark border mb-3 w-auto mx-auto"><?= htmlspecialchars($t['team_type'] ?: 'Senior Division') ?></span>
                                         <p class="small text-muted mb-4"><?= htmlspecialchars($t['description'] ?: 'Official club division team competing in regional competitions.') ?></p>
-                                        <a href="/club/<?= $orgSlug ?>/teams/<?= htmlspecialchars($t['slug']) ?>" class="btn btn-outline-primary rounded-pill btn-sm mt-auto fw-bold">View Squad & Roster</a>
+                                        <a href="<?= url("/club/") ?><?= $orgSlug ?>/teams/<?= htmlspecialchars($t['slug']) ?>" class="btn btn-outline-primary rounded-pill btn-sm mt-auto fw-bold">View Squad & Roster</a>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -210,7 +210,7 @@
                             <span class="badge bg-danger text-white text-uppercase px-3 py-2 rounded-pill mb-2">Matchday & News</span>
                             <h2 class="display-6 fw-bold text-uppercase mb-0"><?= htmlspecialchars($sec['title'] ?: 'Latest Club Updates') ?></h2>
                         </div>
-                        <a href="/club/<?= $orgSlug ?>/news" class="btn btn-link text-club-primary text-decoration-none fw-bold">Read All News <i class="bi bi-arrow-right"></i></a>
+                        <a href="<?= url("/club/") ?><?= $orgSlug ?>/news" class="btn btn-link text-club-primary text-decoration-none fw-bold">Read All News <i class="bi bi-arrow-right"></i></a>
                     </div>
 
                     <?php if (empty($news)): ?>
@@ -231,7 +231,7 @@
                                             <span class="badge bg-primary-subtle text-primary px-3 py-1 rounded-pill small fw-bold w-auto mb-2"><?= htmlspecialchars($article['category']) ?></span>
                                             <h5 class="fw-bold text-dark text-uppercase mb-2"><?= htmlspecialchars($article['title']) ?></h5>
                                             <p class="small text-muted mb-4"><?= htmlspecialchars($article['excerpt'] ?: substr(strip_tags($article['content']), 0, 120) . '...') ?></p>
-                                            <a href="/club/<?= $orgSlug ?>/news/<?= htmlspecialchars($article['slug']) ?>" class="btn btn-link text-club-primary text-decoration-none p-0 fw-bold mt-auto">
+                                            <a href="<?= url("/club/") ?><?= $orgSlug ?>/news/<?= htmlspecialchars($article['slug']) ?>" class="btn btn-link text-club-primary text-decoration-none p-0 fw-bold mt-auto">
                                                 Read Article <i class="bi bi-arrow-right"></i>
                                             </a>
                                         </div>
@@ -272,7 +272,7 @@
                         <div class="col-lg-6">
                             <div class="card border-0 shadow-lg rounded-4 p-4 bg-white">
                                 <h4 class="fw-bold mb-3">Send Message</h4>
-                                <form action="/club/<?= $orgSlug ?>/contact" method="POST">
+                                <form action="<?= url("/club/") ?><?= $orgSlug ?>/contact" method="POST">
                                     <?= csrf_field() ?>
                                     <div class="mb-3">
                                         <input type="text" name="name" class="form-control rounded-3 p-3" placeholder="Your Name" required>
