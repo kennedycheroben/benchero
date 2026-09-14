@@ -5,9 +5,6 @@
     <div class="container py-lg-5">
         <div class="row align-items-center g-5">
             <div class="col-lg-7 text-center text-lg-start">
-                <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-3 benchero-hero-item stagger-1">
-                    <i class="bi bi-trophy-fill me-1"></i> Multi-Sport Club Management Platform
-                </span>
                 <div class="d-flex align-items-center gap-3 justify-content-center justify-content-lg-start mb-3 benchero-hero-item stagger-1">
                     <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="64" class="rounded-3 shadow">
                     <h1 class="display-4 fw-extrabold text-slate-900 tracking-tight mb-0">
