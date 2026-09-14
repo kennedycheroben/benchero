@@ -6,7 +6,7 @@
             <h2 class="display-6 fw-bold mb-0">Club History & Timeline Milestones</h2>
             <p class="text-muted mb-0">Record founding dates, league championships, trophies, and major club achievements.</p>
         </div>
-        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website" class="btn btn-outline-secondary rounded-3">
+        <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website') ?>" class="btn btn-outline-secondary rounded-3">
             <i class="bi bi-arrow-left me-1"></i> Back to Website Overview
         </a>
     </div>
@@ -30,7 +30,7 @@
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                 <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle text-danger me-2"></i>Add / Edit Milestone</h5>
-                <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/history" method="POST" enctype="multipart/form-data">
+                <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/website/history') ?>" method="POST" enctype="multipart/form-data">
                     <?= csrf_field() ?>
                     <input type="hidden" name="id" value="">
 
@@ -98,7 +98,7 @@
                                     <p class="small text-muted mb-0 mt-1"><?= htmlspecialchars($h['description']) ?></p>
                                 </div>
 
-                                <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/history/<?= htmlspecialchars($h['id']) ?>/delete" method="POST" onsubmit="return confirm('Delete milestone?');">
+                                <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/website/history/' . urlencode($h['id']) . '/delete') ?>" method="POST" onsubmit="return confirm('Delete milestone?');">
                                     <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle p-2">
                                         <i class="bi bi-trash"></i>

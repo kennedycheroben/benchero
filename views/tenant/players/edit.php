@@ -31,7 +31,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($player['id']) ?>">
+                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players/<?= htmlspecialchars($player['id']) ?>" enctype="multipart/form-data">
                         <?= csrf_field() ?>
                         
                         <div class="row mb-3">
@@ -48,6 +48,19 @@
                         <div class="mb-3">
                             <label for="display_name" class="form-label">Display Name (Optional)</label>
                             <input type="text" class="form-control" id="display_name" name="display_name" value="<?= htmlspecialchars($player['display_name'] ?? '') ?>">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo_file" class="form-label fw-semibold">Player Photo File Upload (Optional)</label>
+                            <input type="file" class="form-control" id="photo_file" name="photo_file" accept="image/png,image/jpeg,image/webp">
+                            <input type="hidden" name="photo_url" value="<?= htmlspecialchars($player['photo_url'] ?? '') ?>">
+                            <div class="form-text">PNG, JPG, WEBP formats. Max file size: 2 MB.</div>
+                            <?php if (!empty($player['photo_url'])): ?>
+                                <div class="mt-2 d-flex align-items-center">
+                                    <span class="me-2 small text-muted">Current Photo:</span>
+                                    <img src="<?= htmlspecialchars($player['photo_url']) ?>" alt="Player Photo" class="rounded border" style="height: 40px; width: 40px; object-fit: cover;">
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-3">

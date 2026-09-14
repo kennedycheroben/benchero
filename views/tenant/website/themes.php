@@ -6,7 +6,7 @@
             <h2 class="display-6 fw-bold mb-0">Club Website Themes</h2>
             <p class="text-muted mb-0">Select a design layout for your public club website. All themes dynamically use your club data.</p>
         </div>
-        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website" class="btn btn-outline-secondary rounded-3">
+        <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website') ?>" class="btn btn-outline-secondary rounded-3">
             <i class="bi bi-arrow-left me-1"></i> Back to Website Overview
         </a>
     </div>
@@ -18,7 +18,7 @@
         </div>
     <?php endif; ?>
 
-    <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/themes" method="POST">
+    <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/website/themes') ?>" method="POST">
         <?= csrf_field() ?>
 
         <div class="row g-4 mb-4">

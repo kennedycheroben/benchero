@@ -5,7 +5,7 @@
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
             <h3 class="fw-bold mb-3"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Staff Member</h3>
 
-            <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/staff/' . urlencode($member['id'])) ?>" method="POST">
+            <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/staff/' . urlencode($member['id'])) ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 
                 <div class="row g-3 mb-3">
@@ -53,8 +53,16 @@
                     </div>
 
                     <div class="col-12">
-                        <label for="photo_url" class="form-label fw-semibold">Profile Photo URL</label>
-                        <input type="url" id="photo_url" name="photo_url" class="form-control" value="<?= htmlspecialchars($member['photo_url'] ?? '') ?>">
+                        <label for="photo_file" class="form-label fw-semibold">Upload Staff Profile Photo File</label>
+                        <input type="file" id="photo_file" name="photo_file" class="form-control" accept="image/png,image/jpeg,image/webp">
+                        <input type="hidden" name="photo_url" value="<?= htmlspecialchars($member['photo_url'] ?? '') ?>">
+                        <div class="form-text">PNG, JPG, WEBP formats. Max file size: 2 MB.</div>
+                        <?php if (!empty($member['photo_url'])): ?>
+                            <div class="mt-2 d-flex align-items-center">
+                                <span class="me-2 small text-muted">Current Photo:</span>
+                                <img src="<?= htmlspecialchars($member['photo_url']) ?>" alt="Staff Photo" class="rounded border" style="height: 40px; width: 40px; object-fit: cover;">
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="col-12">

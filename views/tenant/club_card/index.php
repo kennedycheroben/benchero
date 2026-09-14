@@ -6,7 +6,7 @@
             <h1 class="h3 fw-bold mb-1">Digital Club Card</h1>
             <p class="text-muted mb-0">Shareable mobile digital club card for your supporters, partners, and team members.</p>
         </div>
-        <a href="/o/<?= htmlspecialchars($org['slug']) ?>/dashboard" class="btn btn-outline-secondary">
+        <a href="<?= url('/o/' . urlencode($org['slug']) . '/dashboard') ?>" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
         </a>
     </div>
@@ -19,7 +19,7 @@
                 <p class="text-muted max-w-xl mx-auto mb-3">
                     Digital Club Cards and instant QR Code generation are available exclusively on <strong>Benchero Pro</strong> (KSh 20,000/year).
                 </p>
-                <a href="/o/<?= htmlspecialchars($org['slug']) ?>/billing" class="btn btn-primary btn-lg fw-bold px-4 rounded-3">
+                <a href="<?= url('/o/' . urlencode($org['slug']) . '/billing') ?>" class="btn btn-primary btn-lg fw-bold px-4 rounded-3">
                     Upgrade to Benchero Pro Now
                 </a>
             </div>
@@ -93,7 +93,7 @@
                         </a>
                     </div>
 
-                    <a href="/club/<?= htmlspecialchars($org['slug']) ?>/card" target="_blank" class="btn btn-outline-secondary w-100 fw-bold">
+                    <a href="<?= url('/club/' . urlencode($org['slug']) . '/card') ?>" target="_blank" class="btn btn-outline-secondary w-100 fw-bold">
                         <i class="bi bi-box-arrow-up-right me-1"></i> View Public Digital Card
                     </a>
                 </div>

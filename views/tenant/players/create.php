@@ -31,7 +31,7 @@
 
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players">
+                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/players" enctype="multipart/form-data">
                         <?= csrf_field() ?>
                         
                         <div class="row mb-3">
@@ -48,6 +48,12 @@
                         <div class="mb-3">
                             <label for="display_name" class="form-label">Display Name (Optional)</label>
                             <input type="text" class="form-control" id="display_name" name="display_name" placeholder="e.g. Known nickname">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo_file" class="form-label fw-semibold">Player Photo File Upload (Optional)</label>
+                            <input type="file" class="form-control" id="photo_file" name="photo_file" accept="image/png,image/jpeg,image/webp">
+                            <div class="form-text">PNG, JPG, WEBP formats. Max file size: 2 MB.</div>
                         </div>
 
                         <div class="mb-3">

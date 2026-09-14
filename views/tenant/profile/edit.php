@@ -7,7 +7,7 @@
             <h2 class="display-6 fw-bold mb-0">Club Profile & Branding</h2>
             <p class="text-muted mb-0">Configure your club details, logo, cover image, colors, and public contact information.</p>
         </div>
-        <a href="/club/<?= htmlspecialchars($tenant['slug']) ?>" target="_blank" class="btn btn-outline-primary fw-bold rounded-3">
+        <a href="<?= url('/club/' . urlencode($tenant['slug'])) ?>" target="_blank" class="btn btn-outline-primary fw-bold rounded-3">
             <i class="bi bi-box-arrow-up-right me-1"></i> Preview Public Page
         </a>
     </div>
@@ -28,7 +28,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/profile" enctype="multipart/form-data" class="needs-validation">
+    <form method="POST" action="<?= url('/o/' . urlencode($tenant['slug']) . '/profile') ?>" enctype="multipart/form-data" class="needs-validation">
         <?= csrf_field() ?>
 
         <div class="row g-4">

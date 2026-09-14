@@ -66,6 +66,7 @@
                 <div class="card border-0 shadow-lg rounded-4 p-4 bg-white">
                     <h4 class="fw-bold text-uppercase mb-3">Send Us A Message</h4>
                     <form action="/club/<?= $orgSlug ?>/contact" method="POST">
+                        <?= csrf_field() ?>
                         <div class="mb-3">
                             <label class="form-label fw-bold small text-uppercase">Your Full Name</label>
                             <input type="text" name="name" class="form-control rounded-3 p-3" value="<?= htmlspecialchars($formData['name'] ?? '') ?>" placeholder="John Doe" required>

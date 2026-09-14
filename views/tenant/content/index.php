@@ -31,18 +31,18 @@
     <!-- Navigation Tabs -->
     <ul class="nav nav-pills nav-fill bg-white shadow-sm p-2 rounded-4 mb-4" id="contentTabs" role="tablist">
         <li class="nav-item">
-            <a class="nav-link fw-bold rounded-3 <?= $tab === 'news' ? 'active' : '' ?>" href="/o/<?= htmlspecialchars($tenant['slug']) ?>/content?tab=news">
-                <i class="bi bi-newspaper me-2"></i>News & Announcements
+            <a class="nav-link fw-bold rounded-3 <?= $tab === 'news' ? 'active' : '' ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/content?tab=news') ?>">
+                <i class="bi bi-newspaper me-1"></i> News & Announcements
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link fw-bold rounded-3 <?= $tab === 'gallery' ? 'active' : '' ?>" href="/o/<?= htmlspecialchars($tenant['slug']) ?>/content?tab=gallery">
-                <i class="bi bi-images me-2"></i>Photo Gallery
+            <a class="nav-link fw-bold rounded-3 <?= $tab === 'gallery' ? 'active' : '' ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/content?tab=gallery') ?>">
+                <i class="bi bi-images me-1"></i> Photo Gallery
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link fw-bold rounded-3 <?= $tab === 'sponsors' ? 'active' : '' ?>" href="/o/<?= htmlspecialchars($tenant['slug']) ?>/content?tab=sponsors">
-                <i class="bi bi-award me-2"></i>Sponsors & Partners
+            <a class="nav-link fw-bold rounded-3 <?= $tab === 'sponsors' ? 'active' : '' ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/content?tab=sponsors') ?>">
+                <i class="bi bi-award me-1"></i> Club Sponsors
             </a>
         </li>
     </ul>
@@ -53,7 +53,7 @@
             <div class="col-lg-5">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                     <h5 class="fw-bold mb-3"><i class="bi bi-pencil-square text-primary me-2"></i>Publish News Article</h5>
-                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/content/news">
+                    <form method="POST" action="<?= url('/o/' . urlencode($tenant['slug']) . '/content/news') ?>" enctype="multipart/form-data">
                         <?= csrf_field() ?>
                         <div class="mb-3">
                             <label for="title" class="form-label fw-semibold">Article Title <span class="text-danger">*</span></label>
@@ -70,8 +70,9 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="image_url" class="form-label fw-semibold">Feature Image URL</label>
-                            <input type="url" class="form-control" id="image_url" name="image_url" placeholder="https://example.com/news.jpg">
+                            <label for="image_file" class="form-label fw-semibold">Feature Image File Upload</label>
+                            <input type="file" class="form-control" id="image_file" name="image_file" accept="image/png,image/jpeg,image/webp,image/gif">
+                            <div class="form-text">Upload news article image (Max size: 2 MB).</div>
                         </div>
                         <div class="mb-3">
                             <label for="excerpt" class="form-label fw-semibold">Short Summary / Excerpt</label>
@@ -109,7 +110,7 @@
                                             <p class="text-muted small mb-2"><?= htmlspecialchars($item['excerpt'] ?: substr(strip_tags($item['content']), 0, 120)) ?></p>
                                             <small class="text-muted"><i class="bi bi-clock me-1"></i><?= date('M j, Y H:i', strtotime($item['published_at'])) ?></small>
                                         </div>
-                                        <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/content/news/<?= htmlspecialchars($item['id']) ?>/delete" onsubmit="return confirm('Delete this news article?');">
+                                        <form method="POST" action="<?= url('/o/' . urlencode($tenant['slug']) . '/content/news/' . urlencode($item['id']) . '/delete') ?>" onsubmit="return confirm('Delete this news article?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-outline-danger btn-sm rounded-3"><i class="bi bi-trash"></i></button>
                                         </form>
@@ -128,7 +129,7 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                     <h5 class="fw-bold mb-3"><i class="bi bi-upload text-info me-2"></i>Add Gallery Photo</h5>
-                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/content/gallery">
+                    <form method="POST" action="<?= url('/o/' . urlencode($tenant['slug']) . '/content/gallery') ?>" enctype="multipart/form-data">
                         <?= csrf_field() ?>
                         <div class="mb-3">
                             <label for="title" class="form-label fw-semibold">Photo Title / Caption</label>
@@ -145,8 +146,9 @@
                             </select>
                         </div>
                         <div class="mb-4">
-                            <label for="image_url" class="form-label fw-semibold">Image Direct URL <span class="text-danger">*</span></label>
-                            <input type="url" class="form-control" id="image_url" name="image_url" required placeholder="https://example.com/photo.jpg">
+                            <label for="image_file" class="form-label fw-semibold">Upload Image File <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="image_file" name="image_file" accept="image/png,image/jpeg,image/webp,image/gif" required>
+                            <div class="form-text">Upload gallery photo (Max size: 2 MB).</div>
                         </div>
                         <button type="submit" class="btn btn-info text-white w-100 fw-bold rounded-3 py-2">
                             <i class="bi bi-plus-lg me-1"></i> Add Photo to Gallery
@@ -171,7 +173,7 @@
                                         <img src="<?= htmlspecialchars($img['image_url']) ?>" class="card-img-top" style="height: 160px; object-fit: cover;" alt="<?= htmlspecialchars($img['title'] ?? 'Gallery') ?>">
                                         <div class="card-body p-2 d-flex justify-content-between align-items-center bg-light">
                                             <span class="badge bg-secondary-subtle text-secondary small"><?= htmlspecialchars($img['category']) ?></span>
-                                            <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/content/gallery/<?= htmlspecialchars($img['id']) ?>/delete" onsubmit="return confirm('Delete this image?');" class="d-inline">
+                                            <form method="POST" action="<?= url('/o/' . urlencode($tenant['slug']) . '/content/gallery/' . urlencode($img['id']) . '/delete') ?>" onsubmit="return confirm('Delete this image?');" class="d-inline">
                                                 <?= csrf_field() ?>
                                                 <button type="submit" class="btn btn-sm text-danger p-0 border-0"><i class="bi bi-trash"></i></button>
                                             </form>
@@ -191,7 +193,7 @@
             <div class="col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
                     <h5 class="fw-bold mb-3"><i class="bi bi-award text-warning me-2"></i>Add Sponsor / Partner</h5>
-                    <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/content/sponsors">
+                    <form method="POST" action="<?= url('/o/' . urlencode($tenant['slug']) . '/content/sponsors') ?>" enctype="multipart/form-data">
                         <?= csrf_field() ?>
                         <div class="mb-3">
                             <label for="name" class="form-label fw-semibold">Sponsor Name <span class="text-danger">*</span></label>
@@ -208,8 +210,9 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="logo_url" class="form-label fw-semibold">Logo Image URL <span class="text-danger">*</span></label>
-                            <input type="url" class="form-control" id="logo_url" name="logo_url" required placeholder="https://example.com/logo.png">
+                            <label for="logo_file" class="form-label fw-semibold">Upload Logo Image File <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="logo_file" name="logo_file" accept="image/png,image/jpeg,image/webp" required>
+                            <div class="form-text">Upload sponsor logo (Max size: 2 MB).</div>
                         </div>
                         <div class="mb-4">
                             <label for="website_url" class="form-label fw-semibold">Website Link (Optional)</label>
@@ -246,7 +249,7 @@
                                             <?php else: ?>
                                                 <span></span>
                                             <?php endif; ?>
-                                            <form method="POST" action="/o/<?= htmlspecialchars($tenant['slug']) ?>/content/sponsors/<?= htmlspecialchars($s['id']) ?>/delete" onsubmit="return confirm('Remove sponsor?');" class="d-inline">
+                                            <form method="POST" action="<?= url('/o/' . urlencode($tenant['slug']) . '/content/sponsors/' . urlencode($s['id']) . '/delete') ?>" onsubmit="return confirm('Remove sponsor?');" class="d-inline">
                                                 <?= csrf_field() ?>
                                                 <button type="submit" class="btn btn-sm text-danger border-0 p-0"><i class="bi bi-trash"></i></button>
                                             </form>

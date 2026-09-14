@@ -9,7 +9,7 @@
                 <div class="alert alert-danger rounded-3 mb-3"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
-            <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/staff') ?>" method="POST">
+            <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/staff') ?>" method="POST" enctype="multipart/form-data">
                 <?= csrf_field() ?>
                 
                 <div class="row g-3 mb-3">
@@ -66,8 +66,9 @@
                     </div>
 
                     <div class="col-12">
-                        <label for="photo_url" class="form-label fw-semibold">Profile Photo URL</label>
-                        <input type="url" id="photo_url" name="photo_url" class="form-control" placeholder="https://example.com/coach.jpg">
+                        <label for="photo_file" class="form-label fw-semibold">Upload Staff Profile Photo File</label>
+                        <input type="file" id="photo_file" name="photo_file" class="form-control" accept="image/png,image/jpeg,image/webp">
+                        <div class="form-text">PNG, JPG, WEBP formats. Max file size: 2 MB.</div>
                     </div>
 
                     <div class="col-12">

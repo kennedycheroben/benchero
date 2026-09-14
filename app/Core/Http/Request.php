@@ -84,9 +84,46 @@ class Request
         return $this->get;
     }
 
-    public function get(string $key, mixed $default = null): mixed
+    public function get(?string $key = null, mixed $default = null): mixed
     {
+        if ($key === null) {
+            return $this->get;
+        }
         return $this->get[$key] ?? $default;
+    }
+
+    public function post(?string $key = null, mixed $default = null): mixed
+    {
+        if ($key === null) {
+            return $this->post;
+        }
+        return $this->post[$key] ?? $default;
+    }
+
+    public function files(?string $key = null, mixed $default = null): mixed
+    {
+        if ($key === null) {
+            return $this->files;
+        }
+        return $this->files[$key] ?? $default;
+    }
+
+    public function setFlash(string $key, string $msg): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        $_SESSION['_flash'][$key] = $msg;
+    }
+
+    public function getFlash(string $key, mixed $default = null): mixed
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        $val = $_SESSION['_flash'][$key] ?? $default;
+        unset($_SESSION['_flash'][$key]);
+        return $val;
     }
 
     public function body(): array

@@ -6,7 +6,7 @@
             <h2 class="display-6 fw-bold mb-0">Homepage Section Builder</h2>
             <p class="text-muted mb-0">Enable, disable, and re-order sections displayed on your club's public home page.</p>
         </div>
-        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website" class="btn btn-outline-secondary rounded-3">
+        <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website') ?>" class="btn btn-outline-secondary rounded-3">
             <i class="bi bi-arrow-left me-1"></i> Back to Website Overview
         </a>
     </div>
@@ -18,7 +18,7 @@
         </div>
     <?php endif; ?>
 
-    <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/homepage" method="POST">
+    <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/website/homepage') ?>" method="POST">
         <?= csrf_field() ?>
 
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">

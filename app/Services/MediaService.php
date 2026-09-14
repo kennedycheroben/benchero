@@ -35,7 +35,7 @@ class MediaService
     ];
 
     public const MAX_LOGO_SIZE = 2097152; // Exactly 2 MB (2,097,152 bytes)
-    public const MAX_GENERAL_SIZE = 5242880; // 5 MB
+    public const MAX_GENERAL_SIZE = 2097152; // Exactly 2 MB (2,097,152 bytes)
 
     public function __construct(?PDO $db = null, ?string $uploadBaseDir = null, ?EntitlementService $entitlementService = null)
     {
@@ -169,7 +169,7 @@ HTACCESS;
         }
 
         if ($file['size'] > self::MAX_GENERAL_SIZE) {
-            throw new InvalidArgumentException('Cover file size exceeds the maximum allowed limit of 5 MB (5,242,880 bytes).');
+            throw new InvalidArgumentException('Cover file size exceeds the maximum allowed limit of 2 MB (2,097,152 bytes).');
         }
 
         if (!is_uploaded_file($file['tmp_name'])) {
@@ -249,7 +249,7 @@ HTACCESS;
         }
 
         if ($file['size'] > self::MAX_GENERAL_SIZE) {
-            throw new InvalidArgumentException('File size exceeds maximum allowed limit (5 MB).');
+            throw new InvalidArgumentException('File size exceeds maximum allowed limit of 2 MB (2,097,152 bytes).');
         }
 
         if (!is_uploaded_file($file['tmp_name'])) {

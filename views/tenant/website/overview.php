@@ -8,10 +8,10 @@
             <p class="text-muted mb-0">Manage your official sports club website status, branding, and content readiness.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/customize" class="btn btn-primary fw-bold rounded-3">
+            <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/customize') ?>" class="btn btn-primary fw-bold rounded-3">
                 <i class="bi bi-paint-bucket me-1"></i> Customize Website
             </a>
-            <a href="/club/<?= htmlspecialchars($tenant['slug']) ?>" target="_blank" class="btn btn-outline-dark fw-bold rounded-3">
+            <a href="<?= url('/club/' . urlencode($tenant['slug'])) ?>" target="_blank" class="btn btn-outline-dark fw-bold rounded-3">
                 <i class="bi bi-globe me-1"></i> View Live Website <i class="bi bi-box-arrow-up-right small ms-1"></i>
             </a>
         </div>
@@ -64,7 +64,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Branding & Customization</h5>
                 <p class="small text-muted mb-4">Set club crest, hero banner, tagline, primary/secondary colors, header style, and footer contact info.</p>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/customize" class="btn btn-outline-primary rounded-3 fw-bold mt-auto">Customize Identity</a>
+                <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/customize') ?>" class="btn btn-outline-primary rounded-3 fw-bold mt-auto">Customize Identity</a>
             </div>
         </div>
 
@@ -75,7 +75,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Homepage Section Builder</h5>
                 <p class="small text-muted mb-4">Enable, disable, and re-order homepage content blocks (Hero, Fixtures, Teams, News, Sponsors, etc.).</p>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/homepage" class="btn btn-outline-success rounded-3 fw-bold mt-auto">Organize Homepage</a>
+                <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/homepage') ?>" class="btn btn-outline-success rounded-3 fw-bold mt-auto">Organize Homepage</a>
             </div>
         </div>
 
@@ -86,7 +86,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Navigation & Page Visibility</h5>
                 <p class="small text-muted mb-4">Control which sub-pages are visible in the website navigation bar (About, Players, Fixtures, News, Gallery, etc.).</p>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/navigation" class="btn btn-outline-warning rounded-3 fw-bold mt-auto">Manage Navigation</a>
+                <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/navigation') ?>" class="btn btn-outline-warning rounded-3 fw-bold mt-auto">Manage Navigation</a>
             </div>
         </div>
 
@@ -97,7 +97,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Website Themes</h5>
                 <p class="small text-muted mb-4">Choose between 3 layouts: Modern Sport, Classic Club, or Dynamic Athletic.</p>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/themes" class="btn btn-outline-info rounded-3 fw-bold mt-auto">Select Theme</a>
+                <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/themes') ?>" class="btn btn-outline-info rounded-3 fw-bold mt-auto">Select Theme</a>
             </div>
         </div>
 
@@ -108,7 +108,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Club History & Milestones</h5>
                 <p class="small text-muted mb-4">Create a timeline of championships, founded dates, and honors.</p>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/history" class="btn btn-outline-danger rounded-3 fw-bold mt-auto">Manage Timeline</a>
+                <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website/history') ?>" class="btn btn-outline-danger rounded-3 fw-bold mt-auto">Manage Timeline</a>
             </div>
         </div>
 
@@ -119,7 +119,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Media Library</h5>
                 <p class="small text-muted mb-4">Centralized tenant photo storage for logos, match snapshots, and banners.</p>
-                <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/media" class="btn btn-outline-secondary rounded-3 fw-bold mt-auto">Open Media Library</a>
+                <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/media') ?>" class="btn btn-outline-secondary rounded-3 fw-bold mt-auto">Open Media Library</a>
             </div>
         </div>
     </div>

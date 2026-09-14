@@ -67,11 +67,28 @@ class StaffController extends Controller
             ], 400);
         }
 
+        $photoUrl = trim((string)$request->input('photo_url'));
+        if (!empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
+            $mediaService = new \Benchero\Services\MediaService();
+            try {
+                $uploaded = $mediaService->uploadImage($tenant['id'], $_FILES['photo_file'], 'staff', $firstName . ' ' . $lastName);
+                $photoUrl = $uploaded['url'];
+            } catch (\Exception $e) {
+                $sport = $request->getAttribute('sport');
+                $teams = $sport ? $this->teamRepo->findByOrgAndSport($tenant['id'], $sport['id']) : [];
+                return $this->render('tenant/staff/create', [
+                    'tenant' => $tenant,
+                    'teams' => $teams,
+                    'error' => 'Photo upload failed: ' . $e->getMessage()
+                ], 400);
+            }
+        }
+
         $data = [
             'first_name' => $firstName,
             'last_name' => $lastName,
             'role' => $role,
-            'photo_url' => trim((string)$request->input('photo_url')),
+            'photo_url' => $photoUrl,
             'team_id' => trim((string)$request->input('team_id')),
             'email' => trim((string)$request->input('email')),
             'phone' => trim((string)$request->input('phone')),
@@ -115,11 +132,23 @@ class StaffController extends Controller
             return Response::redirect("/o/{$tenant['slug']}/staff/{$id}/edit");
         }
 
+        $photoUrl = trim((string)$request->input('photo_url'));
+        if (!empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
+            $mediaService = new \Benchero\Services\MediaService();
+            try {
+                $uploaded = $mediaService->uploadImage($tenant['id'], $_FILES['photo_file'], 'staff', $firstName . ' ' . $lastName);
+                $photoUrl = $uploaded['url'];
+            } catch (\Exception $e) {
+                $_SESSION['error'] = 'Photo upload failed: ' . $e->getMessage();
+                return Response::redirect("/o/{$tenant['slug']}/staff/{$id}/edit");
+            }
+        }
+
         $data = [
             'first_name' => $firstName,
             'last_name' => $lastName,
             'role' => $role,
-            'photo_url' => trim((string)$request->input('photo_url')),
+            'photo_url' => $photoUrl,
             'team_id' => trim((string)$request->input('team_id')),
             'email' => trim((string)$request->input('email')),
             'phone' => trim((string)$request->input('phone')),

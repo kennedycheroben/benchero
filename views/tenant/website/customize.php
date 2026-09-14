@@ -6,7 +6,7 @@
             <h2 class="display-6 fw-bold mb-0">Website Customization & Branding</h2>
             <p class="text-muted mb-0">Configure your official club crest, color palette, hero banner, and contact details.</p>
         </div>
-        <a href="/o/<?= htmlspecialchars($tenant['slug']) ?>/website" class="btn btn-outline-secondary rounded-3">
+        <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/website') ?>" class="btn btn-outline-secondary rounded-3">
             <i class="bi bi-arrow-left me-1"></i> Back to Website Overview
         </a>
     </div>
@@ -25,7 +25,7 @@
         </div>
     <?php endif; ?>
 
-    <form action="/o/<?= htmlspecialchars($tenant['slug']) ?>/website/customize" method="POST" enctype="multipart/form-data">
+    <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/website/customize') ?>" method="POST" enctype="multipart/form-data">
         <?= csrf_field() ?>
 
         <!-- Identity & Crest -->

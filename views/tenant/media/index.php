@@ -10,7 +10,7 @@
             <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#uploadMediaModal">
                 <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload Asset
             </button>
-            <a href="/o/<?= htmlspecialchars($org['slug']) ?>/dashboard" class="btn btn-outline-secondary">
+            <a href="<?= url('/o/' . urlencode($org['slug']) . '/dashboard') ?>" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Dashboard
             </a>
         </div>
@@ -56,25 +56,25 @@
     <!-- Category Tabs -->
     <ul class="nav nav-pills mb-4 gap-1">
         <li class="nav-item">
-            <a class="nav-link <?= empty($currentCategory) ? 'active fw-bold' : '' ?>" href="/o/<?= htmlspecialchars($org['slug']) ?>/media">All Assets</a>
+            <a class="nav-link <?= empty($currentCategory) ? 'active fw-bold' : '' ?>" href="<?= url('/o/' . urlencode($org['slug']) . '/media') ?>">All Assets</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $currentCategory === 'logo' ? 'active fw-bold' : '' ?>" href="/o/<?= htmlspecialchars($org['slug']) ?>/media?category=logo">Club Crests</a>
+            <a class="nav-link <?= $currentCategory === 'logo' ? 'active fw-bold' : '' ?>" href="<?= url('/o/' . urlencode($org['slug']) . '/media?category=logo') ?>">Club Crests</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $currentCategory === 'team' ? 'active fw-bold' : '' ?>" href="/o/<?= htmlspecialchars($org['slug']) ?>/media?category=team">Teams</a>
+            <a class="nav-link <?= $currentCategory === 'team' ? 'active fw-bold' : '' ?>" href="<?= url('/o/' . urlencode($org['slug']) . '/media?category=team') ?>">Teams</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $currentCategory === 'player' ? 'active fw-bold' : '' ?>" href="/o/<?= htmlspecialchars($org['slug']) ?>/media?category=player">Players</a>
+            <a class="nav-link <?= $currentCategory === 'player' ? 'active fw-bold' : '' ?>" href="<?= url('/o/' . urlencode($org['slug']) . '/media?category=player') ?>">Players</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $currentCategory === 'news' ? 'active fw-bold' : '' ?>" href="/o/<?= htmlspecialchars($org['slug']) ?>/media?category=news">News</a>
+            <a class="nav-link <?= $currentCategory === 'news' ? 'active fw-bold' : '' ?>" href="<?= url('/o/' . urlencode($org['slug']) . '/media?category=news') ?>">News</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $currentCategory === 'gallery' ? 'active fw-bold' : '' ?>" href="/o/<?= htmlspecialchars($org['slug']) ?>/media?category=gallery">Gallery</a>
+            <a class="nav-link <?= $currentCategory === 'gallery' ? 'active fw-bold' : '' ?>" href="<?= url('/o/' . urlencode($org['slug']) . '/media?category=gallery') ?>">Gallery</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $currentCategory === 'video' ? 'active fw-bold' : '' ?>" href="/o/<?= htmlspecialchars($org['slug']) ?>/media?category=video">Videos</a>
+            <a class="nav-link <?= $currentCategory === 'video' ? 'active fw-bold' : '' ?>" href="<?= url('/o/' . urlencode($org['slug']) . '/media?category=video') ?>">Videos</a>
         </li>
     </ul>
 
@@ -96,7 +96,7 @@
                 <div class="col-6 col-md-4 col-lg-3">
                     <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden media-card">
                         <div class="ratio ratio-4x3 bg-dark">
-                            <?php if (str_starts_with($item['mime_type'], 'video/')): ?>
+                            <?php if (str_starts_with($item['mime_type'] ?? '', 'video/')): ?>
                                 <video src="<?= htmlspecialchars($item['file_url']) ?>" controls class="object-fit-cover"></video>
                             <?php else: ?>
                                 <img src="<?= htmlspecialchars($item['file_url']) ?>" alt="<?= htmlspecialchars($item['alt_text'] ?: $item['filename']) ?>" class="object-fit-cover">
@@ -116,8 +116,8 @@
                                 <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1" onclick="navigator.clipboard.writeText('<?= htmlspecialchars($item['file_url']) ?>'); alert('Image URL copied to clipboard!');">
                                     <i class="bi bi-link-45deg me-1"></i> Copy URL
                                 </button>
-                                <form action="/o/<?= htmlspecialchars($org['slug']) ?>/media/<?= htmlspecialchars($item['id']) ?>/delete" method="POST" onsubmit="return confirm('Delete this asset?');">
-                                    <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_SESSION['_csrf'] ?? '') ?>">
+                                <form action="<?= url('/o/' . urlencode($org['slug']) . '/media/' . urlencode($item['id']) . '/delete') ?>" method="POST" onsubmit="return confirm('Delete this asset?');">
+                                    <?= csrf_field() ?>
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -135,8 +135,8 @@
 <div class="modal fade" id="uploadMediaModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content rounded-4 border-0">
-            <form action="/o/<?= htmlspecialchars($org['slug']) ?>/media" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="_csrf" value="<?= htmlspecialchars($_SESSION['_csrf'] ?? '') ?>">
+            <form action="<?= url('/o/' . urlencode($org['slug']) . '/media') ?>" method="POST" enctype="multipart/form-data">
+                <?= csrf_field() ?>
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title fw-bold">Upload to Media Library</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

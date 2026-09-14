@@ -32,7 +32,7 @@
                                 <label for="password" class="form-label fw-semibold small mb-0">Password</label>
                                 <a href="<?= $this->url('/forgot-password') ?>" class="small text-decoration-none text-primary">Forgot password?</a>
                             </div>
-                            <input type="password" id="password" name="password" class="form-control form-control-lg" required placeholder="••••••••">
+                            <input type="password" id="password" name="password" class="form-control form-control-lg" required placeholder="password">
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-3 mb-3">Log In</button>

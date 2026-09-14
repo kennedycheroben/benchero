@@ -273,6 +273,7 @@
                             <div class="card border-0 shadow-lg rounded-4 p-4 bg-white">
                                 <h4 class="fw-bold mb-3">Send Message</h4>
                                 <form action="/club/<?= $orgSlug ?>/contact" method="POST">
+                                    <?= csrf_field() ?>
                                     <div class="mb-3">
                                         <input type="text" name="name" class="form-control rounded-3 p-3" placeholder="Your Name" required>
                                     </div>

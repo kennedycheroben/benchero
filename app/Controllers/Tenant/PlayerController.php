@@ -80,8 +80,20 @@ class PlayerController
         $dob = trim($_POST['date_of_birth'] ?? '');
         $isActive = isset($_POST['is_active']);
 
+        $photoUrl = trim($_POST['photo_url'] ?? '');
+        if (!empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
+            $mediaService = new \Benchero\Services\MediaService();
+            try {
+                $uploaded = $mediaService->uploadImage($tenant['id'], $_FILES['photo_file'], 'player', $firstName . ' ' . $lastName);
+                $photoUrl = $uploaded['url'];
+            } catch (\Exception $e) {
+                $_SESSION['error'] = 'Player photo upload failed: ' . $e->getMessage();
+                return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/players/create");
+            }
+        }
+
         $extra = [
-            'photo_url' => trim($_POST['photo_url'] ?? ''),
+            'photo_url' => $photoUrl,
             'nationality' => trim($_POST['nationality'] ?? ''),
             'preferred_foot' => trim($_POST['preferred_foot'] ?? ''),
             'emergency_contact' => trim($_POST['emergency_contact'] ?? '')
@@ -164,8 +176,20 @@ class PlayerController
         $dob = trim($_POST['date_of_birth'] ?? '');
         $isActive = isset($_POST['is_active']);
 
+        $photoUrl = trim($_POST['photo_url'] ?? '');
+        if (!empty($_FILES['photo_file']['name']) && $_FILES['photo_file']['error'] === UPLOAD_ERR_OK) {
+            $mediaService = new \Benchero\Services\MediaService();
+            try {
+                $uploaded = $mediaService->uploadImage($tenant['id'], $_FILES['photo_file'], 'player', $firstName . ' ' . $lastName);
+                $photoUrl = $uploaded['url'];
+            } catch (\Exception $e) {
+                $_SESSION['error'] = 'Player photo upload failed: ' . $e->getMessage();
+                return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/players/{$playerId}/edit");
+            }
+        }
+
         $extra = [
-            'photo_url' => trim($_POST['photo_url'] ?? ''),
+            'photo_url' => $photoUrl,
             'nationality' => trim($_POST['nationality'] ?? ''),
             'preferred_foot' => trim($_POST['preferred_foot'] ?? ''),
             'emergency_contact' => trim($_POST['emergency_contact'] ?? '')
