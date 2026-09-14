@@ -6,6 +6,7 @@ use Benchero\Core\Controller;
 use Benchero\Core\Database\Database;
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
+use Benchero\Services\ContactMessageService;
 use PDO;
 
 class ContactMessageController extends Controller
@@ -67,6 +68,21 @@ class ContactMessageController extends Controller
         ]);
     }
 
+    public function unreadCount(Request $request): Response
+    {
+        $tenant = $request->getAttribute('tenant');
+        if (!$tenant || empty($tenant['id'])) {
+            return Response::json(['error' => 'Unauthorized'], 401);
+        }
+
+        $count = ContactMessageService::getUnreadCount($tenant['id']);
+
+        return Response::json([
+            'success' => true,
+            'unread_count' => $count
+        ]);
+    }
+
     public function updateStatus(Request $request, array $params): Response
     {
         try {
@@ -95,7 +111,43 @@ class ContactMessageController extends Controller
         ");
         $stmt->execute([$newStatus, $msgId, $tenant['id']]);
 
+        ContactMessageService::clearCache($tenant['id']);
+
         $request->setFlash('success', 'Message status updated.');
+        return $this->redirect('/o/' . urlencode($tenant['slug']) . '/contact-messages');
+    }
+
+    public function markAllAsRead(Request $request): Response
+    {
+        try {
+            $this->requireManagerRole($request);
+        } catch (\Exception $e) {
+            return new Response($e->getMessage(), 403);
+        }
+
+        if (!$request->validateCsrf()) {
+            return new Response('403 Forbidden - CSRF failed', 403);
+        }
+
+        $tenant = $request->getAttribute('tenant');
+        $db = Database::getConnection();
+        $stmt = $db->prepare("
+            UPDATE contact_messages
+            SET status = 'read', updated_at = NOW()
+            WHERE organization_id = ? AND status = 'unread' AND deleted_at IS NULL
+        ");
+        $stmt->execute([$tenant['id']]);
+
+        ContactMessageService::clearCache($tenant['id']);
+
+        $acceptHeader = $request->header('Accept');
+        $requestedWith = $request->header('X-Requested-With');
+
+        if (str_contains($acceptHeader, 'application/json') || $requestedWith === 'XMLHttpRequest') {
+            return Response::json(['success' => true, 'unread_count' => 0]);
+        }
+
+        $request->setFlash('success', 'All contact messages marked as read.');
         return $this->redirect('/o/' . urlencode($tenant['slug']) . '/contact-messages');
     }
 
@@ -121,6 +173,8 @@ class ContactMessageController extends Controller
             WHERE id = ? AND organization_id = ?
         ");
         $stmt->execute([$msgId, $tenant['id']]);
+
+        ContactMessageService::clearCache($tenant['id']);
 
         $request->setFlash('success', 'Contact message removed.');
         return $this->redirect('/o/' . urlencode($tenant['slug']) . '/contact-messages');

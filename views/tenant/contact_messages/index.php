@@ -6,6 +6,16 @@
             <h3 class="fw-bold mb-1"><i class="bi bi-envelope-open text-primary me-2"></i>Contact Messages</h3>
             <p class="text-muted mb-0">View and respond to direct inquiries submitted by visitors on your official club website.</p>
         </div>
+        <?php if (($counts['unread'] ?? 0) > 0): ?>
+            <div>
+                <form action="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages/mark-all-read') ?>" method="POST" class="d-inline">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-outline-success fw-semibold rounded-3 shadow-sm">
+                        <i class="bi bi-check2-all me-1"></i> Mark All as Read
+                    </button>
+                </form>
+            </div>
+        <?php endif; ?>
     </div>
 
     <?php if (!empty($success)): ?>

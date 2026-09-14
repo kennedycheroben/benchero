@@ -171,6 +171,8 @@ $router->addRoute('GET', '/o/{slug}/club-card', ['Benchero\Controllers\Tenant\Cl
 
 // Tenant Contact Messages
 $router->addRoute('GET', '/o/{slug}/contact-messages', ['Benchero\Controllers\Tenant\ContactMessageController', 'index']);
+$router->addRoute('GET', '/o/{slug}/contact-messages/unread-count', ['Benchero\Controllers\Tenant\ContactMessageController', 'unreadCount']);
+$router->addRoute('POST', '/o/{slug}/contact-messages/mark-all-read', ['Benchero\Controllers\Tenant\ContactMessageController', 'markAllAsRead']);
 $router->addRoute('POST', '/o/{slug}/contact-messages/{id}/status', ['Benchero\Controllers\Tenant\ContactMessageController', 'updateStatus']);
 $router->addRoute('POST', '/o/{slug}/contact-messages/{id}/delete', ['Benchero\Controllers\Tenant\ContactMessageController', 'delete']);
 

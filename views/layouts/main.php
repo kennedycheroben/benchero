@@ -52,6 +52,28 @@
             color: var(--benchero-accent);
         }
         .fs-7 { font-size: 0.75rem; }
+
+        /* Benchero Unread Messages Notification Badge */
+        .benchero-unread-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25em 0.55em;
+            line-height: 1;
+            transition: all 0.2s ease;
+        }
+        @keyframes benchero-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+        .benchero-unread-badge.pulse {
+            animation: benchero-pulse 0.4s ease-in-out 2;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .benchero-unread-badge.pulse {
+                animation: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -146,8 +168,22 @@
                         </a>
 
                         <div class="text-uppercase text-muted fw-bold fs-7 mt-3 mb-2 px-2">Media & Platform</div>
-                        <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages') ?>">
-                            <i class="bi bi-envelope-open"></i> Contact Messages
+                        <?php
+                            $unreadContactCount = isset($tenant['id']) ? \Benchero\Services\ContactMessageService::getUnreadCount($tenant['id']) : 0;
+                            $badgeText = $unreadContactCount > 9 ? '10+' : (string)$unreadContactCount;
+                            $hasUnread = $unreadContactCount > 0;
+                        ?>
+                        <a class="tenant-nav-link d-flex align-items-center justify-content-between" href="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages') ?>">
+                            <span class="d-flex align-items-center gap-2 text-truncate">
+                                <i class="bi bi-envelope-open"></i> Contact Messages
+                            </span>
+                            <span id="unread-contact-badge" 
+                                  class="badge rounded-pill bg-success ms-auto align-self-center benchero-unread-badge <?= $hasUnread ? '' : 'd-none' ?>" 
+                                  data-count="<?= $unreadContactCount ?>"
+                                  title="<?= $unreadContactCount ?> unread message<?= $unreadContactCount === 1 ? '' : 's' ?>"
+                                  aria-label="<?= $unreadContactCount ?> unread contact message<?= $unreadContactCount === 1 ? '' : 's' ?>">
+                                <?= htmlspecialchars($badgeText) ?>
+                            </span>
                         </a>
                         <a class="tenant-nav-link" href="<?= url('/o/' . urlencode($tenant['slug']) . '/media') ?>">
                             <i class="bi bi-folder2-open"></i> Media Library
@@ -166,13 +202,51 @@
             <?php endif; ?>
 
 <?php
-register_shutdown_function(function() {
+register_shutdown_function(function() use ($tenant) {
     static $rendered = false;
     if (!$rendered) {
         $rendered = true;
         echo '</div></div></div>';
         echo '<footer class="bg-white py-3 mt-auto border-top"><div class="container text-center text-muted"><small>&copy; ' . date('Y') . ' Benchero — Multi-Sport Management SaaS.</small></div></footer>';
         echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>';
+        if (isset($tenant['slug'])) {
+            $slugJs = json_encode($tenant['slug']);
+            echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const badge = document.getElementById('unread-contact-badge');
+                if (!badge) return;
+                const tenantSlug = {$slugJs};
+                function checkUnreadCount() {
+                    fetch('/o/' + encodeURIComponent(tenantSlug) + '/contact-messages/unread-count', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success && typeof data.unread_count === 'number') {
+                            const newCount = data.unread_count;
+                            const oldCount = parseInt(badge.getAttribute('data-count') || '0', 10);
+                            badge.setAttribute('data-count', newCount);
+                            badge.setAttribute('title', newCount + ' unread message' + (newCount === 1 ? '' : 's'));
+                            badge.setAttribute('aria-label', newCount + ' unread contact message' + (newCount === 1 ? '' : 's'));
+                            if (newCount > 0) {
+                                badge.textContent = newCount > 9 ? '10+' : newCount;
+                                badge.classList.remove('d-none');
+                                if (newCount > oldCount) {
+                                    badge.classList.remove('pulse');
+                                    void badge.offsetWidth;
+                                    badge.classList.add('pulse');
+                                }
+                            } else {
+                                badge.classList.add('d-none');
+                            }
+                        }
+                    })
+                    .catch(() => {});
+                }
+                setInterval(checkUnreadCount, 45000);
+            });
+            </script>";
+        }
         echo '<script src="' . url('/assets/js/benchero-motion.js') . '" defer></script></body></html>';
     }
 });
