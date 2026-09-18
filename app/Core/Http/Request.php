@@ -79,9 +79,12 @@ class Request
         return '/' . ltrim($uri, '/');
     }
 
-    public function query(): array
+    public function query(?string $key = null, mixed $default = null): mixed
     {
-        return $this->get;
+        if ($key === null) {
+            return $this->get;
+        }
+        return $this->get[$key] ?? $default;
     }
 
     public function get(?string $key = null, mixed $default = null): mixed

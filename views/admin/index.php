@@ -46,9 +46,15 @@
                 </div>
             </div>
             <div class="col-md-4 col-lg-2-4">
-                <div class="p-4 bg-white rounded-4 shadow-sm border border-start border-info border-4">
-                    <div class="text-muted small fw-bold text-uppercase mb-1">Fixtures</div>
-                    <div class="display-6 fw-black text-info"><?= number_format($stats['fixtures']) ?></div>
+                <div class="p-4 bg-white rounded-4 shadow-sm border border-start border-warning border-4">
+                    <div class="text-muted small fw-bold text-uppercase mb-1">Sports Matches</div>
+                    <div class="display-6 fw-black text-warning"><?= number_format($sportsMatchesCount ?? 0) ?></div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2-4">
+                <div class="p-4 bg-white rounded-4 shadow-sm border border-start border-danger border-4">
+                    <div class="text-muted small fw-bold text-uppercase mb-1">Sports News</div>
+                    <div class="display-6 fw-black text-danger"><?= number_format($sportsNewsCount ?? 0) ?></div>
                 </div>
             </div>
             <div class="col-md-4 col-lg-2-4">

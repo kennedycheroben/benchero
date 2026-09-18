@@ -110,6 +110,15 @@
             padding-bottom: 2rem;
         }
 
+        footer .text-slate-300 {
+            color: #cbd5e1 !important;
+        }
+
+        footer .text-slate-400,
+        footer .text-muted {
+            color: #94a3b8 !important;
+        }
+
         footer a {
             color: #cbd5e1;
             text-decoration: none;
@@ -134,18 +143,29 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="bencheroNavbar">
-                    <ul class="navbar-nav me-auto ms-lg-4 gap-lg-2">
+                    <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= url('/') ?>">Home</a>
+                            <a class="nav-link" href="<?= url('/sports') ?>">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= url('/about') ?>">About</a>
+                            <a class="nav-link d-flex align-items-center gap-1" href="<?= url('/sports/live') ?>">
+                                <span class="badge bg-danger rounded-pill px-2">LIVE</span> Scores
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= url('/pricing') ?>">Pricing</a>
+                            <a class="nav-link" href="<?= url('/sports/results') ?>">Results</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= url('/contact') ?>">Contact</a>
+                            <a class="nav-link" href="<?= url('/sports/fixtures') ?>">Fixtures</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= url('/sports/news') ?>">News</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= url('/sports/competitions') ?>">Leagues</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= url('/sports/clubs') ?>">Clubs</a>
                         </li>
                     </ul>
                     <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
@@ -177,8 +197,8 @@
                         <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="32" class="rounded-2">
                         BENCHERO
                     </div>
-                    <p class="small text-slate-400 mb-3">Your Club. Your Teams. Your Players. Your Game. Your Platform.</p>
-                    <p class="small text-muted mb-0">The modern multi-sport platform for sports organizations, clubs, and academies.</p>
+                    <p class="small text-slate-300 mb-3">Your Club. Your Teams. Your Players. Your Game. Your Platform.</p>
+                    <p class="small text-slate-400 mb-0">The modern multi-sport platform for sports organizations, clubs, and academies.</p>
                 </div>
                 <div class="col-6 col-lg-2">
                     <h6 class="text-white fw-semibold mb-3">Product</h6>
@@ -200,6 +220,7 @@
                     <ul class="list-unstyled small d-grid gap-2">
                         <li><a href="<?= url('/terms') ?>">Terms of Service</a></li>
                         <li><a href="<?= url('/privacy') ?>">Privacy Policy</a></li>
+                        <li><a href="<?= url('/cookies') ?>">Cookie Policy</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-lg-2">
@@ -211,7 +232,7 @@
                 </div>
             </div>
             <hr class="border-secondary opacity-25 my-4">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted gap-2">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-slate-400 gap-2">
                 <div>&copy; <?= date('Y') ?> Benchero. All rights reserved.</div>
                 <div>Designed for Grassroots & Professional Sports Organizations</div>
             </div>

@@ -1,0 +1,204 @@
+<?php
+
+namespace Benchero\Services\Sports\Providers;
+
+use Benchero\Contracts\SportsProviderInterface;
+
+class FootballDataSportsProvider implements SportsProviderInterface
+{
+    private string $apiKey;
+    private string $baseUrl = 'https://api.football-data.org/v4/';
+
+    public function __construct(?string $apiKey = null)
+    {
+        $this->apiKey = $apiKey ?? (string)env('FOOTBALL_DATA_API_KEY', '');
+    }
+
+    private function makeRequest(string $endpoint): array
+    {
+        if (empty($this->apiKey)) {
+            throw new \RuntimeException("Football-Data.org API key missing. Configure FOOTBALL_DATA_API_KEY in .env.", 401);
+        }
+
+        $url = $this->baseUrl . ltrim($endpoint, '/');
+        $ch = curl_init();
+
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [
+                'X-Auth-Token: ' . $this->apiKey,
+                'Accept: application/json'
+            ],
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_USERAGENT => 'Benchero-Sports-Platform/1.0'
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($response === false) {
+            throw new \RuntimeException("Football-Data.org connection timeout or network failure: {$curlError}", 504);
+        }
+
+        if ($httpCode === 401 || $httpCode === 403) {
+            throw new \RuntimeException("Football-Data.org authentication failed (HTTP {$httpCode}). Verify FOOTBALL_DATA_API_KEY.", $httpCode);
+        }
+
+        if ($httpCode === 429) {
+            throw new \RuntimeException("Football-Data.org rate limit exceeded (HTTP 429).", 429);
+        }
+
+        if ($httpCode >= 500) {
+            throw new \RuntimeException("Football-Data.org service error (HTTP {$httpCode}).", 500);
+        }
+
+        $data = json_decode($response, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            throw new \RuntimeException("Football-Data.org returned malformed JSON response.", 502);
+        }
+
+        return $data;
+    }
+
+    public function getLiveScores(): array
+    {
+        $data = $this->makeRequest('matches?status=IN_PLAY,PAUSED');
+        $matches = $data['matches'] ?? [];
+        return array_map([$this, 'normalizeMatch'], $matches);
+    }
+
+    public function getResults(?string $sport = null, ?string $date = null, int $limit = 20): array
+    {
+        $endpoint = 'matches?status=FINISHED';
+        if ($date) {
+            $endpoint .= "&dateFrom={$date}&dateTo={$date}";
+        }
+        $data = $this->makeRequest($endpoint);
+        $matches = $data['matches'] ?? [];
+        $normalized = array_map([$this, 'normalizeMatch'], $matches);
+        return array_slice($normalized, 0, $limit);
+    }
+
+    public function getFixtures(?string $sport = null, ?string $date = null, int $limit = 20): array
+    {
+        $endpoint = 'matches?status=SCHEDULED,TIMED';
+        if ($date) {
+            $endpoint .= "&dateFrom={$date}&dateTo={$date}";
+        }
+        $data = $this->makeRequest($endpoint);
+        $matches = $data['matches'] ?? [];
+        $normalized = array_map([$this, 'normalizeMatch'], $matches);
+        return array_slice($normalized, 0, $limit);
+    }
+
+    public function getCompetitions(?string $sport = null): array
+    {
+        $data = $this->makeRequest('competitions?plan=TIER_ONE');
+        $competitions = $data['competitions'] ?? [];
+        $result = [];
+
+        foreach ($competitions as $c) {
+            $result[] = [
+                'id' => 'fd_comp_' . ($c['id'] ?? ''),
+                'sport' => 'football',
+                'name' => $c['name'] ?? 'Competition',
+                'slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $c['name'] ?? 'comp'), '-')),
+                'country' => $c['area']['name'] ?? 'International',
+                'logo' => $c['emblem'] ?? null,
+                'is_featured' => true,
+                'external_id' => (string)($c['id'] ?? ''),
+                'provider' => 'football-data'
+            ];
+        }
+
+        return $result;
+    }
+
+    public function getStandings(string $competitionSlug): array
+    {
+        $codeMap = [
+            'premier-league' => 'PL',
+            'champions-league' => 'CL',
+            'la-liga' => 'PD',
+            'serie-a' => 'SA',
+            'bundesliga' => 'BL1'
+        ];
+
+        $code = $codeMap[$competitionSlug] ?? 'PL';
+        $data = $this->makeRequest("competitions/{$code}/standings");
+        $tables = $data['standings'][0]['table'] ?? [];
+        $result = [];
+
+        foreach ($tables as $row) {
+            $result[] = [
+                'position' => (int)($row['position'] ?? 0),
+                'team' => $row['team']['name'] ?? 'Team',
+                'team_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $row['team']['name'] ?? 'team'), '-')),
+                'played' => (int)($row['playedGames'] ?? 0),
+                'won' => (int)($row['won'] ?? 0),
+                'drawn' => (int)($row['draw'] ?? 0),
+                'lost' => (int)($row['lost'] ?? 0),
+                'points' => (int)($row['points'] ?? 0),
+                'gf' => (int)($row['goalsFor'] ?? 0),
+                'ga' => (int)($row['goalsAgainst'] ?? 0),
+                'gd' => (int)($row['goalDifference'] ?? 0)
+            ];
+        }
+
+        return $result;
+    }
+
+    public function getMatchDetail(string $matchId): ?array
+    {
+        $data = $this->makeRequest("matches/{$matchId}");
+        return isset($data['id']) ? $this->normalizeMatch($data) : null;
+    }
+
+    public function normalizeMatch(array $m): array
+    {
+        $rawStatus = strtoupper($m['status'] ?? 'SCHEDULED');
+        $status = match ($rawStatus) {
+            'IN_PLAY' => 'LIVE',
+            'PAUSED' => 'HT',
+            'FINISHED' => 'FT',
+            'POSTPONED' => 'POSTPONED',
+            'CANCELLED' => 'CANCELLED',
+            'SUSPENDED' => 'SUSPENDED',
+            default => 'NS'
+        };
+
+        $minute = match ($status) {
+            'LIVE' => "75'",
+            'HT' => 'HT',
+            'FT' => 'FT',
+            default => date('H:i', strtotime($m['utcDate'] ?? 'now'))
+        };
+
+        return [
+            'id' => 'fd_m_' . ($m['id'] ?? ''),
+            'external_id' => (string)($m['id'] ?? ''),
+            'provider' => 'football-data',
+            'sport' => 'football',
+            'competition' => $m['competition']['name'] ?? 'Football Competition',
+            'competition_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $m['competition']['name'] ?? 'comp'), '-')),
+            'home_team' => $m['homeTeam']['name'] ?? 'Home Team',
+            'home_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $m['homeTeam']['name'] ?? 'home'), '-')),
+            'home_logo' => $m['homeTeam']['crest'] ?? null,
+            'away_team' => $m['awayTeam']['name'] ?? 'Away Team',
+            'away_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $m['awayTeam']['name'] ?? 'away'), '-')),
+            'away_logo' => $m['awayTeam']['crest'] ?? null,
+            'home_score' => $m['score']['fullTime']['home'] ?? $m['score']['halfTime']['home'] ?? 0,
+            'away_score' => $m['score']['fullTime']['away'] ?? $m['score']['halfTime']['away'] ?? 0,
+            'status' => $status,
+            'minute' => $minute,
+            'start_time' => date('Y-m-d H:i:s', strtotime($m['utcDate'] ?? 'now')),
+            'venue' => $m['venue'] ?? null,
+            'round' => $m['stage'] ?? null
+        ];
+    }
+}

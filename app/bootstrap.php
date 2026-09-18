@@ -4,12 +4,12 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 
-// Load environment variables (.env.example loaded for local testing)
-if (file_exists(__DIR__ . '/../.env.example')) {
-    $dotenv = Dotenv::createImmutable(__DIR__ . '/../', '.env.example');
-    $dotenv->load();
-} elseif (file_exists(__DIR__ . '/../.env')) {
+// Load environment variables (.env prioritized, fallback to .env.example if .env does not exist)
+if (file_exists(__DIR__ . '/../.env')) {
     $dotenv = Dotenv::createImmutable(__DIR__ . '/../', '.env');
+    $dotenv->load();
+} elseif (file_exists(__DIR__ . '/../.env.example')) {
+    $dotenv = Dotenv::createImmutable(__DIR__ . '/../', '.env.example');
     $dotenv->load();
 }
 

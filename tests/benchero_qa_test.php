@@ -34,6 +34,7 @@ testRoute($router, 'GET', '/pricing', 200, 'Public Pricing Page');
 testRoute($router, 'GET', '/contact', 200, 'Public Contact Page');
 testRoute($router, 'GET', '/terms', 200, 'Public Terms Page');
 testRoute($router, 'GET', '/privacy', 200, 'Public Privacy Page');
+testRoute($router, 'GET', '/cookies', 200, 'Public Cookies Page');
 testRoute($router, 'GET', '/forgot-password', 200, 'Forgot Password Form');
 testRoute($router, 'GET', '/reset-password/test-token', 200, 'Reset Password Form');
 testRoute($router, 'GET', '/nonexistent-benchero-route', 404, '404 Custom Error Page');

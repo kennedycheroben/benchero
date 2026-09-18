@@ -85,9 +85,17 @@ class AdminController extends Controller
             LIMIT 10
         ")->fetchAll(PDO::FETCH_ASSOC);
 
+        // Fetch sports platform operational telemetry
+        $sportsMatchesCount = (int)($db->query("SELECT COUNT(*) FROM sports_matches")->fetchColumn() ?? 0);
+        $sportsNewsCount = (int)($db->query("SELECT COUNT(*) FROM sports_news")->fetchColumn() ?? 0);
+        $latestSportsSync = $db->query("SELECT * FROM sports_sync_logs ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+
         return $this->render('admin/index', [
             'title' => 'Benchero Platform Administration & Statistics',
             'user' => $user,
+            'sportsMatchesCount' => $sportsMatchesCount,
+            'sportsNewsCount' => $sportsNewsCount,
+            'latestSportsSync' => $latestSportsSync,
             'stats' => [
                 'orgs' => $orgCount,
                 'users' => $userCount,

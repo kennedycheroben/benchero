@@ -18,11 +18,11 @@
                     Benchero gives sports organizations one simple place to manage their clubs, teams, players, staff, seasons, fixtures, results and public club presence.
                 </p>
                 <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3 benchero-hero-item stagger-3">
-                    <a href="<?= url('/register') ?>" class="btn btn-primary btn-lg px-4 py-3 fw-bold rounded-3 shadow-sm">
-                        Start Free <i class="bi bi-arrow-right ms-2"></i>
+                    <a href="<?= url('/sports') ?>" class="btn btn-dark btn-lg px-4 py-3 fw-bold rounded-3 shadow-sm">
+                        <i class="bi bi-trophy me-2 text-warning"></i> Benchero Sports
                     </a>
-                    <a href="<?= url('/about') ?>" class="btn btn-outline-secondary btn-lg px-4 py-3 fw-semibold rounded-3">
-                        See How It Works
+                    <a href="<?= url('/register') ?>" class="btn btn-primary btn-lg px-4 py-3 fw-bold rounded-3 shadow-sm">
+                        Start Free Trial <i class="bi bi-arrow-right ms-2"></i>
                     </a>
                 </div>
             </div>

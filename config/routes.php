@@ -17,6 +17,24 @@ $router->addRoute('GET', '/sitemap.xml', ['Benchero\Controllers\Public\SitemapCo
 $router->addRoute('GET', '/robots.txt', ['Benchero\Controllers\Public\SitemapController', 'robots']);
 $router->addRoute('GET', '/health', ['Benchero\Controllers\HealthController', 'check']);
 
+// Public Sports Platform Routes
+$router->addRoute('GET', '/sports', ['Benchero\Controllers\Public\SportsController', 'index']);
+$router->addRoute('GET', '/sports/live', ['Benchero\Controllers\Public\SportsController', 'live']);
+$router->addRoute('GET', '/sports/results', ['Benchero\Controllers\Public\SportsController', 'results']);
+$router->addRoute('GET', '/sports/fixtures', ['Benchero\Controllers\Public\SportsController', 'fixtures']);
+$router->addRoute('GET', '/sports/news', ['Benchero\Controllers\Public\SportsController', 'news']);
+$router->addRoute('GET', '/sports/news/{slug}', ['Benchero\Controllers\Public\SportsController', 'newsDetail']);
+$router->addRoute('GET', '/sports/competitions', ['Benchero\Controllers\Public\SportsController', 'competitions']);
+$router->addRoute('GET', '/sports/c/{slug}', ['Benchero\Controllers\Public\SportsController', 'competitionDetail']);
+$router->addRoute('GET', '/sports/clubs', ['Benchero\Controllers\Public\SportsController', 'clubs']);
+
+// Sports Platform JSON APIs
+$router->addRoute('GET', '/api/sports/live', ['Benchero\Controllers\Public\SportsController', 'apiLive']);
+$router->addRoute('GET', '/api/sports/results', ['Benchero\Controllers\Public\SportsController', 'apiResults']);
+$router->addRoute('GET', '/api/sports/fixtures', ['Benchero\Controllers\Public\SportsController', 'apiFixtures']);
+$router->addRoute('GET', '/api/sports/news', ['Benchero\Controllers\Public\SportsController', 'apiNews']);
+
+
 // Auth - Registration & Verification
 $router->addRoute('GET', '/register', ['Benchero\Controllers\AuthController', 'registerForm']);
 $router->addRoute('POST', '/register', ['Benchero\Controllers\AuthController', 'register']);

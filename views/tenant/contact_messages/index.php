@@ -34,7 +34,7 @@
 
     <!-- Filter Pills & Summary Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages?status=all') ?>" class="card border-0 shadow-sm rounded-4 text-decoration-none p-3 <?= $statusFilter === 'all' ? 'bg-primary text-white' : 'bg-white text-dark' ?>">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -46,7 +46,7 @@
             </a>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages?status=unread') ?>" class="card border-0 shadow-sm rounded-4 text-decoration-none p-3 <?= $statusFilter === 'unread' ? 'bg-warning text-dark' : 'bg-white text-dark' ?>">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -58,7 +58,7 @@
             </a>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages?status=read') ?>" class="card border-0 shadow-sm rounded-4 text-decoration-none p-3 <?= $statusFilter === 'read' ? 'bg-success text-white' : 'bg-white text-dark' ?>">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -70,7 +70,7 @@
             </a>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/contact-messages?status=archived') ?>" class="card border-0 shadow-sm rounded-4 text-decoration-none p-3 <?= $statusFilter === 'archived' ? 'bg-secondary text-white' : 'bg-white text-dark' ?>">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>

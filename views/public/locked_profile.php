@@ -16,7 +16,7 @@
             <h1 class="h2 fw-extrabold text-dark mb-3">This profile is temporarily unavailable</h1>
 
             <p class="text-muted lead fs-6 mb-4 px-md-3">
-                This club's Benchero profile is currently unavailable because its subscription has ended. The profile may become available again when the club returns to Benchero.
+                This club's Benchero profile is currently unavailable.
             </p>
 
             <div class="pt-2">
