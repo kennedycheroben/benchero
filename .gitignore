@@ -29,3 +29,8 @@ composer.phar
 Thumbs.db
 cookies.txt
 server.pid
+
+# Cache and Locks
+storage/cache/*.cache
+storage/locks/*.lock
+app/storage/locks/*.lock
