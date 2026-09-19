@@ -24,7 +24,7 @@
                         <div class="p-3 bg-secondary bg-opacity-25 rounded-3 border border-secondary border-opacity-50 h-100">
                             <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
                                 <span class="fw-semibold text-light"><?= $this->e($match['competition']) ?></span>
-                                <span class="badge bg-danger rounded-pill px-2"><?= $this->e($match['minute']) ?></span>
+                                <span class="badge bg-danger rounded-pill px-2"><?= $this->e(!empty($match['minute']) ? $match['minute'] : 'LIVE') ?></span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center fw-bold fs-5">
                                 <div class="text-truncate flex-grow-1 text-white"><?= $this->e($match['home_team']) ?></div>

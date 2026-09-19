@@ -1,0 +1,913 @@
+{
+    "organizations": [
+        {
+            "id": "01M2G80RYY970XTAXMHTBCZE9R",
+            "name": "kabete fc",
+            "slug": "kabete-fc",
+            "status": "unknown",
+            "is_public": 0,
+            "created_at": "2026-09-14 18:19:23",
+            "users_count": 0,
+            "teams_count": 0,
+            "players_count": 0,
+            "latest_subscription": {
+                "id": "01M2G80RZJWZK927GVHKFR9YRC",
+                "organization_id": "01M2G80RYY970XTAXMHTBCZE9R",
+                "plan_id": 1,
+                "billing_interval": "trial",
+                "status": "trialing",
+                "starts_at": "2026-09-14 18:19:23",
+                "expires_at": "2026-09-28 18:19:23",
+                "payment_reference": null,
+                "provider": "mpesa",
+                "trial_ends_at": "2026-09-28 18:19:23",
+                "current_period_end": "2026-09-28 18:19:23",
+                "created_at": "2026-09-14 18:19:23",
+                "updated_at": "2026-09-14 18:19:23",
+                "plan_name": "Free Trial",
+                "plan_slug": "free-trial"
+            }
+        }
+    ],
+    "sports_tables": {
+        "sports": {
+            "count": 5,
+            "sample": [
+                {
+                    "id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "name": "Football",
+                    "slug": "football",
+                    "description": null,
+                    "is_active": 1,
+                    "created_at": "2026-09-01 22:40:27",
+                    "updated_at": "2026-09-01 22:40:27"
+                },
+                {
+                    "id": "01M1F7SEWRZ5MRSGHY4EFRBYYV",
+                    "name": "Basketball",
+                    "slug": "basketball",
+                    "description": null,
+                    "is_active": 1,
+                    "created_at": "2026-09-01 22:40:27",
+                    "updated_at": "2026-09-01 22:40:27"
+                },
+                {
+                    "id": "01M1GTMB0314S699B220QVEMDT",
+                    "name": "Test Sport",
+                    "slug": "test",
+                    "description": null,
+                    "is_active": 1,
+                    "created_at": "2026-09-02 13:28:57",
+                    "updated_at": "2026-09-02 13:28:57"
+                },
+                {
+                    "id": "01M1K0DGTBWY5903DNA78SRTNA",
+                    "name": "Volleyball",
+                    "slug": "volleyball",
+                    "description": "Indoor & Beach Volleyball",
+                    "is_active": 1,
+                    "created_at": "2026-09-03 09:48:34",
+                    "updated_at": "2026-09-03 09:48:34"
+                },
+                {
+                    "id": "01M1K0DGV1MES9094RKQXYRVR4",
+                    "name": "Rugby",
+                    "slug": "rugby",
+                    "description": "Rugby Union & Rugby Sevens",
+                    "is_active": 1,
+                    "created_at": "2026-09-03 09:48:34",
+                    "updated_at": "2026-09-03 09:48:34"
+                }
+            ]
+        },
+        "competitions": {
+            "error": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'xqtrqexj_benchero.competitions' doesn't exist"
+        },
+        "seasons": {
+            "count": 0,
+            "sample": []
+        },
+        "competition_teams": {
+            "error": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'xqtrqexj_benchero.competition_teams' doesn't exist"
+        },
+        "fixtures": {
+            "count": 0,
+            "sample": []
+        },
+        "fixture_results": {
+            "error": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'xqtrqexj_benchero.fixture_results' doesn't exist"
+        },
+        "standings": {
+            "error": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'xqtrqexj_benchero.standings' doesn't exist"
+        },
+        "sports_news": {
+            "count": 37,
+            "sample": [
+                {
+                    "id": "01M2V35F1R7B11S16AK8ZZXMRK",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "Hemp double ensures Man City maintain winning start to WSL title defence",
+                    "slug": "hemp-double-ensures-man-city-maintain-winning-start-to-wsl-title-defence",
+                    "summary": "Lauren Hemp bookended a 4-2 victory for Manchester City against Liverpool as the WSL champions maintained a winning start to their title defence.",
+                    "content": "Lauren Hemp bookended a 4-2 victory for Manchester City against Liverpool as the WSL champions maintained a winning start to their title defence.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/football\/manchester-city-women-vs-liverpool-women\/report\/575769",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "bd74dc1a7142ceb946b259b2f06e7cbb",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 23:15:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F23B0MNJH9AEFAQFW10",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "&#039;What a disaster&#039; - Frisk own goal and Hemp strike seal comeback win",
+                    "slug": "what-a-disaster---frisk-own-goal-and-hemp-strike-seal-comeback-win",
+                    "summary": "Grace Fisk scored a late own goal and Lauren Hemp struck in the 95th minute as Manchester City completed the comeback win against Liverpool in the WSL.",
+                    "content": "Grace Fisk scored a late own goal and Lauren Hemp struck in the 95th minute as Manchester City completed the comeback win against Liverpool in the WSL.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589482\/wsl-grace-frisk-own-goal-and-lauren-hemp-strike-seal-comeback-win",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "a73b82225c841cd3d3d35f31a614654a",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 22:59:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F2AT13QHKR1W4GYE5ZF",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "Shaw capitalises on Keating error to equalise for Man City",
+                    "slug": "shaw-capitalises-on-keating-error-to-equalise-for-man-city",
+                    "summary": "Bunny Shaw capitalised on Khiara Keating&#039;s calamitous mistake as Manchester City equalised against Liverpool late in the first half.",
+                    "content": "Bunny Shaw capitalised on Khiara Keating&#039;s calamitous mistake as Manchester City equalised against Liverpool late in the first half.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589445\/wsl-bunny-shaw-capitalises-on-khiara-keating-error-to-equalise-for-manchester-city",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "a2a3188b5d620fecf78574099d251852",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 21:53:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F2GT06DXNPMPADRQ59G",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "Bergstrom and Endemann on target as Liverpool come from behind to lead Man City",
+                    "slug": "bergstrom-and-endemann-on-target-as-liverpool-come-from-behind-to-lead-man-city",
+                    "summary": "Alice Bergstrom and Vivien Endemann both scored as Liverpool came from 1-0 down to lead Manchester City after 29 minutes.",
+                    "content": "Alice Bergstrom and Vivien Endemann both scored as Liverpool came from 1-0 down to lead Manchester City after 29 minutes.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589441\/wsl-alice-bergstrom-and-vivien-endemann-on-target-as-liverpool-come-from-behind-to-lead-manchester-city",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "b4250b4821fb15053497a9b903a32ef0",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 21:33:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F2RWGMJ0Y66N428RE4D",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "Hemp scores first goal since November as Man City take lead!",
+                    "slug": "hemp-scores-first-goal-since-november-as-man-city-take-lead",
+                    "summary": "Lauren Hemp scored her first goal since November as Manchester City took the lead early against Liverpool in the WSL.",
+                    "content": "Lauren Hemp scored her first goal since November as Manchester City took the lead early against Liverpool in the WSL.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589437\/wsl-lauren-hemp-scores-first-goal-since-november-as-manchester-city-take-lead",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "113425ef9658d70e4bb431a8eaebc325",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 21:17:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F356VK61WNGG0CA1102",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "Super League Eliminators LIVE! Wakefield back on top vs Leigh",
+                    "slug": "super-league-eliminators-live-wakefield-back-on-top-vs-leigh",
+                    "summary": "",
+                    "content": "",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/rugby-league\/live-blog\/12040\/13586226\/super-league-eliminators-live-updates-commentary-videos-scores-as-wakefield-trinity-take-on-leigh-leopards-for-spot-in-semi-finals",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "dca91e99cdc77e4388484a09184224af",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 21:00:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F3F2NFSHHJYQ0X3JZ3F",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "Gerard surges to take clubhouse lead, as McIlroy impresses at Wentworth",
+                    "slug": "gerard-surges-to-take-clubhouse-lead-as-mcilroy-impresses-at-wentworth",
+                    "summary": "Ryan Gerard leapfrogged Adam Scott and Filippo Celli to take a two-shot lead at the halfway stage of the BMW PGA Championship, as Rory McIlroy impressed on day two to finish four shots off the lead.",
+                    "content": "Ryan Gerard leapfrogged Adam Scott and Filippo Celli to take a two-shot lead at the halfway stage of the BMW PGA Championship, as Rory McIlroy impressed on day two to finish four shots off the lead.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/golf\/news\/12040\/13589419\/bmw-pga-championship-2026-ryan-gerard-takes-two-shot-lead-at-halfway-stage-as-mcilroy-impresses-to-go-four-shots-back",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "8e15e089deaf40f7a2fa2a1a487fd94c",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 20:16:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F3N7G8G949YSWH003VM",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "WSL: Man City score twice late on to beat Liverpool LIVE!",
+                    "slug": "wsl-man-city-score-twice-late-on-to-beat-liverpool-live",
+                    "summary": "",
+                    "content": "",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/football\/manchester-city-women-vs-liverpool-women\/live\/575769",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "d68acbb466562a14a16febb5b1152506",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 20:10:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F3WC6AAGNFSRZB354RR",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "No charges against Carse after police close alleged assault investigation",
+                    "slug": "no-charges-against-carse-after-police-close-alleged-assault-investigation",
+                    "summary": "Brydon Carse will not face any charges after Derbyshire Police closed their investigation into an alleged assault following an incident involving the England cricketer at a nightclub in Derby.",
+                    "content": "Brydon Carse will not face any charges after Derbyshire Police closed their investigation into an alleged assault following an incident involving the England cricketer at a nightclub in Derby.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/cricket\/news\/12040\/13589398\/brydon-carse-no-charges-against-england-cricketer-after-police-close-investigation-into-alleged-assault-at-nightclub",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "7cf7ea5357471b9fd526193074fb8491",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 19:28:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                },
+                {
+                    "id": "01M2V35F4DCN1D0XMB8B8J096X",
+                    "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                    "title": "Gabriel edging closer to Man Utd exit as Barca and Real talks advance",
+                    "slug": "gabriel-edging-closer-to-man-utd-exit-as-barca-and-real-talks-advance",
+                    "summary": "Barcelona and Real Madrid are in transfer talks to sign Manchester United youngster JJ Gabriel.",
+                    "content": "Barcelona and Real Madrid are in transfer talks to sign Manchester United youngster JJ Gabriel.",
+                    "source": "Sky Sports",
+                    "source_url": "https:\/\/www.skysports.com\/football\/news\/12040\/13589387\/jj-gabriel-edging-closer-to-manchester-united-exit-amid-barcelona-talks-about-a-potential-move-for-the-forward",
+                    "image_url": null,
+                    "category": "Football",
+                    "external_id": "4a87e6ccec97e6c291f429651bb18fe2",
+                    "provider": "rss",
+                    "published_at": "2026-09-18 19:20:00",
+                    "created_at": "2026-09-18 23:26:13",
+                    "updated_at": "2026-09-18 23:26:13"
+                }
+            ]
+        },
+        "sports_providers": {
+            "error": "SQLSTATE[42S02]: Base table or view not found: 1146 Table 'xqtrqexj_benchero.sports_providers' doesn't exist"
+        }
+    },
+    "plans": [
+        {
+            "id": 1,
+            "name": "Free Trial",
+            "slug": "free-trial",
+            "price_kes": "0.00",
+            "billing_interval": "trial",
+            "features": "{\"player_limit\":25,\"team_limit\":2,\"fixture_limit\":50,\"total_storage_mb\":100,\"description\":\"Full-feature 14-day trial for new clubs\"}",
+            "created_at": "2026-09-03 09:48:34",
+            "updated_at": "2026-09-19 11:59:56",
+            "deleted_at": null
+        },
+        {
+            "id": 2,
+            "name": "Standard Monthly",
+            "slug": "standard-monthly",
+            "price_kes": "1000.00",
+            "billing_interval": "monthly",
+            "features": "{\"player_limit\":100,\"team_limit\":10,\"fixture_limit\":500,\"total_storage_mb\":500,\"description\":\"Essential club management (KSh 1,000\/mo)\"}",
+            "created_at": "2026-09-01 19:14:04",
+            "updated_at": "2026-09-19 11:59:56",
+            "deleted_at": null
+        },
+        {
+            "id": 3,
+            "name": "Standard Yearly",
+            "slug": "standard-yearly",
+            "price_kes": "10000.00",
+            "billing_interval": "yearly",
+            "features": "{\"player_limit\":500,\"team_limit\":25,\"fixture_limit\":2000,\"total_storage_mb\":1000,\"description\":\"Annual club management (KSh 10,000\/yr)\"}",
+            "created_at": "2026-09-03 09:48:34",
+            "updated_at": "2026-09-19 11:59:56",
+            "deleted_at": null
+        },
+        {
+            "id": 4,
+            "name": "Benchero Pro Yearly",
+            "slug": "benchero-pro",
+            "price_kes": "20000.00",
+            "billing_interval": "yearly",
+            "features": "{\"player_limit\":-1,\"team_limit\":-1,\"fixture_limit\":-1,\"total_storage_mb\":5120,\"custom_domain\":true,\"video_uploads\":true,\"description\":\"Pro annual subscription (KSh 20,000\/yr)\"}",
+            "created_at": "2026-09-14 09:21:11",
+            "updated_at": "2026-09-19 11:59:56",
+            "deleted_at": null
+        }
+    ],
+    "subscriptions": [
+        {
+            "id": "01M2G80RZJWZK927GVHKFR9YRC",
+            "organization_id": "01M2G80RYY970XTAXMHTBCZE9R",
+            "plan_id": 1,
+            "billing_interval": "trial",
+            "status": "trialing",
+            "starts_at": "2026-09-14 18:19:23",
+            "expires_at": "2026-09-28 18:19:23",
+            "payment_reference": null,
+            "provider": "mpesa",
+            "trial_ends_at": "2026-09-28 18:19:23",
+            "current_period_end": "2026-09-28 18:19:23",
+            "created_at": "2026-09-14 18:19:23",
+            "updated_at": "2026-09-14 18:19:23",
+            "org_name": "kabete fc",
+            "plan_name": "Free Trial"
+        }
+    ],
+    "keyword_matches": {
+        "migrations": {
+            "test": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": 32,
+                        "migration": "032_clean_test_orgs_and_add_sports_constraints",
+                        "batch": 24,
+                        "executed_at": "2026-09-19 11:59:57"
+                    }
+                ]
+            },
+            "seed": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": 17,
+                        "migration": "017_seed_additional_sports_and_plans",
+                        "batch": 11,
+                        "executed_at": "2026-09-03 09:48:34"
+                    }
+                ]
+            },
+            "fixture": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": 15,
+                        "migration": "015_create_fixtures_table",
+                        "batch": 10,
+                        "executed_at": "2026-09-01 21:29:58"
+                    }
+                ]
+            }
+        },
+        "plans": {
+            "fixture": {
+                "count": 4,
+                "samples": [
+                    {
+                        "id": 1,
+                        "name": "Free Trial",
+                        "slug": "free-trial",
+                        "price_kes": "0.00",
+                        "billing_interval": "trial",
+                        "features": "{\"player_limit\":25,\"team_limit\":2,\"fixture_limit\":50,\"total_storage_mb\":100,\"description\":\"Full-feature 14-day trial for new clubs\"}",
+                        "created_at": "2026-09-03 09:48:34",
+                        "updated_at": "2026-09-19 11:59:56",
+                        "deleted_at": null
+                    },
+                    {
+                        "id": 2,
+                        "name": "Standard Monthly",
+                        "slug": "standard-monthly",
+                        "price_kes": "1000.00",
+                        "billing_interval": "monthly",
+                        "features": "{\"player_limit\":100,\"team_limit\":10,\"fixture_limit\":500,\"total_storage_mb\":500,\"description\":\"Essential club management (KSh 1,000\/mo)\"}",
+                        "created_at": "2026-09-01 19:14:04",
+                        "updated_at": "2026-09-19 11:59:56",
+                        "deleted_at": null
+                    },
+                    {
+                        "id": 3,
+                        "name": "Standard Yearly",
+                        "slug": "standard-yearly",
+                        "price_kes": "10000.00",
+                        "billing_interval": "yearly",
+                        "features": "{\"player_limit\":500,\"team_limit\":25,\"fixture_limit\":2000,\"total_storage_mb\":1000,\"description\":\"Annual club management (KSh 10,000\/yr)\"}",
+                        "created_at": "2026-09-03 09:48:34",
+                        "updated_at": "2026-09-19 11:59:56",
+                        "deleted_at": null
+                    },
+                    {
+                        "id": 4,
+                        "name": "Benchero Pro Yearly",
+                        "slug": "benchero-pro",
+                        "price_kes": "20000.00",
+                        "billing_interval": "yearly",
+                        "features": "{\"player_limit\":-1,\"team_limit\":-1,\"fixture_limit\":-1,\"total_storage_mb\":5120,\"custom_domain\":true,\"video_uploads\":true,\"description\":\"Pro annual subscription (KSh 20,000\/yr)\"}",
+                        "created_at": "2026-09-14 09:21:11",
+                        "updated_at": "2026-09-19 11:59:56",
+                        "deleted_at": null
+                    }
+                ]
+            }
+        },
+        "sports": {
+            "test": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": "01M1GTMB0314S699B220QVEMDT",
+                        "name": "Test Sport",
+                        "slug": "test",
+                        "description": null,
+                        "is_active": 1,
+                        "created_at": "2026-09-02 13:28:57",
+                        "updated_at": "2026-09-02 13:28:57"
+                    }
+                ]
+            }
+        },
+        "sports_competitions": {
+            "mock": {
+                "count": 3,
+                "samples": [
+                    {
+                        "id": "01M2K781H1G19SK22BFJE6HEAT",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "name": "English Premier League",
+                        "slug": "premier-league",
+                        "country": "International",
+                        "logo": null,
+                        "is_featured": 0,
+                        "external_id": null,
+                        "provider": "mock",
+                        "created_at": "2026-09-15 22:03:36",
+                        "updated_at": "2026-09-15 22:03:36"
+                    },
+                    {
+                        "id": "01M2K781KD1X5FX98XM2XVJMKP",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "name": "FKF Kenyan Premier League",
+                        "slug": "kenyan-premier-league",
+                        "country": "International",
+                        "logo": null,
+                        "is_featured": 0,
+                        "external_id": null,
+                        "provider": "mock",
+                        "created_at": "2026-09-15 22:03:36",
+                        "updated_at": "2026-09-15 22:03:36"
+                    },
+                    {
+                        "id": "01M2K781MSC4FD5MF4SRP7B6V3",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "name": "La Liga",
+                        "slug": "la-liga",
+                        "country": "International",
+                        "logo": null,
+                        "is_featured": 0,
+                        "external_id": null,
+                        "provider": "mock",
+                        "created_at": "2026-09-15 22:03:36",
+                        "updated_at": "2026-09-15 22:03:36"
+                    }
+                ]
+            }
+        },
+        "sports_news": {
+            "test": {
+                "count": 2,
+                "samples": [
+                    {
+                        "id": "01M2V35F94PBDQ10HGDFQE1CBX",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Liverpool latest: Iraola &#039;very happy&#039; with Wirtz contribution",
+                        "slug": "liverpool-latest-iraola-very-happy-with-wirtz-contribution",
+                        "summary": "",
+                        "content": "",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/live-blog\/12040\/13025501\/liverpool-transfer-news-rumours-and-gossip-live-updates-and-latest-on-deals-signings-loans-and-contracts",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "108b6e2397c9c0c9149c741bd962537a",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 16:51:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2WDYVZQNTQN7DEAYVF507XT",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Unbeaten Arapaho Gold tackles Mill Reef test",
+                        "slug": "unbeaten-arapaho-gold-tackles-mill-reef-test",
+                        "summary": "We have a busy day&amp;#8217;s racing on Saturday with flat action from Chester, Newbury and Newcastle, live on Sky Sports Racing...",
+                        "content": "We have a busy day&amp;#8217;s racing on Saturday with flat action from Chester, Newbury and Newcastle, live on Sky Sports Racing...",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/racing\/news\/12040\/13589034\/today-on-sky-sports-racing-chester-newcastle-and-newbury-as-arapaho-gold-goes-in-mill-reef",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "2f41d5cc62b6554bce5369ffdba9968e",
+                        "provider": "rss",
+                        "published_at": "2026-09-19 09:00:00",
+                        "created_at": "2026-09-19 11:54:06",
+                        "updated_at": "2026-09-19 11:54:06"
+                    }
+                ]
+            },
+            "Arsenal": {
+                "count": 2,
+                "samples": [
+                    {
+                        "id": "01M2WDYW16DNP9Y936E8ZDS3VS",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Arteta: Dowman could go out on loan in future",
+                        "slug": "arteta-dowman-could-go-out-on-loan-in-future",
+                        "summary": "Arsenal&amp;#160;manager&amp;#160;Mikel Arteta&amp;#160;has not ruled out loaning out&amp;#160;Max Dowman in the future and says the club evaluates the 16-year-old sensation&#039;s progress every six months.",
+                        "content": "Arsenal&amp;#160;manager&amp;#160;Mikel Arteta&amp;#160;has not ruled out loaning out&amp;#160;Max Dowman in the future and says the club evaluates the 16-year-old sensation&#039;s progress every six months.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/news\/12040\/13589421\/max-dowman-mikel-arteta-admits-16-year-old-arsenal-wonderkid-could-go-out-on-loan-in-the-future",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "415fa6c550578c5b924cd55cd76ad61a",
+                        "provider": "rss",
+                        "published_at": "2026-09-19 00:30:00",
+                        "created_at": "2026-09-19 11:54:06",
+                        "updated_at": "2026-09-19 11:54:06"
+                    },
+                    {
+                        "id": "01M2WDYW3BMX3R498BA73W04PB",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Papers: Mudryk preferred Arsenal before Chelsea move",
+                        "slug": "papers-mudryk-preferred-arsenal-before-chelsea-move",
+                        "summary": "The top stories and transfer rumours from Saturday&#039;s newspapers...",
+                        "content": "The top stories and transfer rumours from Saturday&#039;s newspapers...",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/news\/12040\/13589426\/mykhailo-mudryk-preferred-arsenal-move-before-88m-chelsea-transfer-paper-talk",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "fded7c41adfdd3675deaa0f1ee150dd4",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 09:00:00",
+                        "created_at": "2026-09-19 11:54:06",
+                        "updated_at": "2026-09-19 11:54:06"
+                    }
+                ]
+            },
+            "Chelsea": {
+                "count": 3,
+                "samples": [
+                    {
+                        "id": "01M2WDYW0HZ6DWTFN35XH2QB5C",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "&#039;Bullied&#039; and &#039;out of control&#039; - Chelsea&#039;s defensive issues laid bare",
+                        "slug": "bullied-and-out-of-control---chelsea-s-defensive-issues-laid-bare",
+                        "summary": "&quot;You need to feel it. We&#039;re not feeling it,&quot; said Xabi Alonso after Chelsea&#039;s 3-0 loss at Brentford. Yet Chelsea are stuck in a familiar feeling.",
+                        "content": "&quot;You need to feel it. We&#039;re not feeling it,&quot; said Xabi Alonso after Chelsea&#039;s 3-0 loss at Brentford. Yet Chelsea are stuck in a familiar feeling.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/news\/12040\/13589535\/brentford-3-0-chelsea-defensive-issues-for-xabi-alonso-laid-bare-after-chastening-west-london-derby-defeat",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "4c6571a63302a728bdbdd7db8e4aa9f6",
+                        "provider": "rss",
+                        "published_at": "2026-09-19 01:18:00",
+                        "created_at": "2026-09-19 11:54:06",
+                        "updated_at": "2026-09-19 11:54:06"
+                    },
+                    {
+                        "id": "01M2WDYW1SAR2SS6VADYP8KHVZ",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Brentford score three in dominant win over Chelsea to continue unbeaten start",
+                        "slug": "brentford-score-three-in-dominant-win-over-chelsea-to-continue-unbeaten-start",
+                        "summary": "Highlights from the Premier League match between Brentford and Chelsea.",
+                        "content": "Highlights from the Premier League match between Brentford and Chelsea.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589514\/brentford-3-0-chelsea-premier-league-highlights",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "956ec273563e57e90d45cae3e0770835",
+                        "provider": "rss",
+                        "published_at": "2026-09-19 00:12:00",
+                        "created_at": "2026-09-19 11:54:06",
+                        "updated_at": "2026-09-19 11:54:06"
+                    },
+                    {
+                        "id": "01M2WDYW3BMX3R498BA73W04PB",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Papers: Mudryk preferred Arsenal before Chelsea move",
+                        "slug": "papers-mudryk-preferred-arsenal-before-chelsea-move",
+                        "summary": "The top stories and transfer rumours from Saturday&#039;s newspapers...",
+                        "content": "The top stories and transfer rumours from Saturday&#039;s newspapers...",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/news\/12040\/13589426\/mykhailo-mudryk-preferred-arsenal-move-before-88m-chelsea-transfer-paper-talk",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "fded7c41adfdd3675deaa0f1ee150dd4",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 09:00:00",
+                        "created_at": "2026-09-19 11:54:06",
+                        "updated_at": "2026-09-19 11:54:06"
+                    }
+                ]
+            },
+            "Liverpool": {
+                "count": 8,
+                "samples": [
+                    {
+                        "id": "01M2V35F1R7B11S16AK8ZZXMRK",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Hemp double ensures Man City maintain winning start to WSL title defence",
+                        "slug": "hemp-double-ensures-man-city-maintain-winning-start-to-wsl-title-defence",
+                        "summary": "Lauren Hemp bookended a 4-2 victory for Manchester City against Liverpool as the WSL champions maintained a winning start to their title defence.",
+                        "content": "Lauren Hemp bookended a 4-2 victory for Manchester City against Liverpool as the WSL champions maintained a winning start to their title defence.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/manchester-city-women-vs-liverpool-women\/report\/575769",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "bd74dc1a7142ceb946b259b2f06e7cbb",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 23:15:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F23B0MNJH9AEFAQFW10",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "&#039;What a disaster&#039; - Frisk own goal and Hemp strike seal comeback win",
+                        "slug": "what-a-disaster---frisk-own-goal-and-hemp-strike-seal-comeback-win",
+                        "summary": "Grace Fisk scored a late own goal and Lauren Hemp struck in the 95th minute as Manchester City completed the comeback win against Liverpool in the WSL.",
+                        "content": "Grace Fisk scored a late own goal and Lauren Hemp struck in the 95th minute as Manchester City completed the comeback win against Liverpool in the WSL.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589482\/wsl-grace-frisk-own-goal-and-lauren-hemp-strike-seal-comeback-win",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "a73b82225c841cd3d3d35f31a614654a",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 22:59:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F2AT13QHKR1W4GYE5ZF",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Shaw capitalises on Keating error to equalise for Man City",
+                        "slug": "shaw-capitalises-on-keating-error-to-equalise-for-man-city",
+                        "summary": "Bunny Shaw capitalised on Khiara Keating&#039;s calamitous mistake as Manchester City equalised against Liverpool late in the first half.",
+                        "content": "Bunny Shaw capitalised on Khiara Keating&#039;s calamitous mistake as Manchester City equalised against Liverpool late in the first half.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589445\/wsl-bunny-shaw-capitalises-on-khiara-keating-error-to-equalise-for-manchester-city",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "a2a3188b5d620fecf78574099d251852",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 21:53:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F2GT06DXNPMPADRQ59G",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Bergstrom and Endemann on target as Liverpool come from behind to lead Man City",
+                        "slug": "bergstrom-and-endemann-on-target-as-liverpool-come-from-behind-to-lead-man-city",
+                        "summary": "Alice Bergstrom and Vivien Endemann both scored as Liverpool came from 1-0 down to lead Manchester City after 29 minutes.",
+                        "content": "Alice Bergstrom and Vivien Endemann both scored as Liverpool came from 1-0 down to lead Manchester City after 29 minutes.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589441\/wsl-alice-bergstrom-and-vivien-endemann-on-target-as-liverpool-come-from-behind-to-lead-manchester-city",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "b4250b4821fb15053497a9b903a32ef0",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 21:33:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F2RWGMJ0Y66N428RE4D",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Hemp scores first goal since November as Man City take lead!",
+                        "slug": "hemp-scores-first-goal-since-november-as-man-city-take-lead",
+                        "summary": "Lauren Hemp scored her first goal since November as Manchester City took the lead early against Liverpool in the WSL.",
+                        "content": "Lauren Hemp scored her first goal since November as Manchester City took the lead early against Liverpool in the WSL.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589437\/wsl-lauren-hemp-scores-first-goal-since-november-as-manchester-city-take-lead",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "113425ef9658d70e4bb431a8eaebc325",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 21:17:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    }
+                ]
+            },
+            "Manchester City": {
+                "count": 6,
+                "samples": [
+                    {
+                        "id": "01M2V35F1R7B11S16AK8ZZXMRK",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Hemp double ensures Man City maintain winning start to WSL title defence",
+                        "slug": "hemp-double-ensures-man-city-maintain-winning-start-to-wsl-title-defence",
+                        "summary": "Lauren Hemp bookended a 4-2 victory for Manchester City against Liverpool as the WSL champions maintained a winning start to their title defence.",
+                        "content": "Lauren Hemp bookended a 4-2 victory for Manchester City against Liverpool as the WSL champions maintained a winning start to their title defence.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/manchester-city-women-vs-liverpool-women\/report\/575769",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "bd74dc1a7142ceb946b259b2f06e7cbb",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 23:15:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F23B0MNJH9AEFAQFW10",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "&#039;What a disaster&#039; - Frisk own goal and Hemp strike seal comeback win",
+                        "slug": "what-a-disaster---frisk-own-goal-and-hemp-strike-seal-comeback-win",
+                        "summary": "Grace Fisk scored a late own goal and Lauren Hemp struck in the 95th minute as Manchester City completed the comeback win against Liverpool in the WSL.",
+                        "content": "Grace Fisk scored a late own goal and Lauren Hemp struck in the 95th minute as Manchester City completed the comeback win against Liverpool in the WSL.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589482\/wsl-grace-frisk-own-goal-and-lauren-hemp-strike-seal-comeback-win",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "a73b82225c841cd3d3d35f31a614654a",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 22:59:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F2AT13QHKR1W4GYE5ZF",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Shaw capitalises on Keating error to equalise for Man City",
+                        "slug": "shaw-capitalises-on-keating-error-to-equalise-for-man-city",
+                        "summary": "Bunny Shaw capitalised on Khiara Keating&#039;s calamitous mistake as Manchester City equalised against Liverpool late in the first half.",
+                        "content": "Bunny Shaw capitalised on Khiara Keating&#039;s calamitous mistake as Manchester City equalised against Liverpool late in the first half.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589445\/wsl-bunny-shaw-capitalises-on-khiara-keating-error-to-equalise-for-manchester-city",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "a2a3188b5d620fecf78574099d251852",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 21:53:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F2GT06DXNPMPADRQ59G",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Bergstrom and Endemann on target as Liverpool come from behind to lead Man City",
+                        "slug": "bergstrom-and-endemann-on-target-as-liverpool-come-from-behind-to-lead-man-city",
+                        "summary": "Alice Bergstrom and Vivien Endemann both scored as Liverpool came from 1-0 down to lead Manchester City after 29 minutes.",
+                        "content": "Alice Bergstrom and Vivien Endemann both scored as Liverpool came from 1-0 down to lead Manchester City after 29 minutes.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589441\/wsl-alice-bergstrom-and-vivien-endemann-on-target-as-liverpool-come-from-behind-to-lead-manchester-city",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "b4250b4821fb15053497a9b903a32ef0",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 21:33:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    },
+                    {
+                        "id": "01M2V35F2RWGMJ0Y66N428RE4D",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Hemp scores first goal since November as Man City take lead!",
+                        "slug": "hemp-scores-first-goal-since-november-as-man-city-take-lead",
+                        "summary": "Lauren Hemp scored her first goal since November as Manchester City took the lead early against Liverpool in the WSL.",
+                        "content": "Lauren Hemp scored her first goal since November as Manchester City took the lead early against Liverpool in the WSL.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/watch\/video\/13589437\/wsl-lauren-hemp-scores-first-goal-since-november-as-manchester-city-take-lead",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "113425ef9658d70e4bb431a8eaebc325",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 21:17:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    }
+                ]
+            },
+            "Real Madrid": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": "01M2V35F4DCN1D0XMB8B8J096X",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Gabriel edging closer to Man Utd exit as Barca and Real talks advance",
+                        "slug": "gabriel-edging-closer-to-man-utd-exit-as-barca-and-real-talks-advance",
+                        "summary": "Barcelona and Real Madrid are in transfer talks to sign Manchester United youngster JJ Gabriel.",
+                        "content": "Barcelona and Real Madrid are in transfer talks to sign Manchester United youngster JJ Gabriel.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/news\/12040\/13589387\/jj-gabriel-edging-closer-to-manchester-united-exit-amid-barcelona-talks-about-a-potential-move-for-the-forward",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "4a87e6ccec97e6c291f429651bb18fe2",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 19:20:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    }
+                ]
+            },
+            "Barcelona": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": "01M2V35F4DCN1D0XMB8B8J096X",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "title": "Gabriel edging closer to Man Utd exit as Barca and Real talks advance",
+                        "slug": "gabriel-edging-closer-to-man-utd-exit-as-barca-and-real-talks-advance",
+                        "summary": "Barcelona and Real Madrid are in transfer talks to sign Manchester United youngster JJ Gabriel.",
+                        "content": "Barcelona and Real Madrid are in transfer talks to sign Manchester United youngster JJ Gabriel.",
+                        "source": "Sky Sports",
+                        "source_url": "https:\/\/www.skysports.com\/football\/news\/12040\/13589387\/jj-gabriel-edging-closer-to-manchester-united-exit-amid-barcelona-talks-about-a-potential-move-for-the-forward",
+                        "image_url": null,
+                        "category": "Football",
+                        "external_id": "4a87e6ccec97e6c291f429651bb18fe2",
+                        "provider": "rss",
+                        "published_at": "2026-09-18 19:20:00",
+                        "created_at": "2026-09-18 23:26:13",
+                        "updated_at": "2026-09-18 23:26:13"
+                    }
+                ]
+            }
+        },
+        "sports_teams": {
+            "Chelsea": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": "01M2V35D14MQPKSGGFJZR9KV3T",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "name": "Chelsea FC",
+                        "slug": "chelsea-fc",
+                        "short_code": null,
+                        "logo": null,
+                        "country": "International",
+                        "external_id": null,
+                        "provider": "football-data",
+                        "created_at": "2026-09-18 23:26:11",
+                        "updated_at": "2026-09-18 23:26:11"
+                    }
+                ]
+            },
+            "Barcelona": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": "01M2V35DCE4GEMNAQM0XZZ9DTV",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "name": "RCD Espanyol de Barcelona",
+                        "slug": "rcd-espanyol-de-barcelona",
+                        "short_code": null,
+                        "logo": null,
+                        "country": "International",
+                        "external_id": null,
+                        "provider": "football-data",
+                        "created_at": "2026-09-18 23:26:11",
+                        "updated_at": "2026-09-18 23:26:11"
+                    }
+                ]
+            },
+            "Bayern": {
+                "count": 1,
+                "samples": [
+                    {
+                        "id": "01M2V35BVQJ7CW87Y025B6C122",
+                        "sport_id": "01M1F7SEWRJYHZGA4W690SB2T0",
+                        "name": "FC Bayern M\u00fcnchen",
+                        "slug": "fc-bayern-m-nchen",
+                        "short_code": null,
+                        "logo": null,
+                        "country": "International",
+                        "external_id": null,
+                        "provider": "football-data",
+                        "created_at": "2026-09-18 23:26:10",
+                        "updated_at": "2026-09-18 23:26:10"
+                    }
+                ]
+            }
+        }
+    }
+}

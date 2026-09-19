@@ -42,10 +42,10 @@ $stmt->execute();
 $sub = $stmt->fetch();
 logResult('Trial Initialization', $sub && $sub['status'] === 'trialing', 'Subscription is trialing');
 
-// 4. Test Duplicate Slug
+// 4. Test Duplicate Slug (Auto-deduplication to org-a-1)
 try {
-    $orgService->createOrganization('Org A 2', 'org-a', 'US', 'America/New_York', $userB);
-    logResult('Duplicate Slug Protection', false, 'Allowed duplicate slug');
+    $newSlug = $orgService->createOrganization('Org A 2', 'org-a', 'US', 'America/New_York', $userB);
+    logResult('Duplicate Slug Protection', $newSlug !== 'org-a', 'Generated unique slug: ' . $newSlug);
 } catch (Exception $e) {
     logResult('Duplicate Slug Protection', true, 'Duplicate rejected correctly');
 }

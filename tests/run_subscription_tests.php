@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';
+$_ENV['APP_ENV'] = 'testing';
 
 use Benchero\Core\Database\Database;
 use Benchero\Core\Ulid;

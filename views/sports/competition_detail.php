@@ -1,5 +1,10 @@
 <?php $this->layout('layout', ['title' => $title, 'description' => $description]) ?>
 
+<?php
+$tableRows = is_array($standings) ? ($standings['table'] ?? (isset($standings[0]) ? $standings : [])) : [];
+$activeSeason = is_array($standings) ? ($standings['season'] ?? (date('Y') . '/' . (date('Y') + 1))) : (date('Y') . '/' . (date('Y') + 1));
+?>
+
 <div class="bg-dark text-white py-4 mb-4 border-bottom border-secondary">
     <div class="container d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div>
@@ -28,9 +33,9 @@
                     <h5 class="fw-bold text-slate-900 mb-0">
                         <i class="bi bi-list-ol text-primary me-2"></i> Standings Table
                     </h5>
-                    <span class="badge bg-secondary">Season 2025/2026</span>
+                    <span class="badge bg-secondary">Season <?= $this->e($activeSeason) ?></span>
                 </div>
-                <?php if (!empty($standings)): ?>
+                <?php if (!empty($tableRows)): ?>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light small text-muted text-uppercase">
@@ -46,16 +51,26 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($standings as $st): ?>
-                                    <tr class="<?= $st['position'] <= 4 ? 'table-success bg-opacity-10' : '' ?>">
-                                        <td class="ps-3 text-center fw-bold text-muted"><?= $st['position'] ?></td>
-                                        <td class="fw-bold text-slate-900"><?= $this->e($st['team']) ?></td>
-                                        <td class="text-center text-muted"><?= $st['played'] ?></td>
-                                        <td class="text-center"><?= $st['won'] ?></td>
-                                        <td class="text-center text-muted"><?= $st['drawn'] ?></td>
-                                        <td class="text-center text-muted"><?= $st['lost'] ?></td>
-                                        <td class="text-center text-muted"><?= $st['gd'] > 0 ? '+' . $st['gd'] : $st['gd'] ?></td>
-                                        <td class="text-center pe-3 fw-extrabold fs-6 text-primary"><?= $st['points'] ?></td>
+                                <?php foreach ($tableRows as $st): ?>
+                                    <?php 
+                                    $pos = (int)($st['position'] ?? 0);
+                                    $teamName = $st['team'] ?? $st['team_name'] ?? 'Team';
+                                    $played = $st['played'] ?? 0;
+                                    $won = $st['won'] ?? 0;
+                                    $drawn = $st['drawn'] ?? 0;
+                                    $lost = $st['lost'] ?? 0;
+                                    $gd = $st['gd'] ?? (($st['goals_for'] ?? 0) - ($st['goals_against'] ?? 0));
+                                    $pts = $st['points'] ?? 0;
+                                    ?>
+                                    <tr class="<?= $pos > 0 && $pos <= 4 ? 'table-success bg-opacity-10' : '' ?>">
+                                        <td class="ps-3 text-center fw-bold text-muted"><?= $pos ?></td>
+                                        <td class="fw-bold text-slate-900"><?= $this->e($teamName) ?></td>
+                                        <td class="text-center text-muted"><?= $played ?></td>
+                                        <td class="text-center"><?= $won ?></td>
+                                        <td class="text-center text-muted"><?= $drawn ?></td>
+                                        <td class="text-center text-muted"><?= $lost ?></td>
+                                        <td class="text-center text-muted"><?= $gd > 0 ? '+' . $gd : $gd ?></td>
+                                        <td class="text-center pe-3 fw-extrabold fs-6 text-primary"><?= $pts ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -63,7 +78,7 @@
                     </div>
                 <?php else: ?>
                     <div class="p-4 text-center text-muted">
-                        Standings for this competition are currently being updated.
+                        No verified standings are currently available for this competition.
                     </div>
                 <?php endif; ?>
             </div>

@@ -165,8 +165,8 @@ class SportsController extends Controller
         }
 
         $standings = $this->sportsService->getStandings($slug);
-        $results = $this->sportsService->getResults($competition['sport'] ?? null, null, 10);
-        $fixtures = $this->sportsService->getFixtures($competition['sport'] ?? null, null, 10);
+        $results = $this->sportsService->getResults($competition['sport'] ?? null, null, 10, $competition['id'] ?? $slug);
+        $fixtures = $this->sportsService->getFixtures($competition['sport'] ?? null, null, 10, $competition['id'] ?? $slug);
 
         return $this->render('sports/competition_detail', [
             'title' => $competition['name'] . ' Standings, Fixtures & Results — Benchero Sports',

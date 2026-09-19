@@ -38,7 +38,7 @@
                         <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden benchero-interactive-card">
                             <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between p-3 border-0">
                                 <span class="fw-bold small text-light text-truncate me-2"><?= $this->e($match['competition']) ?></span>
-                                <span class="badge bg-danger rounded-pill px-3 py-1 fw-extrabold"><?= $this->e($match['minute']) ?></span>
+                                <span class="badge bg-danger rounded-pill px-3 py-1 fw-extrabold"><?= $this->e(!empty($match['minute']) ? $match['minute'] : 'LIVE') ?></span>
                             </div>
                             <div class="card-body p-4 bg-white">
                                 <div class="d-flex align-items-center justify-content-between mb-3">

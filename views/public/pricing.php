@@ -74,9 +74,12 @@
                     $isYearly = ($interval === 'yearly' && !$isPro);
                     $isTrial = ($interval === 'trial' || $price == 0);
 
+                    $playerLimitRaw = $features['player_limit'] ?? $features['player_limits'] ?? 100;
+                    $teamLimitRaw = $features['team_limit'] ?? $features['teams_limit'] ?? 10;
+
                     $featureList = [
-                        ['text' => ($features['teams_limit'] ?? 10) . ' Teams Limit', 'icon' => 'bi-check-circle-fill text-success', 'isPro' => false],
-                        ['text' => ($features['player_limit'] ?? $features['player_limits'] ?? 100) . ' Player Roster Capacity', 'icon' => 'bi-check-circle-fill text-success', 'isPro' => false],
+                        ['text' => \Benchero\Core\PricingConfig::formatTeamLimit($teamLimitRaw) . ' Capacity', 'icon' => 'bi-check-circle-fill text-success', 'isPro' => false],
+                        ['text' => \Benchero\Core\PricingConfig::formatPlayerLimit($playerLimitRaw) . ' Roster Capacity', 'icon' => 'bi-check-circle-fill text-success', 'isPro' => false],
                         ['text' => 'Multi-Sport Operations', 'icon' => 'bi-check-circle-fill text-success', 'isPro' => false],
                         ['text' => 'Public Club Website', 'icon' => 'bi-check-circle-fill text-success', 'isPro' => false],
                     ];
