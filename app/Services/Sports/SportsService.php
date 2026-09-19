@@ -35,7 +35,7 @@ class SportsService
         }
 
         return match ($this->providerType) {
-            'real', 'football-data' => new FootballDataSportsProvider(),
+            'real', 'football-data', 'football' => new FootballDataSportsProvider(),
             'mock' => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider(),
             default => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider()
         };
@@ -49,16 +49,7 @@ class SportsService
             return $cached;
         }
 
-        if ($this->providerType === 'mock' && !$this->isProduction) {
-            try {
-                $data = $this->provider->getLiveScores();
-                return ['matches' => $data, 'updated_at' => date('Y-m-d H:i:s'), 'is_stale' => false];
-            } catch (\Throwable $e) {
-                return ['matches' => [], 'updated_at' => date('Y-m-d H:i:s'), 'is_stale' => true, 'notice' => 'Live scores unavailable.'];
-            }
-        }
-
-        // Production / Real mode: Query Benchero's local normalized database cache
+        // Query Benchero's local normalized database cache
         try {
             $stmt = $this->pdo->query("
                 SELECT m.*, 
@@ -95,9 +86,20 @@ class SportsService
                 ];
             }, $dbMatches);
 
-            if (empty($matches) && !$this->isProduction && $this->providerType === 'mock') {
-                $data = $this->provider->getLiveScores();
-                return ['matches' => $data, 'updated_at' => date('Y-m-d H:i:s'), 'is_stale' => false];
+            // In non-production, fall back to direct provider call if DB is empty or stale
+            if ((empty($matches) || $isStale) && !$this->isProduction) {
+                try {
+                    $data = $this->provider->getLiveScores();
+                    $res = [
+                        'matches' => $data ?? [],
+                        'updated_at' => date('Y-m-d H:i:s'),
+                        'is_stale' => false
+                    ];
+                    $this->cache->set($cacheKey, $res, 30);
+                    return $res;
+                } catch (\Throwable $provEx) {
+                    error_log("SportsService getLiveScores provider fallback error: " . $provEx->getMessage());
+                }
             }
 
             $result = [
@@ -109,6 +111,22 @@ class SportsService
             return $result;
         } catch (\Throwable $e) {
             error_log("SportsService getLiveScores error: " . $e->getMessage());
+
+            if (!$this->isProduction) {
+                try {
+                    $data = $this->provider->getLiveScores();
+                    $res = [
+                        'matches' => $data ?? [],
+                        'updated_at' => date('Y-m-d H:i:s'),
+                        'is_stale' => false
+                    ];
+                    $this->cache->set($cacheKey, $res, 30);
+                    return $res;
+                } catch (\Throwable $provEx) {
+                    error_log("SportsService getLiveScores fallback error: " . $provEx->getMessage());
+                }
+            }
+
             return [
                 'matches' => [],
                 'updated_at' => date('Y-m-d H:i:s'),

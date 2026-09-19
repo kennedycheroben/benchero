@@ -43,6 +43,15 @@ class RealSportsProviderTestSuite
         $sportsServiceReal = new SportsService();
         $this->assert(true, "SportsService initialized with SPORTS_PROVIDER=real");
 
+        $_ENV['SPORTS_PROVIDER'] = 'football';
+        $sportsServiceFootball = new SportsService();
+        $syncServiceFootball = new SportsSyncService();
+        $this->assert($syncServiceFootball->getProvider() instanceof FootballDataSportsProvider, "SportsSyncService accepts SPORTS_PROVIDER=football as FootballDataSportsProvider alias");
+
+        $_ENV['SPORTS_PROVIDER'] = 'football-data';
+        $syncServiceFd = new SportsSyncService();
+        $this->assert($syncServiceFd->getProvider() instanceof FootballDataSportsProvider, "SportsSyncService accepts SPORTS_PROVIDER=football-data as FootballDataSportsProvider alias");
+
         $_ENV['NEWS_PROVIDER'] = 'rss';
         $newsServiceRss = new NewsService();
         $this->assert(true, "NewsService initialized with NEWS_PROVIDER=rss");

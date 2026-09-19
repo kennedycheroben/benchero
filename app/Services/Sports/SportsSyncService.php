@@ -44,7 +44,7 @@ class SportsSyncService
         }
 
         return match ($providerType) {
-            'real', 'football-data' => new FootballDataSportsProvider(),
+            'real', 'football-data', 'football' => new FootballDataSportsProvider(),
             'mock' => $isProduction ? new NullSportsProvider() : new MockSportsProvider(),
             default => $isProduction ? new NullSportsProvider() : new MockSportsProvider()
         };
@@ -311,6 +311,9 @@ class SportsSyncService
                 }
             }
 
+            // Invalidate fixtures cache
+            (new \Benchero\Services\CacheService())->forget('sports_fixtures_v3');
+
             $duration = (int)round((microtime(true) - $startTime) * 1000);
             $this->logSync($providerName, 'sync-fixtures', 'success', $duration, $processed, $updated);
             return ['success' => true, 'processed' => $processed, 'updated' => $updated];
@@ -396,6 +399,9 @@ class SportsSyncService
                 }
             }
 
+            // Invalidate results cache
+            (new \Benchero\Services\CacheService())->forget('sports_results_v3');
+
             $duration = (int)round((microtime(true) - $startTime) * 1000);
             $this->logSync($providerName, 'sync-results', 'success', $duration, $processed, $updated);
             return ['success' => true, 'processed' => $processed, 'updated' => $updated];
@@ -437,7 +443,13 @@ class SportsSyncService
                     $comp['logo'] ?? null
                 );
 
-                $rawStandings = $this->provider->getStandings($slug);
+                try {
+                    $rawStandings = $this->provider->getStandings($slug);
+                } catch (\Throwable $standingsEx) {
+                    error_log("SportsSyncService standings error for {$slug}: " . $standingsEx->getMessage());
+                    continue;
+                }
+
                 if (empty($rawStandings)) {
                     continue;
                 }
@@ -521,6 +533,9 @@ class SportsSyncService
                     }
                     $processed++;
                 }
+
+                // Invalidate standings cache for this competition
+                (new \Benchero\Services\CacheService())->forget("sports_standings_{$slug}");
             }
 
             $duration = (int)round((microtime(true) - $startTime) * 1000);

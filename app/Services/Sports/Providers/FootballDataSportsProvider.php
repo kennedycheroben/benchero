@@ -50,7 +50,28 @@ class FootballDataSportsProvider implements SportsProviderInterface
         }
 
         if ($httpCode === 429) {
-            throw new \RuntimeException("Football-Data.org rate limit exceeded (HTTP 429).", 429);
+            // Short backoff and single retry for momentary rate limits
+            sleep(2);
+            $chRetry = curl_init();
+            curl_setopt_array($chRetry, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'X-Auth-Token: ' . $this->apiKey,
+                    'Accept: application/json'
+                ],
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_USERAGENT => 'Benchero-Sports-Platform/1.0'
+            ]);
+            $response = curl_exec($chRetry);
+            $httpCode = curl_getinfo($chRetry, CURLINFO_HTTP_CODE);
+            curl_close($chRetry);
+
+            if ($httpCode === 429) {
+                throw new \RuntimeException("Football-Data.org rate limit exceeded (HTTP 429).", 429);
+            }
         }
 
         if ($httpCode >= 500) {
