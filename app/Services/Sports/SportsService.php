@@ -274,7 +274,13 @@ class SportsService
 
         // Query local database FIRST
         try {
-            $stmt = $this->pdo->query("SELECT * FROM sports_competitions WHERE provider != 'mock' ORDER BY name ASC");
+            $stmt = $this->pdo->query("
+                SELECT c.*, s.slug as sport, s.name as sport_name
+                FROM sports_competitions c
+                LEFT JOIN sports s ON c.sport_id = s.id
+                WHERE c.provider != 'mock'
+                ORDER BY c.name ASC
+            ");
             $comps = $stmt->fetchAll(PDO::FETCH_ASSOC);
             if (!empty($comps)) {
                 $this->cache->set($cacheKey, $comps, 3600);

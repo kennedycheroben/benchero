@@ -119,18 +119,38 @@ class FootballDataSportsProvider implements SportsProviderInterface
         return $result;
     }
 
+    private const COMPETITION_CODE_MAP = [
+        'premier-league' => 'PL',
+        'champions-league' => 'CL',
+        'la-liga' => 'PD',
+        'serie-a' => 'SA',
+        'bundesliga' => 'BL1',
+        'ligue-1' => 'FL1',
+        'championship' => 'ELC',
+        'eredivisie' => 'DED',
+        'primeira-liga' => 'PPL',
+        'copa-libertadores' => 'CLI',
+        'brasileirao' => 'BSA',
+        'european-championship' => 'EC',
+        'world-cup' => 'WC'
+    ];
+
     public function getStandings(string $competitionSlug): array
     {
-        $codeMap = [
-            'premier-league' => 'PL',
-            'champions-league' => 'CL',
-            'la-liga' => 'PD',
-            'serie-a' => 'SA',
-            'bundesliga' => 'BL1'
-        ];
+        if (!isset(self::COMPETITION_CODE_MAP[$competitionSlug])) {
+            error_log("FootballDataSportsProvider: Competition slug '{$competitionSlug}' is not supported by football-data.org. Skipping standings request.");
+            return [];
+        }
 
-        $code = $codeMap[$competitionSlug] ?? 'PL';
-        $data = $this->makeRequest("competitions/{$code}/standings");
+        $code = self::COMPETITION_CODE_MAP[$competitionSlug];
+
+        try {
+            $data = $this->makeRequest("competitions/{$code}/standings");
+        } catch (\Throwable $e) {
+            error_log("FootballDataSportsProvider: Failed to fetch standings for '{$competitionSlug}' ({$code}): " . $e->getMessage());
+            return [];
+        }
+
         $tables = $data['standings'][0]['table'] ?? [];
         $result = [];
 
@@ -139,6 +159,8 @@ class FootballDataSportsProvider implements SportsProviderInterface
                 'position' => (int)($row['position'] ?? 0),
                 'team' => $row['team']['name'] ?? 'Team',
                 'team_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $row['team']['name'] ?? 'team'), '-')),
+                'team_id' => (string)($row['team']['id'] ?? ''),
+                'team_logo' => $row['team']['crest'] ?? null,
                 'played' => (int)($row['playedGames'] ?? 0),
                 'won' => (int)($row['won'] ?? 0),
                 'drawn' => (int)($row['draw'] ?? 0),

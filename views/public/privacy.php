@@ -34,7 +34,7 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">3. Scope of this Policy</h4>
-            <p>This Privacy Policy applies to all services, web presences, administrative dashboards, public club sites (e.g. <code>https://benchero.co.ke/club/{slug}</code>), and APIs provided under the Benchero domain and connected custom domains.</p>
+            <p>This Privacy Policy applies to all services, web presences, administrative dashboards, public club sites, and APIs provided under the Benchero domain and connected custom domains.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -114,7 +114,7 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">12. Payments & Financial Telemetry</h4>
-            <p>Commercial Subscriptions are processed via M-Pesa STK push callbacks (via Daraja or I&M Bank payment integration).</p>
+            <p>Commercial Subscriptions are processed via M-Pesa.</p>
             <ul>
                 <li>Benchero receives transaction reference numbers, receipt codes, payment phone numbers, transaction amounts, and subscription period statuses.</li>
                 <li>Benchero <strong>never</strong> requests, collects, or stores M-Pesa PINs or private banking credentials.</li>

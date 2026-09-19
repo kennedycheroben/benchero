@@ -14,7 +14,7 @@
                 <div class="card h-100 border-0 shadow-sm rounded-4 p-4 benchero-interactive-card">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-1 rounded-pill">
-                            <?= ucfirst($this->e($comp['sport'])) ?>
+                            <?= ucfirst($this->e($comp['sport'] ?? 'Football')) ?>
                         </span>
                         <span class="small text-muted fw-bold"><?= $this->e($comp['country']) ?></span>
                     </div>
