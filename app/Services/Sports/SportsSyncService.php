@@ -197,6 +197,36 @@ class SportsSyncService
                 }
             }
 
+            // Transition stale LIVE matches from this provider that are no longer active to FINISHED
+            $liveExtIds = array_filter(array_map(function($m) {
+                return (string)($m['external_id'] ?? $m['id'] ?? '');
+            }, $matches));
+
+            if (!empty($liveExtIds)) {
+                $placeholders = implode(',', array_fill(0, count($liveExtIds), '?'));
+                $stmtCleanup = $this->pdo->prepare("
+                    UPDATE sports_matches
+                    SET status = 'FINISHED', updated_at = NOW()
+                    WHERE provider = ?
+                      AND status IN ('LIVE', 'IN_PLAY', 'PAUSED')
+                      AND external_id NOT IN ($placeholders)
+                      AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
+                ");
+                $stmtCleanup->execute(array_merge([$providerName], $liveExtIds));
+            } else {
+                $stmtCleanup = $this->pdo->prepare("
+                    UPDATE sports_matches
+                    SET status = 'FINISHED', updated_at = NOW()
+                    WHERE provider = ?
+                      AND status IN ('LIVE', 'IN_PLAY', 'PAUSED')
+                      AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
+                ");
+                $stmtCleanup->execute([$providerName]);
+            }
+
+            // Invalidate live scores cache
+            (new \Benchero\Services\CacheService())->forget('sports_live_scores_v3');
+
             $duration = (int)round((microtime(true) - $startTime) * 1000);
             $this->logSync($providerName, 'sync-live', 'success', $duration, $processed, $updated);
 
