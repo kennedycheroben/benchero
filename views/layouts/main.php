@@ -255,7 +255,7 @@ register_shutdown_function(function() use ($tenant) {
     if (!$rendered) {
         $rendered = true;
         echo '</div></div></div>';
-        echo '<footer class="bg-white py-3 mt-auto border-top"><div class="container text-center text-muted"><small>&copy; ' . date('Y') . ' Benchero — Multi-Sport Management SaaS.</small></div></footer>';
+        echo '<footer class="bg-white py-3 mt-auto border-top"><div class="container text-center text-muted"><small>&copy; ' . date('Y') . ' Benchero — Multi-Sport Management.</small></div></footer>';
         echo '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>';
         if (isset($tenant['slug'])) {
             $slugJs = json_encode($tenant['slug']);

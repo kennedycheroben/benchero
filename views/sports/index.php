@@ -181,7 +181,6 @@
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <img src="<?= url('/images/benchero_logo.png') ?>" alt="Benchero Logo" height="32" class="rounded-2">
                     <span class="fw-extrabold fs-4 tracking-tight">BENCHERO</span>
-                    <span class="badge bg-primary">SaaS</span>
                 </div>
                 <h4 class="fw-bold mb-2">Manage Your Sports Club</h4>
                 <p class="text-white-50 small mb-4">

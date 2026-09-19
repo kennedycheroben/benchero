@@ -194,7 +194,7 @@ class SportsController extends Controller
 
         return $this->render('sports/clubs', [
             'title' => 'Discover Sports Clubs — Benchero Sports',
-            'description' => 'Explore sports clubs, academies, and teams powered by Benchero SaaS.',
+            'description' => 'Explore sports clubs, academies, and teams powered by Benchero.',
             'clubs' => $clubs
         ]);
     }

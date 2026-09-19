@@ -1,6 +1,6 @@
 {
     "name": "benchero/app",
-    "description": "Benchero SaaS Platform",
+    "description": "Benchero Platform",
     "type": "project",
     "require": {
         "php": ">=8.2",
