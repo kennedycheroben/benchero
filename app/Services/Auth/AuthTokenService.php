@@ -31,11 +31,13 @@ class AuthTokenService
 
         $id = Ulid::generate();
         
+        $expiresAt = date('Y-m-d H:i:s', time() + $expiresInSeconds);
+        
         $stmt = $this->pdo->prepare("
             INSERT INTO auth_tokens (id, user_id, type, token_hash, expires_at, created_at)
-            VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND), NOW())
+            VALUES (?, ?, ?, ?, ?, NOW())
         ");
-        $stmt->execute([$id, $userId, $type, $tokenHash, $expiresInSeconds]);
+        $stmt->execute([$id, $userId, $type, $tokenHash, $expiresAt]);
 
         return $plaintextToken;
     }

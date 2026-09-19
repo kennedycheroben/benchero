@@ -30,12 +30,13 @@ class SportsService
     private function resolveProvider(): SportsProviderInterface
     {
         if ($this->isProduction && $this->providerType === 'mock') {
-            throw new \RuntimeException('Mock sports provider is strictly prohibited in production.');
+            error_log("SPORTS_PROVIDER=mock configured in production environment. Falling back to NullSportsProvider.");
+            return new NullSportsProvider();
         }
 
         return match ($this->providerType) {
             'real', 'football-data' => new FootballDataSportsProvider(),
-            'mock' => $this->isProduction ? throw new \RuntimeException('Mock sports provider is strictly prohibited in production.') : new MockSportsProvider(),
+            'mock' => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider(),
             default => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider()
         };
     }
@@ -48,7 +49,7 @@ class SportsService
             return $cached;
         }
 
-        if ($this->providerType === 'mock') {
+        if ($this->providerType === 'mock' && !$this->isProduction) {
             try {
                 $data = $this->provider->getLiveScores();
                 return ['matches' => $data, 'updated_at' => date('Y-m-d H:i:s'), 'is_stale' => false];
@@ -75,7 +76,7 @@ class SportsService
 
             $lastSync = $this->pdo->query("SELECT created_at FROM sports_sync_logs WHERE status = 'success' AND operation = 'sync-live' ORDER BY id DESC LIMIT 1")->fetchColumn();
             $isStale = false;
-            if (empty($matches) || !$lastSync || (time() - strtotime($lastSync) > 120)) {
+            if (empty($dbMatches) || !$lastSync || (time() - strtotime($lastSync) > 120)) {
                 $isStale = true;
             }
 
@@ -93,6 +94,11 @@ class SportsService
                     'start_time' => $r['start_time']
                 ];
             }, $dbMatches);
+
+            if (empty($matches) && !$this->isProduction && $this->providerType === 'mock') {
+                $data = $this->provider->getLiveScores();
+                return ['matches' => $data, 'updated_at' => date('Y-m-d H:i:s'), 'is_stale' => false];
+            }
 
             $result = [
                 'matches' => $matches,
@@ -116,49 +122,36 @@ class SportsService
     {
         $cacheKey = "sports_results_{$sport}_{$date}_{$limit}_{$competitionId}";
         $cached = $this->cache->get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
 
+        // Query local normalized database table FIRST
         try {
-            $data = $this->provider->getResults($sport, $date, $limit);
-            if ($competitionId !== null && !empty($data)) {
-                $data = array_values(array_filter($data, function($m) use ($competitionId) {
-                    return ($m['competition_slug'] ?? '') === $competitionId || ($m['competition'] ?? '') === $competitionId;
-                }));
+            $sql = "
+                SELECT m.*, 
+                       c.name as competition_name, c.slug as competition_slug,
+                       ht.name as home_team_name, ht.slug as home_slug,
+                       at.name as away_team_name, at.slug as away_slug
+                FROM sports_matches m
+                LEFT JOIN sports_competitions c ON m.competition_id = c.id
+                LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
+                LEFT JOIN sports_teams at ON m.away_team_id = at.id
+                WHERE m.status IN ('FINISHED', 'FT', 'AET', 'PEN') AND m.provider != 'mock'
+            ";
+            $params = [];
+            if ($competitionId !== null) {
+                $sql .= " AND (m.competition_id = ? OR c.slug = ?)";
+                $params[] = $competitionId;
+                $params[] = $competitionId;
             }
+            $sql .= " ORDER BY m.start_time DESC LIMIT " . (int)$limit;
 
-            $result = [
-                'results' => $data,
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-            $this->cache->set($cacheKey, $result, 600);
-            return $result;
-        } catch (\Throwable $e) {
-            error_log("SportsService getResults error: " . $e->getMessage());
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $dbRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Database fallback
-            try {
-                $sql = "
-                    SELECT m.*, 
-                           c.name as competition_name, c.slug as competition_slug,
-                           ht.name as home_team_name, ht.slug as home_slug,
-                           at.name as away_team_name, at.slug as away_slug
-                    FROM sports_matches m
-                    LEFT JOIN sports_competitions c ON m.competition_id = c.id
-                    LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
-                    LEFT JOIN sports_teams at ON m.away_team_id = at.id
-                    WHERE m.status IN ('FINISHED', 'FT', 'AET', 'PEN') AND m.provider != 'mock'
-                ";
-                $params = [];
-                if ($competitionId !== null) {
-                    $sql .= " AND (m.competition_id = ? OR c.slug = ?)";
-                    $params[] = $competitionId;
-                    $params[] = $competitionId;
-                }
-                $sql .= " ORDER BY m.start_time DESC LIMIT " . (int)$limit;
-
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute($params);
-                $dbRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+            if (!empty($dbRows)) {
                 $results = array_map(function($r) {
                     return [
                         'id' => $r['id'],
@@ -175,10 +168,27 @@ class SportsService
                     ];
                 }, $dbRows);
 
-                return ['results' => $results, 'updated_at' => date('Y-m-d H:i:s'), 'is_stale' => true];
-            } catch (\Throwable $dbEx) {
-                return $cached ?? ['results' => [], 'updated_at' => date('Y-m-d H:i:s')];
+                $res = ['results' => $results, 'updated_at' => date('Y-m-d H:i:s')];
+                $this->cache->set($cacheKey, $res, 600);
+                return $res;
             }
+        } catch (\Throwable $dbEx) {
+            error_log("SportsService getResults DB error: " . $dbEx->getMessage());
+        }
+
+        if ($this->isProduction) {
+            return ['results' => [], 'updated_at' => date('Y-m-d H:i:s')];
+        }
+
+        // Fallback in dev/testing mode
+        try {
+            $data = $this->provider->getResults($sport, $date, $limit);
+            $res = ['results' => $data ?? [], 'updated_at' => date('Y-m-d H:i:s')];
+            $this->cache->set($cacheKey, $res, 300);
+            return $res;
+        } catch (\Throwable $e) {
+            error_log("SportsService getResults provider error: " . $e->getMessage());
+            return ['results' => [], 'updated_at' => date('Y-m-d H:i:s')];
         }
     }
 
@@ -186,49 +196,36 @@ class SportsService
     {
         $cacheKey = "sports_fixtures_{$sport}_{$date}_{$limit}_{$competitionId}";
         $cached = $this->cache->get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
 
+        // Query local normalized database table FIRST
         try {
-            $data = $this->provider->getFixtures($sport, $date, $limit);
-            if ($competitionId !== null && !empty($data)) {
-                $data = array_values(array_filter($data, function($m) use ($competitionId) {
-                    return ($m['competition_slug'] ?? '') === $competitionId || ($m['competition'] ?? '') === $competitionId;
-                }));
+            $sql = "
+                SELECT m.*, 
+                       c.name as competition_name, c.slug as competition_slug,
+                       ht.name as home_team_name, ht.slug as home_slug,
+                       at.name as away_team_name, at.slug as away_slug
+                FROM sports_matches m
+                LEFT JOIN sports_competitions c ON m.competition_id = c.id
+                LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
+                LEFT JOIN sports_teams at ON m.away_team_id = at.id
+                WHERE m.status IN ('SCHEDULED', 'TIMED', 'POSTPONED') AND m.provider != 'mock'
+            ";
+            $params = [];
+            if ($competitionId !== null) {
+                $sql .= " AND (m.competition_id = ? OR c.slug = ?)";
+                $params[] = $competitionId;
+                $params[] = $competitionId;
             }
+            $sql .= " ORDER BY m.start_time ASC LIMIT " . (int)$limit;
 
-            $result = [
-                'fixtures' => $data,
-                'updated_at' => date('Y-m-d H:i:s')
-            ];
-            $this->cache->set($cacheKey, $result, 600);
-            return $result;
-        } catch (\Throwable $e) {
-            error_log("SportsService getFixtures error: " . $e->getMessage());
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            $dbRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Database fallback
-            try {
-                $sql = "
-                    SELECT m.*, 
-                           c.name as competition_name, c.slug as competition_slug,
-                           ht.name as home_team_name, ht.slug as home_slug,
-                           at.name as away_team_name, at.slug as away_slug
-                    FROM sports_matches m
-                    LEFT JOIN sports_competitions c ON m.competition_id = c.id
-                    LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
-                    LEFT JOIN sports_teams at ON m.away_team_id = at.id
-                    WHERE m.status IN ('SCHEDULED', 'TIMED', 'POSTPONED') AND m.provider != 'mock'
-                ";
-                $params = [];
-                if ($competitionId !== null) {
-                    $sql .= " AND (m.competition_id = ? OR c.slug = ?)";
-                    $params[] = $competitionId;
-                    $params[] = $competitionId;
-                }
-                $sql .= " ORDER BY m.start_time ASC LIMIT " . (int)$limit;
-
-                $stmt = $this->pdo->prepare($sql);
-                $stmt->execute($params);
-                $dbRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+            if (!empty($dbRows)) {
                 $fixtures = array_map(function($r) {
                     return [
                         'id' => $r['id'],
@@ -243,10 +240,27 @@ class SportsService
                     ];
                 }, $dbRows);
 
-                return ['fixtures' => $fixtures, 'updated_at' => date('Y-m-d H:i:s'), 'is_stale' => true];
-            } catch (\Throwable $dbEx) {
-                return $cached ?? ['fixtures' => [], 'updated_at' => date('Y-m-d H:i:s')];
+                $res = ['fixtures' => $fixtures, 'updated_at' => date('Y-m-d H:i:s')];
+                $this->cache->set($cacheKey, $res, 600);
+                return $res;
             }
+        } catch (\Throwable $dbEx) {
+            error_log("SportsService getFixtures DB error: " . $dbEx->getMessage());
+        }
+
+        if ($this->isProduction) {
+            return ['fixtures' => [], 'updated_at' => date('Y-m-d H:i:s')];
+        }
+
+        // Fallback in dev/testing mode
+        try {
+            $data = $this->provider->getFixtures($sport, $date, $limit);
+            $res = ['fixtures' => $data ?? [], 'updated_at' => date('Y-m-d H:i:s')];
+            $this->cache->set($cacheKey, $res, 300);
+            return $res;
+        } catch (\Throwable $e) {
+            error_log("SportsService getFixtures provider error: " . $e->getMessage());
+            return ['fixtures' => [], 'updated_at' => date('Y-m-d H:i:s')];
         }
     }
 
@@ -254,20 +268,33 @@ class SportsService
     {
         $cacheKey = "sports_competitions_{$sport}";
         $cached = $this->cache->get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        // Query local database FIRST
+        try {
+            $stmt = $this->pdo->query("SELECT * FROM sports_competitions WHERE provider != 'mock' ORDER BY name ASC");
+            $comps = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if (!empty($comps)) {
+                $this->cache->set($cacheKey, $comps, 3600);
+                return $comps;
+            }
+        } catch (\Throwable $dbEx) {
+            error_log("SportsService getCompetitions DB error: " . $dbEx->getMessage());
+        }
+
+        if ($this->isProduction) {
+            return [];
+        }
 
         try {
             $data = $this->provider->getCompetitions($sport);
             $this->cache->set($cacheKey, $data, 3600);
             return $data;
         } catch (\Throwable $e) {
-            error_log("SportsService getCompetitions error: " . $e->getMessage());
-
-            try {
-                $stmt = $this->pdo->query("SELECT * FROM sports_competitions WHERE provider != 'mock' ORDER BY name ASC");
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } catch (\Throwable $dbEx) {
-                return $cached ?? [];
-            }
+            error_log("SportsService getCompetitions provider error: " . $e->getMessage());
+            return $cached ?? [];
         }
     }
 
@@ -275,30 +302,20 @@ class SportsService
     {
         $cacheKey = "sports_standings_{$competitionSlug}";
         $cached = $this->cache->get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
 
+        // Query local database FIRST
         try {
-            $data = $this->provider->getStandings($competitionSlug);
-            $this->cache->set($cacheKey, $data, 1800);
-            return $data;
-        } catch (\Throwable $e) {
-            error_log("SportsService getStandings error: " . $e->getMessage());
+            $stmtComp = $this->pdo->prepare("SELECT * FROM sports_competitions WHERE slug = ? AND provider != 'mock'");
+            $stmtComp->execute([$competitionSlug]);
+            $comp = $stmtComp->fetch(PDO::FETCH_ASSOC);
 
-            try {
-                $stmtComp = $this->pdo->prepare("SELECT * FROM sports_competitions WHERE slug = ?");
-                $stmtComp->execute([$competitionSlug]);
-                $comp = $stmtComp->fetch(PDO::FETCH_ASSOC);
-
-                if (!$comp) {
-                    return [
-                        'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
-                        'season' => date('Y') . '/' . (date('Y') + 1),
-                        'table' => []
-                    ];
-                }
-
+            if ($comp) {
                 $stmtSt = $this->pdo->prepare("
                     SELECT s.*, t.name as team_name, t.slug as team_slug, t.logo as team_logo
-                    FROM standings s
+                    FROM sports_standings s
                     LEFT JOIN sports_teams t ON s.team_id = t.id
                     WHERE s.competition_id = ?
                     ORDER BY s.position ASC
@@ -306,22 +323,48 @@ class SportsService
                 $stmtSt->execute([$comp['id']]);
                 $table = $stmtSt->fetchAll(PDO::FETCH_ASSOC);
 
-                return [
-                    'competition' => [
-                        'id' => $comp['id'],
-                        'name' => $comp['name'],
-                        'slug' => $comp['slug']
-                    ],
-                    'season' => date('Y') . '/' . (date('Y') + 1),
-                    'table' => $table
-                ];
-            } catch (\Throwable $dbEx) {
-                return $cached ?? [
-                    'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
-                    'season' => date('Y') . '/' . (date('Y') + 1),
-                    'table' => []
-                ];
+                if (!empty($table)) {
+                    $res = [
+                        'competition' => [
+                            'id' => $comp['id'],
+                            'name' => $comp['name'],
+                            'slug' => $comp['slug']
+                        ],
+                        'season' => date('Y') . '/' . (date('Y') + 1),
+                        'table' => $table
+                    ];
+                    $this->cache->set($cacheKey, $res, 1800);
+                    return $res;
+                }
             }
+        } catch (\Throwable $dbEx) {
+            error_log("SportsService getStandings DB error: " . $dbEx->getMessage());
+        }
+
+        if ($this->isProduction) {
+            return [
+                'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
+                'season' => date('Y') . '/' . (date('Y') + 1),
+                'table' => []
+            ];
+        }
+
+        try {
+            $data = $this->provider->getStandings($competitionSlug);
+            $res = [
+                'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
+                'season' => date('Y') . '/' . (date('Y') + 1),
+                'table' => $data
+            ];
+            $this->cache->set($cacheKey, $res, 1800);
+            return $res;
+        } catch (\Throwable $e) {
+            error_log("SportsService getStandings provider error: " . $e->getMessage());
+            return $cached ?? [
+                'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
+                'season' => date('Y') . '/' . (date('Y') + 1),
+                'table' => []
+            ];
         }
     }
 

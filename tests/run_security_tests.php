@@ -1,6 +1,9 @@
 <?php
 
-$baseUrl = 'http://localhost/benchero/public';
+require_once __DIR__ . '/../app/bootstrap.php';
+\Benchero\Core\Database\Database::getConnection()->exec("DELETE FROM rate_limits");
+
+$baseUrl = 'http://127.0.0.1:8000';
 
 // 1. Get CSRF Token
 $ch = curl_init("$baseUrl/register");

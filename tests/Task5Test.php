@@ -1,62 +1,64 @@
 <?php
 
-require_once __DIR__ . '/../app/bootstrap.php';
+namespace Tests;
 
+use PHPUnit\Framework\TestCase;
 use Benchero\Core\Database\Database;
 use Benchero\Services\Auth\AuthService;
 use Benchero\Services\Auth\AuthTokenService;
+use Exception;
 
-$pdo = Database::getConnection();
-$authService = new AuthService($pdo);
-$tokenService = new AuthTokenService($pdo);
+class Task5Test extends TestCase
+{
+    private $pdo;
+    private $authService;
+    private $tokenService;
 
-echo "Starting Task 5 Tests...\n";
+    protected function setUp(): void
+    {
+        $this->pdo = Database::getConnection();
+        $this->pdo->beginTransaction();
+        $this->authService = new AuthService($this->pdo);
+        $this->tokenService = new AuthTokenService($this->pdo);
+    }
 
-$pdo->beginTransaction();
+    protected function tearDown(): void
+    {
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+    }
 
-try {
-    $pdo->exec("DELETE FROM users WHERE email = 'testuser@example.com'");
-    $pdo->exec("DELETE FROM users WHERE email = 'expired@example.com'");
+    public function test_registration_and_verification_flow(): void
+    {
+        $this->pdo->exec("DELETE FROM users WHERE email = 'testuser@example.com'");
+        $this->pdo->exec("DELETE FROM users WHERE email = 'expired@example.com'");
 
-    echo "1. Testing Registration...\n";
-    $userId = $authService->registerUser('Test User', 'testuser@example.com', 'password123');
-    if (!$userId) throw new Exception("FAILED: Could not register user.");
-    echo " - User created: $userId\n";
+        $userId = $this->authService->registerUser('Test User', 'testuser@example.com', 'password123');
+        $this->assertNotNull($userId);
 
-    $dupId = $authService->registerUser('Duplicate', 'testuser@example.com', 'password123');
-    if ($dupId !== null) throw new Exception("FAILED: Allowed duplicate email.");
-    echo " - Duplicate email blocked.\n";
+        $dupId = $this->authService->registerUser('Duplicate', 'testuser@example.com', 'password123');
+        $this->assertNull($dupId);
 
-    $token = $tokenService->generateToken($userId, AuthTokenService::TYPE_EMAIL_VERIFICATION, 86400);
-    if (strlen($token) !== 64) throw new Exception("FAILED: Token length invalid.");
-    echo " - Token generated.\n";
+        $token = $this->tokenService->generateToken($userId, AuthTokenService::TYPE_EMAIL_VERIFICATION, 86400);
+        $this->assertEquals(64, strlen($token));
 
-    $invalidUserId = $tokenService->validateAndUseToken('invalid_token_123', AuthTokenService::TYPE_EMAIL_VERIFICATION);
-    if ($invalidUserId !== null) throw new Exception("FAILED: Allowed invalid token.");
-    echo " - Invalid token blocked.\n";
+        $invalidUserId = $this->tokenService->validateAndUseToken('invalid_token_123', AuthTokenService::TYPE_EMAIL_VERIFICATION);
+        $this->assertNull($invalidUserId);
 
-    $verifiedUserId = $tokenService->validateAndUseToken($token, AuthTokenService::TYPE_EMAIL_VERIFICATION);
-    if ($verifiedUserId !== $userId) throw new Exception("FAILED: Valid token did not return correct user ID.");
-    
-    $authService->markEmailVerified($userId);
-    $user = $authService->findUserById($userId);
-    if ($user['email_verified_at'] === null) throw new Exception("FAILED: email_verified_at not updated.");
-    echo " - Token validated and user verified.\n";
+        $verifiedUserId = $this->tokenService->validateAndUseToken($token, AuthTokenService::TYPE_EMAIL_VERIFICATION);
+        $this->assertEquals($userId, $verifiedUserId);
 
-    $reused = $tokenService->validateAndUseToken($token, AuthTokenService::TYPE_EMAIL_VERIFICATION);
-    if ($reused !== null) throw new Exception("FAILED: Token was reused.");
-    echo " - Token reuse prevented.\n";
+        $this->authService->markEmailVerified($userId);
+        $user = $this->authService->findUserById($userId);
+        $this->assertNotNull($user['email_verified_at']);
 
-    $expUserId = $authService->registerUser('Expired', 'expired@example.com', 'pass');
-    $expToken = $tokenService->generateToken($expUserId, AuthTokenService::TYPE_EMAIL_VERIFICATION, -3600);
-    $expCheck = $tokenService->validateAndUseToken($expToken, AuthTokenService::TYPE_EMAIL_VERIFICATION);
-    if ($expCheck !== null) throw new Exception("FAILED: Expired token was accepted.");
-    echo " - Expired token blocked.\n";
+        $reused = $this->tokenService->validateAndUseToken($token, AuthTokenService::TYPE_EMAIL_VERIFICATION);
+        $this->assertNull($reused);
 
-    echo "\nAll Tests Passed Successfully!\n";
-} catch (Exception $e) {
-    echo "\n" . $e->getMessage() . "\n";
-} finally {
-    $pdo->rollBack();
-    echo " - Test data rolled back.\n";
+        $expUserId = $this->authService->registerUser('Expired', 'expired@example.com', 'pass');
+        $expToken = $this->tokenService->generateToken($expUserId, AuthTokenService::TYPE_EMAIL_VERIFICATION, -3600);
+        $expCheck = $this->tokenService->validateAndUseToken($expToken, AuthTokenService::TYPE_EMAIL_VERIFICATION);
+        $this->assertNull($expCheck);
+    }
 }

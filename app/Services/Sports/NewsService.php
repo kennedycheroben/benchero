@@ -29,12 +29,13 @@ class NewsService
     private function resolveProvider(): NewsProviderInterface
     {
         if ($this->isProduction && $this->providerType === 'mock') {
-            throw new \RuntimeException('Mock news provider is strictly prohibited in production.');
+            error_log("NEWS_PROVIDER=mock configured in production. Falling back to RSSNewsProvider.");
+            return new RSSNewsProvider();
         }
 
         return match ($this->providerType) {
             'real', 'rss' => new RSSNewsProvider(),
-            'mock' => $this->isProduction ? throw new \RuntimeException('Mock news provider is strictly prohibited in production.') : new MockNewsProvider(),
+            'mock' => $this->isProduction ? new RSSNewsProvider() : new MockNewsProvider(),
             default => $this->isProduction ? new RSSNewsProvider() : new MockNewsProvider()
         };
     }
@@ -65,6 +66,10 @@ class NewsService
             if (!empty($dbNews)) {
                 $this->cache->set($cacheKey, $dbNews, 300);
                 return $dbNews;
+            }
+
+            if ($this->providerType === 'mock' && $this->isProduction) {
+                return [];
             }
 
             // Otherwise fetch via provider
@@ -100,6 +105,10 @@ class NewsService
             if ($article) {
                 $this->cache->set($cacheKey, $article, 3600);
                 return $article;
+            }
+
+            if ($this->providerType === 'mock' && $this->isProduction) {
+                return null;
             }
 
             // Fallback to provider

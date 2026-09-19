@@ -1,1 +1,1 @@
-a:2:{s:10:"expires_at";i:1789811372;s:5:"value";a:3:{s:11:"competition";a:2:{s:4:"name";s:14:"Premier league";s:4:"slug";s:14:"premier-league";}s:6:"season";s:9:"2026/2027";s:5:"table";a:0:{}}}
+a:2:{s:10:"expires_at";i:1789813429;s:5:"value";a:3:{s:11:"competition";a:2:{s:4:"name";s:14:"Premier league";s:4:"slug";s:14:"premier-league";}s:6:"season";s:9:"2026/2027";s:5:"table";a:3:{s:11:"competition";a:2:{s:4:"name";s:14:"Premier league";s:4:"slug";s:14:"premier-league";}s:6:"season";s:9:"2026/2027";s:5:"table";a:0:{}}}}
