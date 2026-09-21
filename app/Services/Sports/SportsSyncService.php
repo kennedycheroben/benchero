@@ -233,8 +233,8 @@ class SportsSyncService
                 $stmtCleanup->execute([$providerName]);
             }
 
-            // Invalidate live scores cache
-            (new \Benchero\Services\CacheService())->forget('sports_live_scores_v3');
+            // Invalidate live scores and sports cache
+            (new \Benchero\Services\CacheService())->flushSportsCache();
 
             $duration = (int)round((microtime(true) - $startTime) * 1000);
             $this->logSync($providerName, 'sync-live', 'success', $duration, $processed, $updated);
@@ -320,8 +320,20 @@ class SportsSyncService
                 }
             }
 
-            // Invalidate fixtures cache
-            (new \Benchero\Services\CacheService())->forget('sports_fixtures_v3');
+            // Reconcile past fixtures that were scheduled in the past and never updated
+            try {
+                $this->pdo->exec("
+                    UPDATE sports_matches 
+                    SET status = 'FINISHED' 
+                    WHERE status IN ('NS', 'SCHEDULED', 'TIMED') 
+                      AND start_time < DATE_SUB(NOW(), INTERVAL 12 HOUR)
+                ");
+            } catch (\Throwable $rcEx) {
+                error_log("Failed to reconcile past fixtures: " . $rcEx->getMessage());
+            }
+
+            // Invalidate fixtures and sports cache
+            (new \Benchero\Services\CacheService())->flushSportsCache();
 
             $duration = (int)round((microtime(true) - $startTime) * 1000);
             $this->logSync($providerName, 'sync-fixtures', 'success', $duration, $processed, $updated);
@@ -408,8 +420,8 @@ class SportsSyncService
                 }
             }
 
-            // Invalidate results cache
-            (new \Benchero\Services\CacheService())->forget('sports_results_v3');
+            // Invalidate results and sports cache
+            (new \Benchero\Services\CacheService())->flushSportsCache();
 
             $duration = (int)round((microtime(true) - $startTime) * 1000);
             $this->logSync($providerName, 'sync-results', 'success', $duration, $processed, $updated);
@@ -543,8 +555,8 @@ class SportsSyncService
                     $processed++;
                 }
 
-                // Invalidate standings cache for this competition
-                (new \Benchero\Services\CacheService())->forget("sports_standings_{$slug}");
+                // Invalidate standings cache for this competition and sports cache
+                (new \Benchero\Services\CacheService())->flushSportsCache();
             }
 
             $duration = (int)round((microtime(true) - $startTime) * 1000);
@@ -665,10 +677,10 @@ class SportsSyncService
     {
         try {
             $stmt = $this->pdo->prepare("
-                INSERT INTO sports_sync_logs (provider, operation, status, duration_ms, records_processed, records_updated, error_message)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO sports_sync_logs (provider, operation, status, duration_ms, records_processed, records_updated, error_message, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            $stmt->execute([$provider, $operation, $status, $durationMs, $processed, $updated, $error]);
+            $stmt->execute([$provider, $operation, $status, $durationMs, $processed, $updated, $error, date('Y-m-d H:i:s')]);
         } catch (\Throwable $e) {
             error_log("Failed to insert sports_sync_logs: " . $e->getMessage());
         }

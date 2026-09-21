@@ -67,7 +67,7 @@ class SportsService
 
             $lastSync = $this->pdo->query("SELECT created_at FROM sports_sync_logs WHERE status = 'success' AND operation = 'sync-live' ORDER BY id DESC LIMIT 1")->fetchColumn();
             $isStale = false;
-            if (empty($dbMatches) || !$lastSync || (time() - strtotime($lastSync) > 120)) {
+            if (!$lastSync || (abs(time() - strtotime($lastSync)) > 900)) {
                 $isStale = true;
             }
 
@@ -256,6 +256,8 @@ class SportsService
             if ($date !== null) {
                 $sql .= " AND DATE(m.start_time) = ?";
                 $params[] = $date;
+            } else {
+                $sql .= " AND m.start_time >= NOW()";
             }
             $sql .= " ORDER BY m.start_time ASC LIMIT " . (int)$limit;
 

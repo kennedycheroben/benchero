@@ -50,6 +50,7 @@ class CacheService
     {
         $filePath = $this->getFilePath($key);
         $data = [
+            'key' => $key,
             'expires_at' => time() + $ttl,
             'value' => $value
         ];
@@ -113,6 +114,37 @@ class CacheService
             }
         }
 
+        return $count;
+    }
+
+    /**
+     * Flush all sports platform caches.
+     */
+    public function flushSportsCache(): int
+    {
+        $count = 0;
+        $files = glob($this->cacheDir . '/*.cache');
+        if ($files) {
+            foreach ($files as $file) {
+                $content = @file_get_contents($file);
+                if ($content !== false) {
+                    $data = @unserialize($content);
+                    if (is_array($data)) {
+                        $key = (string)($data['key'] ?? '');
+                        if (str_starts_with($key, 'sports_')) {
+                            @unlink($file);
+                            $count++;
+                            continue;
+                        }
+                        $val = $data['value'] ?? null;
+                        if (is_array($val) && (isset($val['matches']) || isset($val['fixtures']) || isset($val['results']) || isset($val['standings']))) {
+                            @unlink($file);
+                            $count++;
+                        }
+                    }
+                }
+            }
+        }
         return $count;
     }
 

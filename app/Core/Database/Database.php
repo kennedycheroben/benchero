@@ -31,6 +31,11 @@ class Database
             try {
                 self::$instance = new PDO($dsn, $user, $pass, $options);
                 self::$instance->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+                try {
+                    self::$instance->exec("SET time_zone = '+03:00'");
+                } catch (\Throwable) {
+                    // Ignore if named/offset time_zones restricted by host
+                }
             } catch (PDOException $e) {
                 // Do not leak credentials in exception message
                 echo $e->getMessage() . "\n";
