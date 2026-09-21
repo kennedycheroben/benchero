@@ -47,7 +47,7 @@ class SportsPlatformTestSuite
         echo "==================================================\n";
 
         // 1. SportsService & MockSportsProvider
-        $sportsService = new SportsService();
+        $sportsService = new SportsService(new \Benchero\Services\Sports\Providers\MockSportsProvider());
         $liveData = $sportsService->getLiveScores();
         $this->assert(isset($liveData['matches']) && is_array($liveData['matches']), "SportsService returns live matches payload");
         $this->assert(count($liveData['matches']) > 0, "MockSportsProvider provides live matches data");

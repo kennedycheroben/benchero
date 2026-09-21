@@ -44,6 +44,7 @@ class SportsSyncService
         }
 
         return match ($providerType) {
+            'api-football', 'apifootball' => new \Benchero\Services\Sports\Providers\ApiFootballSportsProvider(),
             'real', 'football-data', 'football' => new FootballDataSportsProvider(),
             'mock' => $isProduction ? new NullSportsProvider() : new MockSportsProvider(),
             default => $isProduction ? new NullSportsProvider() : new MockSportsProvider()
@@ -78,6 +79,9 @@ class SportsSyncService
 
     public function getProviderName(): string
     {
+        if ($this->provider instanceof \Benchero\Services\Sports\Providers\ApiFootballSportsProvider) {
+            return 'api-football';
+        }
         if ($this->provider instanceof FootballDataSportsProvider) {
             return 'football-data';
         }
@@ -208,7 +212,7 @@ class SportsSyncService
                     UPDATE sports_matches
                     SET status = 'FINISHED', updated_at = NOW()
                     WHERE provider = ?
-                      AND status IN ('LIVE', 'IN_PLAY', 'PAUSED')
+                      AND status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
                       AND external_id NOT IN ($placeholders)
                       AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
                 ");
@@ -218,7 +222,7 @@ class SportsSyncService
                     UPDATE sports_matches
                     SET status = 'FINISHED', updated_at = NOW()
                     WHERE provider = ?
-                      AND status IN ('LIVE', 'IN_PLAY', 'PAUSED')
+                      AND status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
                       AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
                 ");
                 $stmtCleanup->execute([$providerName]);

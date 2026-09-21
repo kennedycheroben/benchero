@@ -60,7 +60,7 @@ class SportsService
                 LEFT JOIN sports_competitions c ON m.competition_id = c.id
                 LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
                 LEFT JOIN sports_teams at ON m.away_team_id = at.id
-                WHERE m.status IN ('LIVE', 'IN_PLAY', 'PAUSED') AND m.provider != 'mock'
+                WHERE m.status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED') AND m.provider != 'mock'
                 ORDER BY m.start_time DESC LIMIT 20
             ");
             $dbMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -229,7 +229,7 @@ class SportsService
                 LEFT JOIN sports_competitions c ON m.competition_id = c.id
                 LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
                 LEFT JOIN sports_teams at ON m.away_team_id = at.id
-                WHERE m.status IN ('SCHEDULED', 'TIMED', 'POSTPONED') AND m.provider != 'mock'
+                WHERE m.status IN ('NS', 'SCHEDULED', 'TIMED', 'POSTPONED') AND m.provider != 'mock'
             ";
             $params = [];
             if ($competitionId !== null) {
