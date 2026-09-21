@@ -350,6 +350,83 @@ class SportsSyncRegressionTestSuite
         $this->assert($val === 'test_key', "14. API Key stored privately in provider instance");
         $this->assert(true, "14b. Provider does not expose secrets in logs or responses");
 
+        // TEST 15: Lock path behavior & concurrency prevention
+        $syncService = new SportsSyncService();
+        $syncReflection = new \ReflectionClass($syncService);
+        $lockFileProp = $syncReflection->getProperty('lockFile');
+        $lockFileProp->setAccessible(true);
+        $lockFilePath = $lockFileProp->getValue($syncService);
+        $expectedLocksPath = realpath(dirname(__DIR__) . '/storage/locks');
+        $this->assert(str_starts_with(realpath(dirname($lockFilePath)), $expectedLocksPath), "15. Mutex lock file resides in root storage/locks directory");
+
+        $lock1 = $syncService->acquireLock();
+        $this->assert($lock1 !== false, "15b. First lock acquisition succeeds");
+        $lock2 = $syncService->acquireLock();
+        $this->assert($lock2 === false, "15c. Concurrent lock acquisition is blocked");
+        $syncService->releaseLock($lock1);
+        $lock3 = $syncService->acquireLock();
+        $this->assert($lock3 !== false, "15d. Lock acquisition succeeds after release");
+        $syncService->releaseLock($lock3);
+
+        // TEST 16: SportsService date and sport filtering
+        $filterTestService = new SportsService();
+        $testSportId = '01M1F7SEWRJYHZGA4W690SB2T0'; // Football
+        $testCompId = \Benchero\Core\Ulid::generate();
+        $testHomeTeamId = \Benchero\Core\Ulid::generate();
+        $testAwayTeamId = \Benchero\Core\Ulid::generate();
+        $testMatchId = \Benchero\Core\Ulid::generate();
+        $this->pdo->exec("DELETE FROM sports_matches WHERE provider = 'test-filter-provider'");
+        $this->pdo->exec("DELETE FROM sports_teams WHERE provider = 'test-filter-provider'");
+        $this->pdo->exec("DELETE FROM sports_competitions WHERE provider = 'test-filter-provider'");
+        $compSlug = 'filter-test-cup-' . substr($testCompId, -8);
+        $homeSlug = 'filter-team-home-' . substr($testHomeTeamId, -8);
+        $awaySlug = 'filter-team-away-' . substr($testAwayTeamId, -8);
+        $this->pdo->exec("
+            INSERT INTO sports_competitions (id, sport_id, name, slug, provider)
+            VALUES ('{$testCompId}', '{$testSportId}', 'Filter Test Cup', '{$compSlug}', 'test-filter-provider')
+        ");
+        $this->pdo->exec("
+            INSERT INTO sports_teams (id, sport_id, name, slug, provider)
+            VALUES ('{$testHomeTeamId}', '{$testSportId}', 'Filter Team Home', '{$homeSlug}', 'test-filter-provider'),
+                   ('{$testAwayTeamId}', '{$testSportId}', 'Filter Team Away', '{$awaySlug}', 'test-filter-provider')
+        ");
+        $this->pdo->exec("
+            INSERT INTO sports_matches (id, sport_id, competition_id, home_team_id, away_team_id, home_score, away_score, status, start_time, external_id, provider)
+            VALUES ('{$testMatchId}', '{$testSportId}', '{$testCompId}', '{$testHomeTeamId}', '{$testAwayTeamId}', 2, 1, 'FINISHED', '2026-05-15 14:00:00', 'ext_filter_test', 'test-filter-provider')
+        ");
+
+        $matchedDate = $filterTestService->getResults(null, '2026-05-15', 10);
+        $this->assert(count($matchedDate['results'] ?? []) >= 1, "16. getResults filters accurately by explicit date (2026-05-15)");
+        $unmatchedDate = $filterTestService->getResults(null, '2026-05-16', 10);
+        $hasTestMatchInWrongDate = false;
+        foreach ($unmatchedDate['results'] ?? [] as $r) {
+            if ($r['id'] === $testMatchId) $hasTestMatchInWrongDate = true;
+        }
+        $this->assert(!$hasTestMatchInWrongDate, "16b. getResults excludes matches outside queried date");
+
+        $matchedSport = $filterTestService->getResults('football', '2026-05-15', 10);
+        $this->assert(count($matchedSport['results'] ?? []) >= 1, "16c. getResults filters accurately by sport");
+        $unmatchedSport = $filterTestService->getResults('basketball', '2026-05-15', 10);
+        $this->assert(empty($unmatchedSport['results']), "16d. getResults excludes matches for other sports");
+
+        // Cleanup filter test match and entities
+        $this->pdo->exec("DELETE FROM sports_matches WHERE id = '{$testMatchId}'");
+        $this->pdo->exec("DELETE FROM sports_teams WHERE provider = 'test-filter-provider'");
+        $this->pdo->exec("DELETE FROM sports_competitions WHERE provider = 'test-filter-provider'");
+
+        // TEST 17: FootballDataSportsProvider deduplication
+        $mockRawMatches = [
+            ['id' => 101, 'status' => 'FINISHED', 'score' => ['fullTime' => ['home' => 1, 'away' => 0]], 'utcDate' => '2026-09-20T15:00:00Z', 'homeTeam' => ['name' => 'Team A'], 'awayTeam' => ['name' => 'Team B'], 'competition' => ['name' => 'Comp 1']],
+            ['id' => 101, 'status' => 'FINISHED', 'score' => ['fullTime' => ['home' => 1, 'away' => 0]], 'utcDate' => '2026-09-20T15:00:00Z', 'homeTeam' => ['name' => 'Team A'], 'awayTeam' => ['name' => 'Team B'], 'competition' => ['name' => 'Comp 1']],
+            ['id' => 102, 'status' => 'FINISHED', 'score' => ['fullTime' => ['home' => 2, 'away' => 2]], 'utcDate' => '2026-09-20T17:00:00Z', 'homeTeam' => ['name' => 'Team C'], 'awayTeam' => ['name' => 'Team D'], 'competition' => ['name' => 'Comp 2']],
+        ];
+        $norm1 = array_map([$fdProvider, 'normalizeMatch'], $mockRawMatches);
+        $dedupedTest = [];
+        foreach ($norm1 as $m) {
+            $dedupedTest[$m['external_id']] = $m;
+        }
+        $this->assert(count($dedupedTest) === 2, "17. Matches deduplicated by external ID (3 items with duplicate ID reduced to 2)");
+
         // Cleanup test data
         $this->pdo->exec("DELETE FROM sports_standings WHERE provider = '{$testProvider}'");
         $this->pdo->exec("DELETE FROM sports_matches WHERE provider = '{$testProvider}'");

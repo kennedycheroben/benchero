@@ -95,26 +95,110 @@ class FootballDataSportsProvider implements SportsProviderInterface
 
     public function getResults(?string $sport = null, ?string $date = null, int $limit = 20): array
     {
-        $endpoint = 'matches?status=FINISHED';
         if ($date) {
-            $endpoint .= "&dateFrom={$date}&dateTo={$date}";
+            $endpoint = "matches?status=FINISHED&dateFrom={$date}&dateTo={$date}";
+        } else {
+            // Rolling 10-day window into the past to capture recent finished results
+            $dateFrom = date('Y-m-d', strtotime('-10 days'));
+            $dateTo = date('Y-m-d');
+            $endpoint = "matches?status=FINISHED&dateFrom={$dateFrom}&dateTo={$dateTo}";
         }
-        $data = $this->makeRequest($endpoint);
-        $matches = $data['matches'] ?? [];
+
+        try {
+            $data = $this->makeRequest($endpoint);
+            $matches = $data['matches'] ?? [];
+        } catch (\Throwable $e) {
+            error_log("FootballDataSportsProvider getResults error: " . $e->getMessage());
+            $matches = [];
+        }
+
         $normalized = array_map([$this, 'normalizeMatch'], $matches);
-        return array_slice($normalized, 0, $limit);
+
+        // Deduplicate by external/provider match ID
+        $deduped = [];
+        foreach ($normalized as $m) {
+            $key = (string)($m['external_id'] ?? $m['id']);
+            $deduped[$key] = $m;
+        }
+
+        $results = array_values($deduped);
+        usort($results, function ($a, $b) {
+            return strcmp($b['start_time'] ?? '', $a['start_time'] ?? '');
+        });
+
+        return array_slice($results, 0, $limit);
     }
 
     public function getFixtures(?string $sport = null, ?string $date = null, int $limit = 20): array
     {
-        $endpoint = 'matches?status=SCHEDULED,TIMED';
         if ($date) {
-            $endpoint .= "&dateFrom={$date}&dateTo={$date}";
+            $endpoint = "matches?status=SCHEDULED,TIMED&dateFrom={$date}&dateTo={$date}";
+            try {
+                $data = $this->makeRequest($endpoint);
+                $matches = $data['matches'] ?? [];
+            } catch (\Throwable $e) {
+                error_log("FootballDataSportsProvider getFixtures with date error: " . $e->getMessage());
+                $matches = [];
+            }
+            $normalized = array_map([$this, 'normalizeMatch'], $matches);
+            $deduped = [];
+            foreach ($normalized as $m) {
+                $key = (string)($m['external_id'] ?? $m['id']);
+                $deduped[$key] = $m;
+            }
+            return array_slice(array_values($deduped), 0, $limit);
         }
-        $data = $this->makeRequest($endpoint);
-        $matches = $data['matches'] ?? [];
-        $normalized = array_map([$this, 'normalizeMatch'], $matches);
-        return array_slice($normalized, 0, $limit);
+
+        // Rolling 10-day window into the future (max allowed by football-data /v4/matches)
+        $dateFrom = date('Y-m-d');
+        $dateTo = date('Y-m-d', strtotime('+10 days'));
+        $endpoint = "matches?status=SCHEDULED,TIMED&dateFrom={$dateFrom}&dateTo={$dateTo}";
+
+        $allMatches = [];
+        try {
+            $data = $this->makeRequest($endpoint);
+            $allMatches = $data['matches'] ?? [];
+        } catch (\Throwable $e) {
+            error_log("FootballDataSportsProvider getFixtures rolling window error: " . $e->getMessage());
+            $allMatches = [];
+        }
+
+        // If the rolling window yielded 0 fixtures (e.g. between gameweeks or during international breaks),
+        // fallback to querying featured tier-one competitions directly for their next scheduled fixtures.
+        if (empty($allMatches)) {
+            $featuredCodes = ['PL', 'PD', 'BL1', 'SA', 'FL1'];
+            foreach ($featuredCodes as $code) {
+                if (count($allMatches) >= $limit) {
+                    break;
+                }
+                try {
+                    $compData = $this->makeRequest("competitions/{$code}/matches?status=SCHEDULED");
+                    $compMatches = $compData['matches'] ?? [];
+                    if (!empty($compMatches)) {
+                        $batch = array_slice($compMatches, 0, 10);
+                        $allMatches = array_merge($allMatches, $batch);
+                    }
+                } catch (\Throwable $e) {
+                    error_log("FootballDataSportsProvider getFixtures fallback error for {$code}: " . $e->getMessage());
+                }
+            }
+        }
+
+        $normalized = array_map([$this, 'normalizeMatch'], $allMatches);
+
+        // Deduplicate by external/provider match ID
+        $deduped = [];
+        foreach ($normalized as $m) {
+            $key = (string)($m['external_id'] ?? $m['id']);
+            $deduped[$key] = $m;
+        }
+
+        $fixtures = array_values($deduped);
+        usort($fixtures, function ($a, $b) {
+            return strcmp($a['start_time'] ?? '', $b['start_time'] ?? '');
+        });
+
+        return array_slice($fixtures, 0, $limit);
     }
 
     public function getCompetitions(?string $sport = null): array

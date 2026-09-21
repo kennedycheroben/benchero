@@ -26,7 +26,7 @@ class SportsSyncService
         $this->provider = $provider ?? $this->resolveProvider();
         $this->newsProvider = $newsProvider ?? $this->resolveNewsProvider();
         
-        $locksDir = __DIR__ . '/../../storage/locks';
+        $locksDir = dirname(__DIR__, 3) . '/storage/locks';
         if (!is_dir($locksDir)) {
             @mkdir($locksDir, 0755, true);
         }
@@ -100,6 +100,11 @@ class SportsSyncService
 
     public function acquireLock(): mixed
     {
+        $dir = dirname($this->lockFile);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+
         $fp = @fopen($this->lockFile, 'w+');
         if (!$fp) {
             return false;

@@ -155,6 +155,7 @@ class SportsService
                 LEFT JOIN sports_competitions c ON m.competition_id = c.id
                 LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
                 LEFT JOIN sports_teams at ON m.away_team_id = at.id
+                LEFT JOIN sports s ON m.sport_id = s.id
                 WHERE m.status IN ('FINISHED', 'FT', 'AET', 'PEN') AND m.provider != 'mock'
             ";
             $params = [];
@@ -162,6 +163,15 @@ class SportsService
                 $sql .= " AND (m.competition_id = ? OR c.slug = ?)";
                 $params[] = $competitionId;
                 $params[] = $competitionId;
+            }
+            if ($sport !== null) {
+                $sql .= " AND (s.slug = ? OR s.name = ?)";
+                $params[] = $sport;
+                $params[] = $sport;
+            }
+            if ($date !== null) {
+                $sql .= " AND DATE(m.start_time) = ?";
+                $params[] = $date;
             }
             $sql .= " ORDER BY m.start_time DESC LIMIT " . (int)$limit;
 
@@ -229,6 +239,7 @@ class SportsService
                 LEFT JOIN sports_competitions c ON m.competition_id = c.id
                 LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
                 LEFT JOIN sports_teams at ON m.away_team_id = at.id
+                LEFT JOIN sports s ON m.sport_id = s.id
                 WHERE m.status IN ('NS', 'SCHEDULED', 'TIMED', 'POSTPONED') AND m.provider != 'mock'
             ";
             $params = [];
@@ -236,6 +247,15 @@ class SportsService
                 $sql .= " AND (m.competition_id = ? OR c.slug = ?)";
                 $params[] = $competitionId;
                 $params[] = $competitionId;
+            }
+            if ($sport !== null) {
+                $sql .= " AND (s.slug = ? OR s.name = ?)";
+                $params[] = $sport;
+                $params[] = $sport;
+            }
+            if ($date !== null) {
+                $sql .= " AND DATE(m.start_time) = ?";
+                $params[] = $date;
             }
             $sql .= " ORDER BY m.start_time ASC LIMIT " . (int)$limit;
 

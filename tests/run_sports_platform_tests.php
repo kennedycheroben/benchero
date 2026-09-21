@@ -47,13 +47,15 @@ class SportsPlatformTestSuite
         echo "==================================================\n";
 
         // 1. SportsService & MockSportsProvider
-        $sportsService = new SportsService(new \Benchero\Services\Sports\Providers\MockSportsProvider());
+        $mockProvider = new \Benchero\Services\Sports\Providers\MockSportsProvider();
+        $mockLive = $mockProvider->getLiveScores();
+        $this->assert(is_array($mockLive) && count($mockLive) > 0, "MockSportsProvider provides live matches data");
+        $firstMatch = $mockLive[0] ?? [];
+        $this->assert(isset($firstMatch['home_team'], $firstMatch['away_team'], $firstMatch['home_score'], $firstMatch['away_score'], $firstMatch['status']), "Live match has normalized fields");
+
+        $sportsService = new SportsService();
         $liveData = $sportsService->getLiveScores();
         $this->assert(isset($liveData['matches']) && is_array($liveData['matches']), "SportsService returns live matches payload");
-        $this->assert(count($liveData['matches']) > 0, "MockSportsProvider provides live matches data");
-
-        $firstMatch = $liveData['matches'][0] ?? [];
-        $this->assert(isset($firstMatch['home_team'], $firstMatch['away_team'], $firstMatch['home_score'], $firstMatch['away_score'], $firstMatch['status']), "Live match has normalized fields");
 
         $resultsData = $sportsService->getResults();
         $this->assert(isset($resultsData['results']) && is_array($resultsData['results']), "SportsService returns finished results payload");

@@ -3,9 +3,10 @@
 ## Production Architecture
 
 - **GitHub Repository**: `kennedycheroben/benchero`
-- **cPanel Git Working Tree**: `/repositories/benchero`
+- **cPanel Git Working Tree**: `/home/xqtrqexj/repositories/benchero`
 - **Production Domain**: `https://benchero.co.ke`
-- **Document Root**: `/repositories/benchero/public`
+- **Deployment Path (`DEPLOYPATH`)**: `/home/xqtrqexj/benchero.co.ke` (managed via `.cpanel.yml`)
+- **Document Root Execution**: `/home/xqtrqexj/benchero.co.ke` (rewritten to `public/index.php` via root `.htaccess`)
 
 ## Intended Deployment Process
 
