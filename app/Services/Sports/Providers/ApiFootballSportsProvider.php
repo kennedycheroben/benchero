@@ -109,17 +109,22 @@ class ApiFootballSportsProvider implements SportsProviderInterface
 
     public function getResults(?string $sport = null, ?string $date = null, int $limit = 20): array
     {
-        $params = ['status' => 'FT-AET-PEN'];
-        if ($date) {
-            $params['date'] = $date;
-        } else {
-            $params['last'] = $limit;
-        }
+        $dates = $date ? [$date] : [date('Y-m-d'), date('Y-m-d', strtotime('-1 day'))];
+        $allMatches = [];
 
         try {
-            $data = $this->makeRequest('fixtures', $params);
-            $matches = $data['response'] ?? [];
-            $normalized = array_map([$this, 'normalizeMatch'], $matches);
+            foreach ($dates as $d) {
+                if (count($allMatches) >= $limit) {
+                    break;
+                }
+                $data = $this->makeRequest('fixtures', ['date' => $d, 'status' => 'FT-AET-PEN']);
+                $matches = $data['response'] ?? [];
+                $allMatches = array_merge($allMatches, $matches);
+            }
+            $normalized = array_map([$this, 'normalizeMatch'], $allMatches);
+            usort($normalized, function ($a, $b) {
+                return strcmp($b['start_time'] ?? '', $a['start_time'] ?? '');
+            });
             return array_slice($normalized, 0, $limit);
         } catch (\Throwable $e) {
             error_log("ApiFootballSportsProvider getResults error: " . $e->getMessage());
@@ -129,17 +134,26 @@ class ApiFootballSportsProvider implements SportsProviderInterface
 
     public function getFixtures(?string $sport = null, ?string $date = null, int $limit = 20): array
     {
-        $params = ['status' => 'NS'];
-        if ($date) {
-            $params['date'] = $date;
-        } else {
-            $params['next'] = $limit;
-        }
+        $dates = $date ? [$date] : [
+            date('Y-m-d'),
+            date('Y-m-d', strtotime('+1 day')),
+            date('Y-m-d', strtotime('+2 days'))
+        ];
+        $allMatches = [];
 
         try {
-            $data = $this->makeRequest('fixtures', $params);
-            $matches = $data['response'] ?? [];
-            $normalized = array_map([$this, 'normalizeMatch'], $matches);
+            foreach ($dates as $d) {
+                if (count($allMatches) >= $limit) {
+                    break;
+                }
+                $data = $this->makeRequest('fixtures', ['date' => $d, 'status' => 'NS']);
+                $matches = $data['response'] ?? [];
+                $allMatches = array_merge($allMatches, $matches);
+            }
+            $normalized = array_map([$this, 'normalizeMatch'], $allMatches);
+            usort($normalized, function ($a, $b) {
+                return strcmp($a['start_time'] ?? '', $b['start_time'] ?? '');
+            });
             return array_slice($normalized, 0, $limit);
         } catch (\Throwable $e) {
             error_log("ApiFootballSportsProvider getFixtures error: " . $e->getMessage());

@@ -19,10 +19,12 @@ class SportsSyncService
     private SportsProviderInterface $provider;
     private NewsProviderInterface $newsProvider;
     private string $lockFile;
+    private bool $hasExplicitProvider = false;
 
     public function __construct(?PDO $pdo = null, ?SportsProviderInterface $provider = null, ?NewsProviderInterface $newsProvider = null)
     {
         $this->pdo = $pdo ?? Database::getConnection();
+        $this->hasExplicitProvider = ($provider !== null);
         $this->provider = $provider ?? $this->resolveProvider();
         $this->newsProvider = $newsProvider ?? $this->resolveNewsProvider();
         
@@ -98,6 +100,39 @@ class SportsSyncService
         return 'mock';
     }
 
+    /**
+     * Get all active sports providers available for synchronization.
+     * Combines API-Football (daily global coverage) and Football-Data (European tier-one leagues) if configured.
+     *
+     * @return array<string, SportsProviderInterface>
+     */
+    public function getActiveProviders(): array
+    {
+        if ($this->hasExplicitProvider) {
+            return [$this->getProviderName() => $this->provider];
+        }
+
+        $providers = [];
+
+        // 1. API-Football (provides real-time global live scores and daily active fixtures/results)
+        $afKey = env('API_FOOTBALL_API_KEY');
+        if (!empty($afKey)) {
+            $providers['api-football'] = new \Benchero\Services\Sports\Providers\ApiFootballSportsProvider();
+        }
+
+        // 2. Football-Data.org (provides European tier-one leagues, upcoming matchdays & standings)
+        $fdKey = env('FOOTBALL_DATA_API_KEY');
+        if (!empty($fdKey)) {
+            $providers['football-data'] = new FootballDataSportsProvider();
+        }
+
+        if (empty($providers)) {
+            $providers[$this->getProviderName()] = $this->provider;
+        }
+
+        return $providers;
+    }
+
     public function acquireLock(): mixed
     {
         $dir = dirname($this->lockFile);
@@ -129,444 +164,519 @@ class SportsSyncService
     public function syncLive(): array
     {
         $startTime = microtime(true);
-        $providerName = $this->getProviderName();
-        $processed = 0;
-        $updated = 0;
+        $totalProcessed = 0;
+        $totalUpdated = 0;
+        $errors = [];
+        $activeProviders = $this->getActiveProviders();
 
-        try {
-            $matches = $this->provider->getLiveScores();
-            $processed = count($matches);
+        foreach ($activeProviders as $providerName => $provider) {
+            $processed = 0;
+            $updated = 0;
+            $provStartTime = microtime(true);
 
-            foreach ($matches as $match) {
-                $sportId = $this->resolveSportId($match['sport'] ?? 'football');
-                $compId = $this->ensureCompetition(
-                    $match['competition'] ?? 'League',
-                    $match['competition_slug'] ?? 'league',
-                    $sportId,
-                    $match['provider'] ?? $providerName
-                );
-                $homeId = $this->ensureTeam(
-                    $match['home_team'] ?? 'Home Team',
-                    $match['home_slug'] ?? 'home-team',
-                    $sportId,
-                    $match['provider'] ?? $providerName,
-                    null,
-                    $match['home_logo'] ?? null
-                );
-                $awayId = $this->ensureTeam(
-                    $match['away_team'] ?? 'Away Team',
-                    $match['away_slug'] ?? 'away-team',
-                    $sportId,
-                    $match['provider'] ?? $providerName,
-                    null,
-                    $match['away_logo'] ?? null
-                );
-
-                $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
-                $stmtCheck->execute([$match['provider'] ?? $providerName, $match['external_id'] ?? $match['id']]);
-                $existingId = $stmtCheck->fetchColumn();
-
-                if ($existingId) {
-                    $stmtUpdate = $this->pdo->prepare("
-                        UPDATE sports_matches
-                        SET home_score = ?, away_score = ?, status = ?, minute = ?, updated_at = NOW()
-                        WHERE id = ?
-                    ");
-                    $stmtUpdate->execute([
-                        $match['home_score'],
-                        $match['away_score'],
-                        $match['status'],
-                        $match['minute'] ?? null,
-                        $existingId
-                    ]);
-                    $updated++;
-                } else {
-                    $stmtInsert = $this->pdo->prepare("
-                        INSERT INTO sports_matches
-                        (id, sport_id, competition_id, home_team_id, away_team_id, home_score, away_score, status, minute, start_time, venue, round, external_id, provider)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmtInsert->execute([
-                        Ulid::generate(),
-                        $sportId,
-                        $compId,
-                        $homeId,
-                        $awayId,
-                        $match['home_score'],
-                        $match['away_score'],
-                        $match['status'],
-                        $match['minute'] ?? null,
-                        $match['start_time'] ?? date('Y-m-d H:i:s'),
-                        $match['venue'] ?? null,
-                        $match['round'] ?? null,
-                        $match['external_id'] ?? $match['id'],
-                        $match['provider'] ?? $providerName
-                    ]);
-                    $updated++;
-                }
-            }
-
-            // Transition stale LIVE matches from this provider that are no longer active to FINISHED
-            $liveExtIds = array_filter(array_map(function($m) {
-                return (string)($m['external_id'] ?? $m['id'] ?? '');
-            }, $matches));
-
-            if (!empty($liveExtIds)) {
-                $placeholders = implode(',', array_fill(0, count($liveExtIds), '?'));
-                $stmtCleanup = $this->pdo->prepare("
-                    UPDATE sports_matches
-                    SET status = 'FINISHED', updated_at = NOW()
-                    WHERE provider = ?
-                      AND status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
-                      AND external_id NOT IN ($placeholders)
-                      AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
-                ");
-                $stmtCleanup->execute(array_merge([$providerName], $liveExtIds));
-            } else {
-                $stmtCleanup = $this->pdo->prepare("
-                    UPDATE sports_matches
-                    SET status = 'FINISHED', updated_at = NOW()
-                    WHERE provider = ?
-                      AND status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
-                      AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
-                ");
-                $stmtCleanup->execute([$providerName]);
-            }
-
-            // Invalidate live scores and sports cache
-            (new \Benchero\Services\CacheService())->flushSportsCache();
-
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-live', 'success', $duration, $processed, $updated);
-
-            return ['success' => true, 'processed' => $processed, 'updated' => $updated];
-        } catch (\Throwable $e) {
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-live', 'error', $duration, $processed, $updated, $e->getMessage());
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-
-    public function syncFixtures(): array
-    {
-        $startTime = microtime(true);
-        $providerName = $this->getProviderName();
-        $processed = 0;
-        $updated = 0;
-
-        try {
-            $matches = $this->provider->getFixtures();
-            $processed = count($matches);
-
-            foreach ($matches as $match) {
-                $sportId = $this->resolveSportId($match['sport'] ?? 'football');
-                $compId = $this->ensureCompetition(
-                    $match['competition'] ?? 'League',
-                    $match['competition_slug'] ?? 'league',
-                    $sportId,
-                    $match['provider'] ?? $providerName
-                );
-                $homeId = $this->ensureTeam(
-                    $match['home_team'] ?? 'Home Team',
-                    $match['home_slug'] ?? 'home-team',
-                    $sportId,
-                    $match['provider'] ?? $providerName,
-                    null,
-                    $match['home_logo'] ?? null
-                );
-                $awayId = $this->ensureTeam(
-                    $match['away_team'] ?? 'Away Team',
-                    $match['away_slug'] ?? 'away-team',
-                    $sportId,
-                    $match['provider'] ?? $providerName,
-                    null,
-                    $match['away_logo'] ?? null
-                );
-
-                $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
-                $stmtCheck->execute([$match['provider'] ?? $providerName, $match['external_id'] ?? $match['id']]);
-                $existingId = $stmtCheck->fetchColumn();
-
-                if ($existingId) {
-                    $stmtUpdate = $this->pdo->prepare("
-                        UPDATE sports_matches
-                        SET status = ?, start_time = ?, venue = ?, round = ?, updated_at = NOW()
-                        WHERE id = ?
-                    ");
-                    $stmtUpdate->execute([
-                        $match['status'] ?? 'SCHEDULED',
-                        $match['start_time'] ?? date('Y-m-d H:i:s'),
-                        $match['venue'] ?? null,
-                        $match['round'] ?? null,
-                        $existingId
-                    ]);
-                    $updated++;
-                } else {
-                    $stmtInsert = $this->pdo->prepare("
-                        INSERT INTO sports_matches
-                        (id, sport_id, competition_id, home_team_id, away_team_id, status, start_time, venue, round, external_id, provider)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmtInsert->execute([
-                        Ulid::generate(), $sportId, $compId, $homeId, $awayId,
-                        $match['status'] ?? 'SCHEDULED',
-                        $match['start_time'] ?? date('Y-m-d H:i:s'),
-                        $match['venue'] ?? null,
-                        $match['round'] ?? null,
-                        $match['external_id'] ?? $match['id'],
-                        $match['provider'] ?? $providerName
-                    ]);
-                    $updated++;
-                }
-            }
-
-            // Reconcile past fixtures that were scheduled in the past and never updated
             try {
-                $this->pdo->exec("
-                    UPDATE sports_matches 
-                    SET status = 'FINISHED' 
-                    WHERE status IN ('NS', 'SCHEDULED', 'TIMED') 
-                      AND start_time < DATE_SUB(NOW(), INTERVAL 12 HOUR)
-                ");
-            } catch (\Throwable $rcEx) {
-                error_log("Failed to reconcile past fixtures: " . $rcEx->getMessage());
-            }
+                $matches = $provider->getLiveScores();
+                $processed = count($matches);
 
-            // Invalidate fixtures and sports cache
-            (new \Benchero\Services\CacheService())->flushSportsCache();
-
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-fixtures', 'success', $duration, $processed, $updated);
-            return ['success' => true, 'processed' => $processed, 'updated' => $updated];
-        } catch (\Throwable $e) {
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-fixtures', 'error', $duration, $processed, $updated, $e->getMessage());
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-
-    public function syncResults(): array
-    {
-        $startTime = microtime(true);
-        $providerName = $this->getProviderName();
-        $processed = 0;
-        $updated = 0;
-
-        try {
-            $matches = $this->provider->getResults();
-            $processed = count($matches);
-
-            foreach ($matches as $match) {
-                $sportId = $this->resolveSportId($match['sport'] ?? 'football');
-                $compId = $this->ensureCompetition(
-                    $match['competition'] ?? 'League',
-                    $match['competition_slug'] ?? 'league',
-                    $sportId,
-                    $match['provider'] ?? $providerName
-                );
-                $homeId = $this->ensureTeam(
-                    $match['home_team'] ?? 'Home Team',
-                    $match['home_slug'] ?? 'home-team',
-                    $sportId,
-                    $match['provider'] ?? $providerName,
-                    null,
-                    $match['home_logo'] ?? null
-                );
-                $awayId = $this->ensureTeam(
-                    $match['away_team'] ?? 'Away Team',
-                    $match['away_slug'] ?? 'away-team',
-                    $sportId,
-                    $match['provider'] ?? $providerName,
-                    null,
-                    $match['away_logo'] ?? null
-                );
-
-                $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
-                $stmtCheck->execute([$match['provider'] ?? $providerName, $match['external_id'] ?? $match['id']]);
-                $existingId = $stmtCheck->fetchColumn();
-
-                if ($existingId) {
-                    $stmtUpdate = $this->pdo->prepare("
-                        UPDATE sports_matches
-                        SET home_score = ?, away_score = ?, status = ?, venue = ?, round = ?, updated_at = NOW()
-                        WHERE id = ?
-                    ");
-                    $stmtUpdate->execute([
-                        $match['home_score'],
-                        $match['away_score'],
-                        $match['status'] ?? 'FINISHED',
-                        $match['venue'] ?? null,
-                        $match['round'] ?? null,
-                        $existingId
-                    ]);
-                    $updated++;
-                } else {
-                    $stmtInsert = $this->pdo->prepare("
-                        INSERT INTO sports_matches
-                        (id, sport_id, competition_id, home_team_id, away_team_id, home_score, away_score, status, start_time, venue, round, external_id, provider)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmtInsert->execute([
-                        Ulid::generate(), $sportId, $compId, $homeId, $awayId,
-                        $match['home_score'], $match['away_score'],
-                        $match['status'] ?? 'FINISHED',
-                        $match['start_time'] ?? date('Y-m-d H:i:s'),
-                        $match['venue'] ?? null,
-                        $match['round'] ?? null,
-                        $match['external_id'] ?? $match['id'],
-                        $match['provider'] ?? $providerName
-                    ]);
-                    $updated++;
-                }
-            }
-
-            // Invalidate results and sports cache
-            (new \Benchero\Services\CacheService())->flushSportsCache();
-
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-results', 'success', $duration, $processed, $updated);
-            return ['success' => true, 'processed' => $processed, 'updated' => $updated];
-        } catch (\Throwable $e) {
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-results', 'error', $duration, $processed, $updated, $e->getMessage());
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-
-    public function syncStandings(): array
-    {
-        $startTime = microtime(true);
-        $providerName = $this->getProviderName();
-        $processed = 0;
-        $updated = 0;
-
-        try {
-            $comps = $this->provider->getCompetitions('football');
-            if (empty($comps)) {
-                $stmt = $this->pdo->prepare("SELECT * FROM sports_competitions WHERE provider = ?");
-                $stmt->execute([$providerName]);
-                $comps = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            }
-
-            foreach ($comps as $comp) {
-                $slug = $comp['slug'] ?? '';
-                if (empty($slug)) {
-                    continue;
-                }
-
-                $sportId = $this->resolveSportId($comp['sport'] ?? 'football');
-                $compId = $this->ensureCompetition(
-                    $comp['name'] ?? 'Competition',
-                    $slug,
-                    $sportId,
-                    $comp['provider'] ?? $providerName,
-                    $comp['external_id'] ?? null,
-                    $comp['logo'] ?? null
-                );
-
-                try {
-                    $rawStandings = $this->provider->getStandings($slug);
-                } catch (\Throwable $standingsEx) {
-                    error_log("SportsSyncService standings error for {$slug}: " . $standingsEx->getMessage());
-                    continue;
-                }
-
-                if (empty($rawStandings)) {
-                    continue;
-                }
-
-                $table = isset($rawStandings['table']) ? $rawStandings['table'] : $rawStandings;
-                if (!is_array($table) || empty($table)) {
-                    continue;
-                }
-
-                $season = $rawStandings['season'] ?? (date('Y') . '/' . (date('Y') + 1));
-
-                foreach ($table as $row) {
-                    $pos = (int)($row['position'] ?? 0);
-                    $teamName = $row['team'] ?? $row['team_name'] ?? 'Team';
-                    $teamSlug = $row['team_slug'] ?? strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $teamName), '-'));
-                    $teamExtId = $row['team_id'] ?? $row['external_id'] ?? null;
-                    $teamLogo = $row['team_logo'] ?? $row['logo'] ?? null;
-
-                    $teamId = $this->ensureTeam(
-                        $teamName,
-                        $teamSlug,
+                foreach ($matches as $match) {
+                    $mProv = $match['provider'] ?? $providerName;
+                    $sportId = $this->resolveSportId($match['sport'] ?? 'football');
+                    $compId = $this->ensureCompetition(
+                        $match['competition'] ?? 'League',
+                        $match['competition_slug'] ?? 'league',
                         $sportId,
-                        $comp['provider'] ?? $providerName,
-                        $teamExtId,
-                        $teamLogo
+                        $mProv
+                    );
+                    $homeId = $this->ensureTeam(
+                        $match['home_team'] ?? 'Home Team',
+                        $match['home_slug'] ?? 'home-team',
+                        $sportId,
+                        $mProv,
+                        null,
+                        $match['home_logo'] ?? null
+                    );
+                    $awayId = $this->ensureTeam(
+                        $match['away_team'] ?? 'Away Team',
+                        $match['away_slug'] ?? 'away-team',
+                        $sportId,
+                        $mProv,
+                        null,
+                        $match['away_logo'] ?? null
                     );
 
-                    $played = (int)($row['played'] ?? $row['played_games'] ?? 0);
-                    $won = (int)($row['won'] ?? 0);
-                    $drawn = (int)($row['drawn'] ?? $row['draw'] ?? 0);
-                    $lost = (int)($row['lost'] ?? 0);
-                    $points = (int)($row['points'] ?? 0);
-                    $gf = (int)($row['gf'] ?? $row['goals_for'] ?? 0);
-                    $ga = (int)($row['ga'] ?? $row['goals_against'] ?? 0);
-                    $gd = (int)($row['gd'] ?? $row['goal_difference'] ?? ($gf - $ga));
-                    $groupName = $row['group_name'] ?? 'Main';
-
-                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_standings WHERE competition_id = ? AND team_id = ? AND season = ?");
-                    $stmtCheck->execute([$compId, $teamId, $season]);
+                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
+                    $stmtCheck->execute([$mProv, $match['external_id'] ?? $match['id']]);
                     $existingId = $stmtCheck->fetchColumn();
 
                     if ($existingId) {
                         $stmtUpdate = $this->pdo->prepare("
-                            UPDATE sports_standings
-                            SET position = ?, played = ?, won = ?, drawn = ?, lost = ?, points = ?,
-                                goals_for = ?, goals_against = ?, goal_difference = ?, group_name = ?,
-                                provider = ?, updated_at = NOW()
+                            UPDATE sports_matches
+                            SET home_score = ?, away_score = ?, status = ?, minute = ?, updated_at = NOW()
                             WHERE id = ?
                         ");
                         $stmtUpdate->execute([
-                            $pos, $played, $won, $drawn, $lost, $points,
-                            $gf, $ga, $gd, $groupName,
-                            $comp['provider'] ?? $providerName,
+                            $match['home_score'],
+                            $match['away_score'],
+                            $match['status'],
+                            $match['minute'] ?? null,
                             $existingId
                         ]);
                         $updated++;
                     } else {
                         $stmtInsert = $this->pdo->prepare("
-                            INSERT INTO sports_standings
-                            (id, competition_id, team_id, position, played, won, drawn, lost, points, goals_for, goals_against, goal_difference, group_name, season, provider)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            INSERT INTO sports_matches
+                            (id, sport_id, competition_id, home_team_id, away_team_id, home_score, away_score, status, minute, start_time, venue, round, external_id, provider)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ");
                         $stmtInsert->execute([
                             Ulid::generate(),
+                            $sportId,
                             $compId,
-                            $teamId,
-                            $pos,
-                            $played,
-                            $won,
-                            $drawn,
-                            $lost,
-                            $points,
-                            $gf,
-                            $ga,
-                            $gd,
-                            $groupName,
-                            $season,
-                            $comp['provider'] ?? $providerName
+                            $homeId,
+                            $awayId,
+                            $match['home_score'],
+                            $match['away_score'],
+                            $match['status'],
+                            $match['minute'] ?? null,
+                            $match['start_time'] ?? date('Y-m-d H:i:s'),
+                            $match['venue'] ?? null,
+                            $match['round'] ?? null,
+                            $match['external_id'] ?? $match['id'],
+                            $mProv
                         ]);
                         $updated++;
                     }
-                    $processed++;
                 }
 
-                // Invalidate standings cache for this competition and sports cache
-                (new \Benchero\Services\CacheService())->flushSportsCache();
-            }
+                // Transition stale LIVE matches from this provider that are no longer active to FINISHED
+                $liveExtIds = array_filter(array_map(function($m) {
+                    return (string)($m['external_id'] ?? $m['id'] ?? '');
+                }, $matches));
 
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-standings', 'success', $duration, $processed, $updated);
-            return ['success' => true, 'processed' => $processed, 'updated' => $updated];
-        } catch (\Throwable $e) {
-            $duration = (int)round((microtime(true) - $startTime) * 1000);
-            $this->logSync($providerName, 'sync-standings', 'error', $duration, $processed, $updated, $e->getMessage());
-            return ['success' => false, 'error' => $e->getMessage()];
+                if (!empty($liveExtIds)) {
+                    $placeholders = implode(',', array_fill(0, count($liveExtIds), '?'));
+                    $stmtCleanup = $this->pdo->prepare("
+                        UPDATE sports_matches
+                        SET status = 'FINISHED', updated_at = NOW()
+                        WHERE provider = ?
+                          AND status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
+                          AND external_id NOT IN ($placeholders)
+                          AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
+                    ");
+                    $stmtCleanup->execute(array_merge([$providerName], $liveExtIds));
+                } else {
+                    $stmtCleanup = $this->pdo->prepare("
+                        UPDATE sports_matches
+                        SET status = 'FINISHED', updated_at = NOW()
+                        WHERE provider = ?
+                          AND status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
+                          AND start_time < DATE_SUB(NOW(), INTERVAL 135 MINUTE)
+                    ");
+                    $stmtCleanup->execute([$providerName]);
+                }
+
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-live', 'success', $duration, $processed, $updated);
+
+                $totalProcessed += $processed;
+                $totalUpdated += $updated;
+            } catch (\Throwable $e) {
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-live', 'error', $duration, $processed, $updated, $e->getMessage());
+                $errors[$providerName] = $e->getMessage();
+                if ($this->hasExplicitProvider || count($activeProviders) === 1) {
+                    return ['success' => false, 'error' => $e->getMessage()];
+                }
+            }
         }
+
+        // Invalidate live scores and sports cache
+        (new \Benchero\Services\CacheService())->flushSportsCache();
+
+        return [
+            'success' => empty($errors) || $totalUpdated > 0 || $totalProcessed > 0,
+            'processed' => $totalProcessed,
+            'updated' => $totalUpdated
+        ];
+    }
+
+    public function syncFixtures(): array
+    {
+        $startTime = microtime(true);
+        $totalProcessed = 0;
+        $totalUpdated = 0;
+        $errors = [];
+        $activeProviders = $this->getActiveProviders();
+
+        foreach ($activeProviders as $providerName => $provider) {
+            $processed = 0;
+            $updated = 0;
+            $provStartTime = microtime(true);
+
+            try {
+                $matches = $provider->getFixtures();
+                $processed = count($matches);
+
+                foreach ($matches as $match) {
+                    $mProv = $match['provider'] ?? $providerName;
+                    $sportId = $this->resolveSportId($match['sport'] ?? 'football');
+                    $compId = $this->ensureCompetition(
+                        $match['competition'] ?? 'League',
+                        $match['competition_slug'] ?? 'league',
+                        $sportId,
+                        $mProv
+                    );
+                    $homeId = $this->ensureTeam(
+                        $match['home_team'] ?? 'Home Team',
+                        $match['home_slug'] ?? 'home-team',
+                        $sportId,
+                        $mProv,
+                        null,
+                        $match['home_logo'] ?? null
+                    );
+                    $awayId = $this->ensureTeam(
+                        $match['away_team'] ?? 'Away Team',
+                        $match['away_slug'] ?? 'away-team',
+                        $sportId,
+                        $mProv,
+                        null,
+                        $match['away_logo'] ?? null
+                    );
+
+                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
+                    $stmtCheck->execute([$mProv, $match['external_id'] ?? $match['id']]);
+                    $existingId = $stmtCheck->fetchColumn();
+
+                    if ($existingId) {
+                        $stmtUpdate = $this->pdo->prepare("
+                            UPDATE sports_matches
+                            SET status = ?, start_time = ?, venue = ?, round = ?, updated_at = NOW()
+                            WHERE id = ?
+                        ");
+                        $stmtUpdate->execute([
+                            $match['status'] ?? 'SCHEDULED',
+                            $match['start_time'] ?? date('Y-m-d H:i:s'),
+                            $match['venue'] ?? null,
+                            $match['round'] ?? null,
+                            $existingId
+                        ]);
+                        $updated++;
+                    } else {
+                        $stmtInsert = $this->pdo->prepare("
+                            INSERT INTO sports_matches
+                            (id, sport_id, competition_id, home_team_id, away_team_id, status, start_time, venue, round, external_id, provider)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        $stmtInsert->execute([
+                            Ulid::generate(), $sportId, $compId, $homeId, $awayId,
+                            $match['status'] ?? 'SCHEDULED',
+                            $match['start_time'] ?? date('Y-m-d H:i:s'),
+                            $match['venue'] ?? null,
+                            $match['round'] ?? null,
+                            $match['external_id'] ?? $match['id'],
+                            $mProv
+                        ]);
+                        $updated++;
+                    }
+                }
+
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-fixtures', 'success', $duration, $processed, $updated);
+
+                $totalProcessed += $processed;
+                $totalUpdated += $updated;
+            } catch (\Throwable $e) {
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-fixtures', 'error', $duration, $processed, $updated, $e->getMessage());
+                $errors[$providerName] = $e->getMessage();
+                if ($this->hasExplicitProvider || count($activeProviders) === 1) {
+                    return ['success' => false, 'error' => $e->getMessage()];
+                }
+            }
+        }
+
+        // Reconcile past fixtures that were scheduled in the past and never updated
+        try {
+            $this->pdo->exec("
+                UPDATE sports_matches 
+                SET status = 'FINISHED' 
+                WHERE status IN ('NS', 'SCHEDULED', 'TIMED') 
+                  AND start_time < DATE_SUB(NOW(), INTERVAL 12 HOUR)
+            ");
+        } catch (\Throwable $rcEx) {
+            error_log("Failed to reconcile past fixtures: " . $rcEx->getMessage());
+        }
+
+        // Invalidate fixtures and sports cache
+        (new \Benchero\Services\CacheService())->flushSportsCache();
+
+        return [
+            'success' => empty($errors) || $totalUpdated > 0 || $totalProcessed > 0,
+            'processed' => $totalProcessed,
+            'updated' => $totalUpdated
+        ];
+    }
+
+    public function syncResults(): array
+    {
+        $startTime = microtime(true);
+        $totalProcessed = 0;
+        $totalUpdated = 0;
+        $errors = [];
+        $activeProviders = $this->getActiveProviders();
+
+        foreach ($activeProviders as $providerName => $provider) {
+            $processed = 0;
+            $updated = 0;
+            $provStartTime = microtime(true);
+
+            try {
+                $matches = $provider->getResults();
+                $processed = count($matches);
+
+                foreach ($matches as $match) {
+                    $mProv = $match['provider'] ?? $providerName;
+                    $sportId = $this->resolveSportId($match['sport'] ?? 'football');
+                    $compId = $this->ensureCompetition(
+                        $match['competition'] ?? 'League',
+                        $match['competition_slug'] ?? 'league',
+                        $sportId,
+                        $mProv
+                    );
+                    $homeId = $this->ensureTeam(
+                        $match['home_team'] ?? 'Home Team',
+                        $match['home_slug'] ?? 'home-team',
+                        $sportId,
+                        $mProv,
+                        null,
+                        $match['home_logo'] ?? null
+                    );
+                    $awayId = $this->ensureTeam(
+                        $match['away_team'] ?? 'Away Team',
+                        $match['away_slug'] ?? 'away-team',
+                        $sportId,
+                        $mProv,
+                        null,
+                        $match['away_logo'] ?? null
+                    );
+
+                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
+                    $stmtCheck->execute([$mProv, $match['external_id'] ?? $match['id']]);
+                    $existingId = $stmtCheck->fetchColumn();
+
+                    if ($existingId) {
+                        $stmtUpdate = $this->pdo->prepare("
+                            UPDATE sports_matches
+                            SET home_score = ?, away_score = ?, status = ?, venue = ?, round = ?, updated_at = NOW()
+                            WHERE id = ?
+                        ");
+                        $stmtUpdate->execute([
+                            $match['home_score'],
+                            $match['away_score'],
+                            $match['status'] ?? 'FINISHED',
+                            $match['venue'] ?? null,
+                            $match['round'] ?? null,
+                            $existingId
+                        ]);
+                        $updated++;
+                    } else {
+                        $stmtInsert = $this->pdo->prepare("
+                            INSERT INTO sports_matches
+                            (id, sport_id, competition_id, home_team_id, away_team_id, home_score, away_score, status, start_time, venue, round, external_id, provider)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        $stmtInsert->execute([
+                            Ulid::generate(), $sportId, $compId, $homeId, $awayId,
+                            $match['home_score'],
+                            $match['home_score'] !== null ? $match['away_score'] : null,
+                            $match['status'] ?? 'FINISHED',
+                            $match['start_time'] ?? date('Y-m-d H:i:s'),
+                            $match['venue'] ?? null,
+                            $match['round'] ?? null,
+                            $match['external_id'] ?? $match['id'],
+                            $mProv
+                        ]);
+                        $updated++;
+                    }
+                }
+
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-results', 'success', $duration, $processed, $updated);
+
+                $totalProcessed += $processed;
+                $totalUpdated += $updated;
+            } catch (\Throwable $e) {
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-results', 'error', $duration, $processed, $updated, $e->getMessage());
+                $errors[$providerName] = $e->getMessage();
+                if ($this->hasExplicitProvider || count($activeProviders) === 1) {
+                    return ['success' => false, 'error' => $e->getMessage()];
+                }
+            }
+        }
+
+        // Invalidate results and sports cache
+        (new \Benchero\Services\CacheService())->flushSportsCache();
+
+        return [
+            'success' => empty($errors) || $totalUpdated > 0 || $totalProcessed > 0,
+            'processed' => $totalProcessed,
+            'updated' => $totalUpdated
+        ];
+    }
+
+    public function syncStandings(): array
+    {
+        $startTime = microtime(true);
+        $totalProcessed = 0;
+        $totalUpdated = 0;
+        $errors = [];
+        $activeProviders = $this->getActiveProviders();
+
+        foreach ($activeProviders as $providerName => $provider) {
+            $processed = 0;
+            $updated = 0;
+            $provStartTime = microtime(true);
+
+            try {
+                $comps = $provider->getCompetitions('football');
+                if (empty($comps)) {
+                    $stmt = $this->pdo->prepare("SELECT * FROM sports_competitions WHERE provider = ?");
+                    $stmt->execute([$providerName]);
+                    $comps = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                }
+
+                foreach ($comps as $comp) {
+                    $slug = $comp['slug'] ?? '';
+                    if (empty($slug)) {
+                        continue;
+                    }
+
+                    $sportId = $this->resolveSportId($comp['sport'] ?? 'football');
+                    $compId = $this->ensureCompetition(
+                        $comp['name'] ?? 'Competition',
+                        $slug,
+                        $sportId,
+                        $comp['provider'] ?? $providerName,
+                        $comp['external_id'] ?? null,
+                        $comp['logo'] ?? null
+                    );
+
+                    try {
+                        $rawStandings = $provider->getStandings($slug);
+                    } catch (\Throwable $standingsEx) {
+                        error_log("SportsSyncService standings error for {$slug} ({$providerName}): " . $standingsEx->getMessage());
+                        continue;
+                    }
+
+                    if (empty($rawStandings)) {
+                        continue;
+                    }
+
+                    $table = isset($rawStandings['table']) ? $rawStandings['table'] : $rawStandings;
+                    if (!is_array($table) || empty($table)) {
+                        continue;
+                    }
+
+                    $season = $rawStandings['season'] ?? (date('Y') . '/' . (date('Y') + 1));
+
+                    foreach ($table as $row) {
+                        $pos = (int)($row['position'] ?? 0);
+                        $teamName = $row['team'] ?? $row['team_name'] ?? 'Team';
+                        $teamSlug = $row['team_slug'] ?? strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $teamName), '-'));
+                        $teamExtId = $row['team_id'] ?? $row['external_id'] ?? null;
+                        $teamLogo = $row['team_logo'] ?? $row['logo'] ?? null;
+
+                        $teamId = $this->ensureTeam(
+                            $teamName,
+                            $teamSlug,
+                            $sportId,
+                            $comp['provider'] ?? $providerName,
+                            $teamExtId,
+                            $teamLogo
+                        );
+
+                        $played = (int)($row['played'] ?? $row['played_games'] ?? 0);
+                        $won = (int)($row['won'] ?? 0);
+                        $drawn = (int)($row['drawn'] ?? $row['draw'] ?? 0);
+                        $lost = (int)($row['lost'] ?? 0);
+                        $points = (int)($row['points'] ?? 0);
+                        $gf = (int)($row['gf'] ?? $row['goals_for'] ?? 0);
+                        $ga = (int)($row['ga'] ?? $row['goals_against'] ?? 0);
+                        $gd = (int)($row['gd'] ?? $row['goal_difference'] ?? ($gf - $ga));
+                        $groupName = $row['group_name'] ?? 'Main';
+
+                        $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_standings WHERE competition_id = ? AND team_id = ? AND season = ?");
+                        $stmtCheck->execute([$compId, $teamId, $season]);
+                        $existingId = $stmtCheck->fetchColumn();
+
+                        if ($existingId) {
+                            $stmtUpdate = $this->pdo->prepare("
+                                UPDATE sports_standings
+                                SET position = ?, played = ?, won = ?, drawn = ?, lost = ?, points = ?,
+                                    goals_for = ?, goals_against = ?, goal_difference = ?, group_name = ?,
+                                    provider = ?, updated_at = NOW()
+                                WHERE id = ?
+                            ");
+                            $stmtUpdate->execute([
+                                $pos, $played, $won, $drawn, $lost, $points,
+                                $gf, $ga, $gd, $groupName,
+                                $comp['provider'] ?? $providerName,
+                                $existingId
+                            ]);
+                            $updated++;
+                        } else {
+                            $stmtInsert = $this->pdo->prepare("
+                                INSERT INTO sports_standings
+                                (id, competition_id, team_id, position, played, won, drawn, lost, points, goals_for, goals_against, goal_difference, group_name, season, provider)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ");
+                            $stmtInsert->execute([
+                                Ulid::generate(),
+                                $compId,
+                                $teamId,
+                                $pos,
+                                $played,
+                                $won,
+                                $drawn,
+                                $lost,
+                                $points,
+                                $gf,
+                                $ga,
+                                $gd,
+                                $groupName,
+                                $season,
+                                $comp['provider'] ?? $providerName
+                            ]);
+                            $updated++;
+                        }
+                        $processed++;
+                    }
+
+                    // Invalidate standings cache for this competition and sports cache
+                    (new \Benchero\Services\CacheService())->flushSportsCache();
+                }
+
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-standings', 'success', $duration, $processed, $updated);
+
+                $totalProcessed += $processed;
+                $totalUpdated += $updated;
+            } catch (\Throwable $e) {
+                $duration = (int)round((microtime(true) - $provStartTime) * 1000);
+                $this->logSync($providerName, 'sync-standings', 'error', $duration, $processed, $updated, $e->getMessage());
+                $errors[$providerName] = $e->getMessage();
+                if ($this->hasExplicitProvider || count($activeProviders) === 1) {
+                    return ['success' => false, 'error' => $e->getMessage()];
+                }
+            }
+        }
+
+        return [
+            'success' => empty($errors) || $totalUpdated > 0 || $totalProcessed > 0,
+            'processed' => $totalProcessed,
+            'updated' => $totalUpdated
+        ];
     }
 
     public function syncNews(): array

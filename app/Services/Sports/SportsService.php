@@ -35,6 +35,7 @@ class SportsService
         }
 
         return match ($this->providerType) {
+            'api-football', 'apifootball' => new \Benchero\Services\Sports\Providers\ApiFootballSportsProvider(),
             'real', 'football-data', 'football' => new FootballDataSportsProvider(),
             'mock' => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider(),
             default => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider()
