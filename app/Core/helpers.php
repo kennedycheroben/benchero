@@ -111,31 +111,39 @@ if (!function_exists('url')) {
         $base = base_path_url();
         $path = '/' . ltrim($path, '/');
         
+        if ($base !== '' && ($path === $base || str_starts_with($path, $base . '/'))) {
+            return $path;
+        }
+
         return $base . $path;
     }
 }
 
 if (!function_exists('is_test_account')) {
     /**
-     * Check if an email or user ID (or current logged-in user) is a production test account.
+     * Check if an email, user ID, organization ID, or current logged-in user is a test account.
+     * Works in both localhost development and production environments.
      */
-    function is_test_account(?string $emailOrUserId = null): bool
+    function is_test_account(?string $emailOrId = null): bool
     {
         $testEmailsConfig = env('TEST_ACCOUNT_EMAILS', 'cherobenkennedy34@gmail.com');
         $testEmails = array_map('strtolower', array_map('trim', explode(',', (string)$testEmailsConfig)));
+        if (!in_array('cherobenkennedy34@gmail.com', $testEmails, true)) {
+            $testEmails[] = 'cherobenkennedy34@gmail.com';
+        }
 
-        if (empty($emailOrUserId)) {
-            $emailOrUserId = $_SESSION['_user_email'] ?? $_SESSION['user_email'] ?? null;
-            if (empty($emailOrUserId) && !empty($_SESSION['_user_id'] ?? $_SESSION['user_id'] ?? null)) {
-                $emailOrUserId = $_SESSION['_user_id'] ?? $_SESSION['user_id'];
+        if (empty($emailOrId)) {
+            $emailOrId = $_SESSION['_user_email'] ?? $_SESSION['user_email'] ?? null;
+            if (empty($emailOrId) && !empty($_SESSION['_user_id'] ?? $_SESSION['user_id'] ?? null)) {
+                $emailOrId = $_SESSION['_user_id'] ?? $_SESSION['user_id'];
             }
         }
 
-        if (empty($emailOrUserId)) {
+        if (empty($emailOrId)) {
             return false;
         }
 
-        $target = strtolower(trim((string)$emailOrUserId));
+        $target = strtolower(trim((string)$emailOrId));
 
         if (in_array($target, $testEmails, true)) {
             return true;
@@ -144,11 +152,28 @@ if (!function_exists('is_test_account')) {
         if (strlen($target) === 26) {
             try {
                 $db = \Benchero\Core\Database\Database::getConnection();
+
+                // 1. Check if target is a user ID
                 $stmt = $db->prepare("SELECT email FROM users WHERE id = ?");
                 $stmt->execute([$target]);
                 $user = $stmt->fetch(\PDO::FETCH_ASSOC);
                 if ($user && in_array(strtolower($user['email']), $testEmails, true)) {
                     return true;
+                }
+
+                // 2. Check if target is an organization ID belonging to a test account
+                $stmtOrg = $db->prepare("
+                    SELECT u.email 
+                    FROM users u
+                    JOIN organization_user ou ON u.id = ou.user_id
+                    WHERE ou.organization_id = ?
+                ");
+                $stmtOrg->execute([$target]);
+                $members = $stmtOrg->fetchAll(\PDO::FETCH_ASSOC);
+                foreach ($members as $m) {
+                    if (in_array(strtolower($m['email']), $testEmails, true)) {
+                        return true;
+                    }
                 }
             } catch (\Throwable $e) {
                 // Ignore DB error

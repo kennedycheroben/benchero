@@ -167,15 +167,20 @@ $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Benchero\C
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/status', ['Benchero\Controllers\Tenant\FixtureController', 'status']);
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/result', ['Benchero\Controllers\Tenant\FixtureController', 'saveResult']);
 
-// Tenant Billing & M-Pesa STK Push
+// Tenant Billing, M-Pesa STK Push & PayPal Checkout
 $router->addRoute('GET', '/o/{slug}/billing', ['Benchero\Controllers\Tenant\BillingController', 'index']);
 $router->addRoute('POST', '/o/{slug}/billing/payment-intent', ['Benchero\Controllers\Tenant\BillingController', 'createPaymentIntent']);
 $router->addRoute('POST', '/o/{slug}/billing/payment-intent/{id}/initiate', ['Benchero\Controllers\Tenant\BillingController', 'initiatePayment']);
 $router->addRoute('GET', '/o/{slug}/billing/payment-intent/{id}/status', ['Benchero\Controllers\Tenant\BillingController', 'getPaymentStatus']);
 $router->addRoute('POST', '/o/{slug}/billing/stkpush', ['Benchero\Controllers\Tenant\BillingController', 'stkPush']);
 $router->addRoute('POST', '/o/{slug}/billing/test-activate', ['Benchero\Controllers\Tenant\BillingController', 'testActivatePlan']);
+$router->addRoute('POST', '/o/{slug}/billing/paypal/create-order', ['Benchero\Controllers\Tenant\BillingController', 'createPayPalOrder']);
+$router->addRoute('POST', '/o/{slug}/billing/paypal/capture-order', ['Benchero\Controllers\Tenant\BillingController', 'capturePayPalOrder']);
 $router->addRoute('POST', '/billing/mpesa/callback', ['Benchero\Controllers\Public\MpesaCallbackController', 'handle']);
 $router->addRoute('POST', '/billing/imbank/callback', ['Benchero\Controllers\Public\MpesaCallbackController', 'handle']);
+$router->addRoute('POST', '/billing/paypal/webhook', ['Benchero\Controllers\Public\PayPalWebhookController', 'handle']);
+$router->addRoute(['GET', 'POST'], '/billing/paypal/return', ['Benchero\Controllers\Public\PayPalReturnController', 'return']);
+$router->addRoute(['GET', 'POST'], '/billing/paypal/cancel', ['Benchero\Controllers\Public\PayPalReturnController', 'cancel']);
 
 
 // Tenant Custom Domains Management

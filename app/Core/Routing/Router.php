@@ -12,7 +12,7 @@ class Router
 {
     private array $routes = [];
 
-    public function addRoute(string $method, string $route, mixed $handler): void
+    public function addRoute(string|array $method, string $route, mixed $handler): void
     {
         $this->routes[] = [$method, $route, $handler];
     }
@@ -41,6 +41,9 @@ class Router
             case Dispatcher::FOUND:
                 $handler = $routeInfo[1];
                 $vars = $routeInfo[2];
+                foreach ($vars as $k => $v) {
+                    $request->setAttribute($k, $v);
+                }
                 return $this->callHandler($handler, $vars, $request);
             default:
                 return new Response('500 Internal Server Error', 500);

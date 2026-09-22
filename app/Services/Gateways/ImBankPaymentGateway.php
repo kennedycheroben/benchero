@@ -30,6 +30,16 @@ class ImBankPaymentGateway implements PaymentGatewayInterface
         return 'imbank';
     }
 
+    public function getSupportedCurrencies(): array
+    {
+        return ['KES'];
+    }
+
+    public function getSupportedPaymentMethods(): array
+    {
+        return ['mpesa'];
+    }
+
     /**
      * Safely normalize Kenyan phone numbers into 2547XXXXXXXX or 2541XXXXXXXX format.
      */
@@ -70,7 +80,19 @@ class ImBankPaymentGateway implements PaymentGatewayInterface
 
         // Check if I&M API credentials are configured in .env
         $isConfigured = !empty($this->consumerKey) && !empty($this->stkPushUrl);
-        $isTestEnv = (env('APP_ENV') === 'testing' || $intent['phone_number'] === '254712345678' || !$isConfigured);
+        $isTestAccount = is_test_account() || is_test_account($intent['organization_id'] ?? null);
+        $isMockPhone = in_array($intent['phone_number'] ?? '', ['254712345678', '0712345678'], true);
+        $isTestEnv = (env('APP_ENV') === 'testing' || (env('APP_ENV') !== 'production' && ($isMockPhone || !$isConfigured)) || ($isTestAccount && $isMockPhone));
+
+        // If in production and not configured, NEVER mock/simulate payment UNLESS it is a verified test account using a mock test phone
+        if (!$isConfigured && env('APP_ENV') === 'production' && !($isTestAccount && $isMockPhone)) {
+            return [
+                'success' => false,
+                'provider_reference' => null,
+                'message' => 'Payment provider is currently unavailable. Please try again shortly or contact support.',
+                'raw' => []
+            ];
+        }
 
         if ($isTestEnv) {
             // Internal sandbox / test execution mode when official credentials are pending

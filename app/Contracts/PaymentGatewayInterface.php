@@ -41,4 +41,18 @@ interface PaymentGatewayInterface
      * @return array
      */
     public function reconcilePayment(string $reference): array;
+
+    /**
+     * Get list of currencies supported by this payment provider.
+     *
+     * @return array
+     */
+    public function getSupportedCurrencies(): array;
+
+    /**
+     * Get list of payment methods supported by this payment provider (e.g., 'mpesa', 'paypal', 'card').
+     *
+     * @return array
+     */
+    public function getSupportedPaymentMethods(): array;
 }

@@ -25,11 +25,21 @@ class MpesaService
      */
     public function getServerPlanPrice(int $planId): ?float
     {
+        try {
+            $stmt = $this->db->prepare("SELECT price_kes FROM plans WHERE id = ? AND deleted_at IS NULL LIMIT 1");
+            $stmt->execute([$planId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row !== false && isset($row['price_kes'])) {
+                return (float)$row['price_kes'];
+            }
+        } catch (\Throwable $e) {}
+
         return match ($planId) {
             1 => 0.0,
             2 => 1000.0,
             3 => 10000.0,
             4 => 20000.0,
+            5 => 2500.0,
             default => null,
         };
     }
@@ -156,9 +166,14 @@ class MpesaService
             return ['success' => false, 'error' => 'Invalid phone number format.'];
         }
 
-        // Check testing mode or mock bypass (STRICTLY NON-PRODUCTION ONLY)
+        // Check testing mode or mock bypass (supports both localhost and production for test accounts)
         $isMockTestPhone = ($phone === '254712345678' || $phone === '0712345678');
-        if (env('APP_ENV') !== 'production' && (env('APP_ENV') === 'testing' || $isMockTestPhone)) {
+        $orgId = $intent['organization_id'] ?? $intentIdOrOrgId;
+        $isTestAccount = is_test_account() || is_test_account($orgId);
+
+        if ((env('APP_ENV') !== 'production' && (env('APP_ENV') === 'testing' || $isMockTestPhone)) 
+            || ($isTestAccount && $isMockTestPhone)
+            || (env('APP_ENV') === 'testing')) {
             $receipt = 'REC_MOCK_' . rand(100000, 999999);
             $this->processCallback([
                 'Body' => [
@@ -182,7 +197,7 @@ class MpesaService
                 'intent_id' => $intent['id'],
                 'reference' => $intent['reference'],
                 'receipt' => $receipt,
-                'message' => 'Development mock payment processed successfully.'
+                'message' => 'Test account mock payment processed successfully.'
             ];
         }
 

@@ -28,8 +28,35 @@ class CsrfMiddleware implements MiddlewareInterface
 
         if (in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             $token = $request->input('_csrf') ?? $request->input('csrf_token') ?? $request->header('X-CSRF-Token');
-            if (!hash_equals($_SESSION['_csrf_token'], (string)$token)) {
-                $response = new Response('CSRF token mismatch', 403);
+            $sessionToken = $_SESSION['_csrf_token'] ?? '';
+            if (!hash_equals($sessionToken, (string)$token)) {
+                $accept = $request->header('Accept') ?? '';
+                $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || str_contains($accept, 'application/json');
+
+                if ($isAjax) {
+                    $response = new Response(json_encode(['error' => 'CSRF token mismatch. Please reload.']), 403, ['Content-Type' => 'application/json']);
+                    $response->send();
+                    exit;
+                }
+
+                $referer = $request->header('Referer') ?? '';
+                if ($path === '/login' || str_contains($referer, '/login')) {
+                    $_SESSION['error'] = 'Your session expired. Please enter your credentials to log in.';
+                    session_write_close();
+                    $response = Response::redirect(url('/login'));
+                    $response->send();
+                    exit;
+                }
+
+                if ($path === '/register' || str_contains($referer, '/register')) {
+                    $_SESSION['error'] = 'Your session expired. Please submit the form again.';
+                    session_write_close();
+                    $response = Response::redirect(url('/register'));
+                    $response->send();
+                    exit;
+                }
+
+                $response = new Response('CSRF token mismatch. Please refresh the page and try again.', 403);
                 $response->send();
                 exit;
             }

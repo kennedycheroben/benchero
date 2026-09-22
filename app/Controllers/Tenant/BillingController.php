@@ -6,19 +6,23 @@ use Benchero\Core\Controller;
 use Benchero\Core\Database\Database;
 use Benchero\Core\Http\Request;
 use Benchero\Core\Http\Response;
+use Benchero\Core\PricingConfig;
 use Benchero\Services\MpesaService;
+use Benchero\Services\PaymentService;
 use Benchero\Services\SubscriptionService;
 use PDO;
 
 class BillingController extends Controller
 {
     private MpesaService $mpesaService;
+    private PaymentService $paymentService;
     private SubscriptionService $subscriptionService;
 
     public function __construct()
     {
         parent::__construct();
         $this->mpesaService = new MpesaService();
+        $this->paymentService = new PaymentService();
         $this->subscriptionService = new SubscriptionService();
     }
 
@@ -31,7 +35,14 @@ class BillingController extends Controller
         $subscription = $this->subscriptionService->getSubscription($tenant['id']);
         $plans = $this->subscriptionService->getPlans();
 
-        // Fetch payment history
+        // Attach international pricing to plans
+        $plansWithPricing = array_map(function ($plan) {
+            $planId = (int)$plan['id'];
+            $plan['intl_pricing'] = PricingConfig::getInternationalPrice($planId, 'USD');
+            return $plan;
+        }, $plans);
+
+        // Fetch payment history with provider and method details
         $payStmt = $db->prepare("
             SELECT * FROM payments
             WHERE organization_id = ?
@@ -40,12 +51,18 @@ class BillingController extends Controller
         $payStmt->execute([$tenant['id']]);
         $payments = $payStmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $defaultMethod = (strtoupper($tenant['country'] ?? 'KE') === 'KE') ? 'mpesa' : 'paypal';
+
         return $this->render('tenant/billing/index', [
             'tenant' => $tenant,
             'subscription' => $subscription,
             'subStatus' => $subStatus,
-            'plans' => $plans,
+            'plans' => $plansWithPricing,
             'payments' => $payments,
+            'defaultMethod' => $defaultMethod,
+            'paypalClientId' => env('PAYPAL_CLIENT_ID', ''),
+            'paypalEnvironment' => env('PAYPAL_ENVIRONMENT', 'sandbox'),
+            'paypalCurrency' => env('PAYPAL_CURRENCY', 'USD'),
             'error' => $_SESSION['error'] ?? null,
             'success' => $_SESSION['success'] ?? null
         ]);
@@ -84,17 +101,29 @@ class BillingController extends Controller
     {
         $tenant = $request->getAttribute('tenant');
         $planId = (int)($request->input('plan_id') ?? $request->post('plan_id'));
-        $phone = trim((string)($request->input('phone_number') ?? $request->post('phone_number')));
+        $method = strtolower(trim((string)($request->input('payment_method') ?? $request->post('payment_method') ?? 'mpesa')));
+        $phone = trim((string)($request->input('phone_number') ?? $request->post('phone_number') ?? ''));
+        $currency = trim((string)($request->input('currency') ?? $request->post('currency') ?? 'USD'));
         $userId = $_SESSION['_user_id'] ?? $_SESSION['user_id'] ?? null;
 
-        if (empty($phone) || empty($planId)) {
+        if (empty($planId)) {
             return Response::json([
                 'success' => false,
-                'error' => 'Please provide a valid M-Pesa phone number and plan selection.'
+                'error' => 'Please select a valid subscription plan.'
             ], 400);
         }
 
-        $res = $this->mpesaService->createPaymentIntent($tenant['id'], $userId, $planId, $phone);
+        if ($method === 'mpesa' && empty($phone)) {
+            return Response::json([
+                'success' => false,
+                'error' => 'Please provide a valid M-Pesa phone number.'
+            ], 400);
+        }
+
+        $res = $this->paymentService->createPaymentIntent($tenant['id'], $userId, $planId, $method, [
+            'phone_number' => $phone,
+            'currency' => $currency
+        ]);
 
         if (!($res['success'] ?? false)) {
             return Response::json($res, 400);
@@ -113,15 +142,88 @@ class BillingController extends Controller
         }
 
         try {
-            $intent = $this->mpesaService->getIntentStatus($intentId);
+            $intent = $this->paymentService->getIntentStatus($intentId);
             if ($intent['organization_id'] !== $tenant['id']) {
                 return Response::json(['success' => false, 'error' => 'Unauthorized payment intent access.'], 403);
             }
 
-            $res = $this->mpesaService->initiateStkPush($intent['id'], $intent['phone_number']);
+            $res = $this->paymentService->initiatePayment($intent['id'], [
+                'phone_number' => $intent['phone_number']
+            ]);
             return Response::json($res);
         } catch (\Throwable $e) {
             return Response::json(['success' => false, 'error' => 'Failed to initiate payment: ' . $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Create PayPal Order endpoint for PayPal Checkout popup/smart buttons.
+     */
+    public function createPayPalOrder(Request $request): Response
+    {
+        $tenant = $request->getAttribute('tenant');
+        $planId = (int)($request->input('plan_id') ?? $request->post('plan_id') ?? 4);
+        $currency = strtoupper((string)($request->input('currency') ?? $request->post('currency') ?? 'USD'));
+        $userId = $_SESSION['_user_id'] ?? $_SESSION['user_id'] ?? null;
+
+        $intentRes = $this->paymentService->createPaymentIntent($tenant['id'], $userId, $planId, 'paypal', [
+            'currency' => $currency
+        ]);
+
+        if (!($intentRes['success'] ?? false)) {
+            return Response::json($intentRes, 400);
+        }
+
+        $initRes = $this->paymentService->initiatePayment($intentRes['intent_id']);
+
+        if (!($initRes['success'] ?? false)) {
+            return Response::json($initRes, 400);
+        }
+
+        return Response::json([
+            'success' => true,
+            'order_id' => $initRes['provider_reference'] ?? $initRes['order_id'],
+            'intent_id' => $intentRes['intent_id'],
+            'approval_url' => $initRes['approval_url'] ?? null,
+            'amount' => $intentRes['amount'],
+            'currency' => $intentRes['currency']
+        ]);
+    }
+
+    /**
+     * Capture PayPal Order server-side upon customer approving on PayPal.
+     */
+    public function capturePayPalOrder(Request $request): Response
+    {
+        $tenant = $request->getAttribute('tenant');
+        $orderId = trim((string)($request->input('order_id') ?? $request->post('order_id') ?? ''));
+        $intentId = trim((string)($request->input('intent_id') ?? $request->post('intent_id') ?? ''));
+
+        if (empty($orderId) || empty($intentId)) {
+            return Response::json([
+                'success' => false,
+                'error' => 'Missing PayPal order or payment intent ID.'
+            ], 400);
+        }
+
+        try {
+            $intent = $this->paymentService->getIntentStatus($intentId);
+            if ($intent['organization_id'] !== $tenant['id']) {
+                return Response::json(['success' => false, 'error' => 'Unauthorized payment capture request.'], 403);
+            }
+
+            $res = $this->paymentService->capturePayPalPayment($intent['id'], $orderId);
+
+            if ($res['success'] ?? false) {
+                $_SESSION['success'] = 'Payment verified via PayPal! Your Benchero subscription is now active.';
+            }
+
+            return Response::json($res);
+        } catch (\Throwable $e) {
+            return Response::json([
+                'success' => false,
+                'error' => 'Server error capturing payment: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -135,7 +237,7 @@ class BillingController extends Controller
         }
 
         try {
-            $intent = $this->mpesaService->getIntentStatus($intentId);
+            $intent = $this->paymentService->getIntentStatus($intentId);
             if ($intent['organization_id'] !== $tenant['id']) {
                 return Response::json(['success' => false, 'error' => 'Unauthorized payment intent access.'], 403);
             }
@@ -147,13 +249,16 @@ class BillingController extends Controller
                 'payment_intent_id' => $intent['payment_intent_id'] ?? $intent['reference'],
                 'reference' => $intent['reference'],
                 'amount' => (float)$intent['amount'],
+                'currency' => $intent['currency'] ?? 'KES',
+                'provider' => $intent['provider'] ?? 'imbank',
+                'payment_method' => $intent['payment_method'] ?? 'mpesa',
                 'mpesa_receipt_number' => $intent['mpesa_receipt_number'] ?? null,
                 'result_desc' => $intent['result_desc'] ?? null,
                 'created_at' => $intent['created_at'],
                 'updated_at' => $intent['updated_at']
             ]);
         } catch (\Throwable $e) {
-            return Response::json(['success' => false, 'error' => 'Payment intent not found.'], 440);
+            return Response::json(['success' => false, 'error' => 'Payment intent not found.'], 404);
         }
     }
 
@@ -164,12 +269,14 @@ class BillingController extends Controller
         }
 
         $tenant = $request->getAttribute('tenant');
-        $planId = (int)($request->input('plan_id') ?? $request->post('plan_id') ?? 2);
+        $planId = (int)($request->input('plan_id') ?? $request->post('plan_id') ?? 4);
 
         $activated = $this->subscriptionService->activateSubscription(
             $tenant['id'],
             $planId,
-            'DEV_TEST_' . time()
+            'DEV_TEST_' . time(),
+            null,
+            'imbank'
         );
 
         if ($activated) {

@@ -98,16 +98,17 @@
                             <th>Customer</th>
                             <th>Plan</th>
                             <th>Amount</th>
-                            <th>Phone (Masked)</th>
+                            <th>Provider & Method</th>
+                            <th>Payer / Phone</th>
                             <th>Benchero Ref</th>
-                            <th>Provider Ref</th>
+                            <th>Receipt / Ref</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($intents)): ?>
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-5">
+                                <td colspan="10" class="text-center text-muted py-5">
                                     <i class="bi bi-inbox display-6 d-block mb-2 text-secondary opacity-50"></i>
                                     No payment transactions found matching filter.
                                 </td>
@@ -119,7 +120,18 @@
                                     <td class="fw-bold"><?= htmlspecialchars($item['org_name'] ?? 'N/A') ?></td>
                                     <td class="small"><?= htmlspecialchars($item['user_name'] ?? $item['user_email'] ?? 'N/A') ?></td>
                                     <td class="fw-semibold small"><?= htmlspecialchars($item['plan_name'] ?? 'N/A') ?></td>
-                                    <td class="fw-bold text-dark">KES <?= number_format($item['amount'], 2) ?></td>
+                                    <td class="fw-bold text-dark"><?= htmlspecialchars($item['currency'] ?? 'KES') ?> <?= number_format($item['amount'], 2) ?></td>
+                                    <td>
+                                        <?php if (($item['provider'] ?? 'imbank') === 'paypal'): ?>
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small">
+                                                <i class="bi bi-paypal me-1"></i>PayPal (<?= htmlspecialchars(ucfirst($item['payment_method'] ?? 'paypal')) ?>)
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 small">
+                                                <i class="bi bi-phone me-1"></i>I&M (M-Pesa)
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
                                     <td class="font-monospace small text-muted"><?= htmlspecialchars($item['masked_phone']) ?></td>
                                     <td><code class="small text-primary"><?= htmlspecialchars($item['benchero_reference']) ?></code></td>
                                     <td>

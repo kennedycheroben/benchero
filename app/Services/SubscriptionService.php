@@ -78,6 +78,24 @@ class SubscriptionService
         $sub = $this->getSubscription($orgId);
 
         if (!$sub) {
+            if (is_test_account($orgId) || is_test_account()) {
+                return [
+                    'status' => self::STATUS_ACTIVE,
+                    'raw_status' => 'active',
+                    'is_visible' => true,
+                    'starts_at' => date('Y-m-d H:i:s'),
+                    'expires_at' => date('Y-m-d H:i:s', strtotime('+5 years')),
+                    'expiry_timestamp' => strtotime('+5 years'),
+                    'days_remaining' => 1825,
+                    'plan_id' => 4,
+                    'plan_name' => 'Benchero Pro (Testing Account)',
+                    'price_kes' => 0.00,
+                    'billing_interval' => 'yearly',
+                    'warning_message' => null,
+                    'subscription_id' => null
+                ];
+            }
+
             return [
                 'status' => self::STATUS_EXPIRED,
                 'raw_status' => 'expired',
@@ -174,6 +192,10 @@ class SubscriptionService
      */
     public function isPublicProfileVisible($orgOrId): bool
     {
+        $orgId = is_array($orgOrId) ? ($orgOrId['id'] ?? '') : (string)$orgOrId;
+        if (is_test_account($orgId) || is_test_account()) {
+            return true;
+        }
         $status = $this->getSubscriptionStatus($orgOrId);
         return $status['is_visible'];
     }
@@ -190,7 +212,7 @@ class SubscriptionService
     /**
      * Activate or renew a subscription upon verified payment.
      */
-    public function activateSubscription(string $orgId, int $planId, ?string $paymentRef = null, ?string $paymentId = null): bool
+    public function activateSubscription(string $orgId, int $planId, ?string $paymentRef = null, ?string $paymentId = null, string $provider = 'mpesa'): bool
     {
         $plan = $this->getPlan($planId);
         if (!$plan) {
@@ -198,6 +220,12 @@ class SubscriptionService
         }
 
         $sub = $this->getSubscription($orgId);
+
+        // Idempotency: if already active with this exact payment reference, do not re-stack
+        if ($sub && !empty($paymentRef) && ($sub['payment_reference'] === $paymentRef) && ($sub['status'] === 'active')) {
+            return true;
+        }
+
         $nowTs = time();
         $interval = strtolower($plan['billing_interval'] ?? 'monthly');
 
@@ -235,7 +263,7 @@ class SubscriptionService
                     expires_at = ?,
                     current_period_end = ?,
                     payment_reference = ?,
-                    provider = 'mpesa',
+                    provider = ?,
                     updated_at = NOW()
                 WHERE organization_id = ?
             ");
@@ -246,6 +274,7 @@ class SubscriptionService
                 $expiresAt,
                 $expiresAt,
                 $paymentRef,
+                $provider,
                 $orgId
             ]);
         } else {
@@ -253,7 +282,7 @@ class SubscriptionService
             $stmt = $this->db->prepare("
                 INSERT INTO subscriptions 
                 (id, organization_id, plan_id, billing_interval, status, starts_at, expires_at, current_period_end, payment_reference, provider, created_at, updated_at)
-                VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, 'mpesa', NOW(), NOW())
+                VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, NOW(), NOW())
             ");
             $stmt->execute([
                 $subId,
@@ -263,7 +292,8 @@ class SubscriptionService
                 $startsAt,
                 $expiresAt,
                 $expiresAt,
-                $paymentRef
+                $paymentRef,
+                $provider
             ]);
         }
 
@@ -273,9 +303,9 @@ class SubscriptionService
     /**
      * Alias method for upgrading or activating subscription.
      */
-    public function upgradeSubscription(string $orgId, int $planId, ?string $paymentRef = null): bool
+    public function upgradeSubscription(string $orgId, int $planId, ?string $paymentRef = null, ?string $paymentId = null, string $provider = 'mpesa'): bool
     {
-        return $this->activateSubscription($orgId, $planId, $paymentRef);
+        return $this->activateSubscription($orgId, $planId, $paymentRef, $paymentId, $provider);
     }
 
     /**

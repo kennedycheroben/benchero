@@ -12,13 +12,26 @@ class PaymentGatewayFactory
      */
     public static function create(?string $providerName = null): PaymentGatewayInterface
     {
-        $provider = strtolower($providerName ?: env('PAYMENT_PROVIDER', 'imbank'));
+        $provider = strtolower($providerName ?: env('PAYMENT_DEFAULT_PROVIDER', env('PAYMENT_PROVIDER', 'imbank')));
 
-        switch ($provider) {
-            case 'imbank':
-            case 'mpesa':
-            default:
-                return new ImBankPaymentGateway();
-        }
+        return match ($provider) {
+            'paypal' => new PayPalPaymentGateway(),
+            'imbank', 'mpesa' => new ImBankPaymentGateway(),
+            default => new ImBankPaymentGateway(),
+        };
+    }
+
+    /**
+     * Resolve payment gateway instance based on requested payment method.
+     */
+    public static function getProviderForMethod(string $method): PaymentGatewayInterface
+    {
+        $normalized = strtolower(trim($method));
+
+        return match ($normalized) {
+            'paypal', 'card', 'credit_card', 'debit_card' => self::create(env('PAYMENT_INTERNATIONAL_PROVIDER', 'paypal')),
+            'mpesa', 'stk', 'mobile_money', 'imbank' => self::create(env('PAYMENT_KENYA_PROVIDER', 'imbank')),
+            default => self::create(),
+        };
     }
 }
