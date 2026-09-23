@@ -28,7 +28,8 @@ class SportsController extends Controller
         $resultsData = $this->sportsService->getResults(null, null, 6);
         $fixturesData = $this->sportsService->getFixtures(null, null, 6);
         $newsFeed = $this->newsService->getLatestNews(6);
-        $competitions = $this->sportsService->getCompetitions();
+        $popularCompetitions = $this->sportsService->getFeaturedCompetitions(8);
+        $allCompetitions = $this->sportsService->getCompetitions();
 
         return $this->render('sports/index', [
             'title' => 'Benchero Sports — Live Scores, Results, Fixtures & Sports News',
@@ -38,7 +39,8 @@ class SportsController extends Controller
             'recentResults' => $resultsData['results'] ?? [],
             'upcomingFixtures' => $fixturesData['fixtures'] ?? [],
             'latestNews' => $newsFeed,
-            'competitions' => $competitions
+            'competitions' => $popularCompetitions,
+            'totalCompetitions' => count($allCompetitions)
         ]);
     }
 

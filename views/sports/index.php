@@ -183,7 +183,7 @@
                     <div class="col-md-6">
                         <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden benchero-interactive-card">
                             <?php if (!empty($article['image_url'])): ?>
-                                <img src="<?= $this->e($article['image_url']) ?>" class="card-img-top" alt="<?= $this->e(html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>" style="height: 180px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80'">
+                                <img src="<?= $this->e($article['image_url']) ?>" class="card-img-top" alt="<?= $this->e($article['title']) ?>" style="height: 180px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80'">
                             <?php else: ?>
                                 <div class="bg-dark text-white p-4 text-center d-flex align-items-center justify-content-center" style="height: 180px;">
                                     <i class="bi bi-trophy fs-1 text-warning"></i>
@@ -198,11 +198,11 @@
                                 </div>
                                 <h5 class="card-title fw-bold text-slate-900 mb-2">
                                     <a href="<?= url('/sports/news/' . $article['slug']) ?>" class="text-dark text-decoration-none">
-                                        <?= $this->e(html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
+                                        <?= $this->e($article['title']) ?>
                                     </a>
                                 </h5>
                                 <p class="card-text text-muted small flex-grow-1 mb-3">
-                                    <?= $this->e(html_entity_decode($article['summary'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
+                                    <?= $this->e($article['summary'] ?? '') ?>
                                 </p>
                                 <a href="<?= url('/sports/news/' . $article['slug']) ?>" class="btn btn-sm btn-outline-primary fw-semibold rounded-3 align-self-start">
                                     Read Story <i class="bi bi-arrow-right ms-1"></i>
@@ -215,8 +215,8 @@
 
         </div>
 
-        <!-- Sidebar: Popular Competitions & SaaS CTA -->
-        <div class="col-lg-4">
+        <!-- Sidebar: Popular Competitions & SaaS CTA (Sticky on Desktop >=1200px) -->
+        <div class="col-lg-4 sports-sidebar-sticky">
             
             <!-- SaaS Conversion Card -->
             <div class="card border-0 shadow-lg rounded-4 text-white bg-dark p-4 mb-4 position-relative overflow-hidden">
@@ -241,21 +241,31 @@
                 </div>
             </div>
 
-            <!-- Popular Competitions Hub -->
+            <!-- Popular Competitions Hub (Curated 6-8 leagues with link to full directory) -->
             <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <h5 class="fw-bold mb-3 text-slate-900">
-                    <i class="bi bi-award text-warning me-2"></i> Popular Competitions
-                </h5>
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold mb-0 text-slate-900">
+                        <i class="bi bi-award text-warning me-2"></i> Popular Competitions
+                    </h5>
+                    <?php if (!empty($totalCompetitions)): ?>
+                        <span class="badge bg-light text-muted border"><?= (int)$totalCompetitions ?> Total</span>
+                    <?php endif; ?>
+                </div>
                 <div class="d-grid gap-2">
                     <?php foreach ($competitions as $comp): ?>
                         <a href="<?= url('/sports/c/' . $comp['slug']) ?>" class="d-flex align-items-center justify-content-between p-3 rounded-3 border bg-light text-decoration-none text-dark hover-bg-white">
                             <div>
                                 <div class="fw-bold text-slate-900"><?= $this->e($comp['name']) ?></div>
-                                <div class="small text-muted"><?= $this->e($comp['country']) ?></div>
+                                <div class="small text-muted"><?= $this->e($comp['country'] ?? 'International') ?></div>
                             </div>
                             <i class="bi bi-chevron-right text-muted"></i>
                         </a>
                     <?php endforeach; ?>
+                </div>
+                <div class="mt-3 pt-3 border-top text-center">
+                    <a href="<?= url('/sports/competitions') ?>" class="btn btn-outline-primary btn-sm w-100 fw-bold rounded-3">
+                        View all competitions &rarr;
+                    </a>
                 </div>
             </div>
 

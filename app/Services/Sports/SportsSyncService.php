@@ -185,7 +185,10 @@ class SportsSyncService
                         $match['competition'] ?? 'League',
                         $match['competition_slug'] ?? 'league',
                         $sportId,
-                        $mProv
+                        $mProv,
+                        null,
+                        null,
+                        $match['competition_country'] ?? null
                     );
                     $homeId = $this->ensureTeam(
                         $match['home_team'] ?? 'Home Team',
@@ -324,7 +327,10 @@ class SportsSyncService
                         $match['competition'] ?? 'League',
                         $match['competition_slug'] ?? 'league',
                         $sportId,
-                        $mProv
+                        $mProv,
+                        null,
+                        null,
+                        $match['competition_country'] ?? null
                     );
                     $homeId = $this->ensureTeam(
                         $match['home_team'] ?? 'Home Team',
@@ -441,7 +447,10 @@ class SportsSyncService
                         $match['competition'] ?? 'League',
                         $match['competition_slug'] ?? 'league',
                         $sportId,
-                        $mProv
+                        $mProv,
+                        null,
+                        null,
+                        $match['competition_country'] ?? null
                     );
                     $homeId = $this->ensureTeam(
                         $match['home_team'] ?? 'Home Team',
@@ -559,7 +568,8 @@ class SportsSyncService
                         $sportId,
                         $comp['provider'] ?? $providerName,
                         $comp['external_id'] ?? null,
-                        $comp['logo'] ?? null
+                        $comp['logo'] ?? null,
+                        $comp['country'] ?? null
                     );
 
                     try {
@@ -747,21 +757,27 @@ class SportsSyncService
         return $fallback ?: Ulid::generate();
     }
 
-    private function ensureCompetition(string $name, string $slug, string $sportId, string $provider, ?string $externalId = null, ?string $logo = null): string
+    private function ensureCompetition(string $name, string $slug, string $sportId, string $provider, ?string $externalId = null, ?string $logo = null, ?string $country = null): string
     {
-        $stmt = $this->pdo->prepare("SELECT id FROM sports_competitions WHERE slug = ?");
+        $stmt = $this->pdo->prepare("SELECT id, country FROM sports_competitions WHERE slug = ?");
         $stmt->execute([$slug]);
-        $id = $stmt->fetchColumn();
-        if ($id) {
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            $id = $row['id'];
+            if ($country && (empty($row['country']) || $row['country'] === 'International')) {
+                $stmtUpdate = $this->pdo->prepare("UPDATE sports_competitions SET country = ? WHERE id = ?");
+                $stmtUpdate->execute([$country, $id]);
+            }
             return $id;
         }
 
         $newId = Ulid::generate();
+        $finalCountry = $country ?: 'International';
         $stmtInsert = $this->pdo->prepare("
-            INSERT INTO sports_competitions (id, sport_id, name, slug, logo, external_id, provider)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO sports_competitions (id, sport_id, name, slug, country, logo, external_id, provider)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmtInsert->execute([$newId, $sportId, $name, $slug, $logo, $externalId, $provider]);
+        $stmtInsert->execute([$newId, $sportId, $name, $slug, $finalCountry, $logo, $externalId, $provider]);
         return $newId;
     }
 

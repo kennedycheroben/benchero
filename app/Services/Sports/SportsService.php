@@ -83,6 +83,7 @@ class SportsService
                     'home_score' => (int)($r['home_score'] ?? 0),
                     'away_score' => (int)($r['away_score'] ?? 0),
                     'status' => $r['status'],
+                    'minute' => $r['minute'] ?? null,
                     'start_time' => $r['start_time']
                 ];
             }, $dbMatches);
@@ -343,6 +344,73 @@ class SportsService
             error_log("SportsService getCompetitions provider error: " . $e->getMessage());
             return $cached ?? [];
         }
+    }
+
+    /**
+     * Get deterministic curated/featured competitions for landing page discovery.
+     * Capped at 6-8 items, prioritized by recognized domestic & international leagues.
+     */
+    public function getFeaturedCompetitions(int $limit = 8, ?string $sport = null): array
+    {
+        $cacheKey = "sports_featured_competitions_{$sport}_{$limit}";
+        $cached = $this->cache->get($cacheKey);
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        try {
+            // Deterministic priority ordering: Kenyan domestic top league, premier international tournaments, major European domestic leagues
+            $priorityOrder = [
+                'fkf-premier-league',
+                'kenyan-premier-league',
+                'premier-league',
+                'uefa-champions-league',
+                'la-liga',
+                'serie-a',
+                'bundesliga',
+                'caf-champions-league',
+                'ligue-1',
+                'championship',
+                'eredivisie',
+                'primeira-liga',
+                'copa-libertadores',
+                'campeonato-brasileiro-s-rie-a'
+            ];
+
+            $allComps = $this->getCompetitions($sport);
+            if (!empty($allComps)) {
+                usort($allComps, function ($a, $b) use ($priorityOrder) {
+                    $slugA = $a['slug'] ?? '';
+                    $slugB = $b['slug'] ?? '';
+
+                    $posA = array_search($slugA, $priorityOrder, true);
+                    $posB = array_search($slugB, $priorityOrder, true);
+
+                    $rankA = ($posA !== false) ? $posA : 999;
+                    $rankB = ($posB !== false) ? $posB : 999;
+
+                    if ($rankA !== $rankB) {
+                        return $rankA <=> $rankB;
+                    }
+
+                    $featA = !empty($a['is_featured']) ? 0 : 1;
+                    $featB = !empty($b['is_featured']) ? 0 : 1;
+                    if ($featA !== $featB) {
+                        return $featA <=> $featB;
+                    }
+
+                    return strcasecmp($a['name'] ?? '', $b['name'] ?? '');
+                });
+
+                $featured = array_slice($allComps, 0, $limit);
+                $this->cache->set($cacheKey, $featured, 3600);
+                return $featured;
+            }
+        } catch (\Throwable $e) {
+            error_log("SportsService getFeaturedCompetitions error: " . $e->getMessage());
+        }
+
+        return [];
     }
 
     public function getStandings(string $competitionSlug): array

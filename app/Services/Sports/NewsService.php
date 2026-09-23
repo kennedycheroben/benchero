@@ -91,12 +91,25 @@ class NewsService
     private function normalizeArticle(array $article): array
     {
         if (isset($article['title'])) {
-            $article['title'] = html_entity_decode((string)$article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $article['title'] = $this->cleanText((string)$article['title']);
         }
         if (isset($article['summary'])) {
-            $article['summary'] = html_entity_decode((string)$article['summary'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $article['summary'] = $this->cleanText((string)$article['summary']);
+        }
+        if (isset($article['content'])) {
+            $article['content'] = $this->cleanText((string)$article['content']);
         }
         return $article;
+    }
+
+    private function cleanText(string $str): string
+    {
+        $prev = '';
+        while ($prev !== $str) {
+            $prev = $str;
+            $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        return trim($str);
     }
 
     public function getNewsBySlug(string $slug): ?array

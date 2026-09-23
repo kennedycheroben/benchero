@@ -111,24 +111,28 @@ class RSSNewsProvider implements NewsProviderInterface
                 continue;
             }
 
+            // Clean title and summary: recursively decode HTML entities into pure UTF-8 text
+            $cleanTitle = $this->cleanText($title);
+            $cleanDesc = $this->cleanText($description);
+
             // Clean title and generate slug
-            $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title), '-'));
+            $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $cleanTitle), '-'));
             if (strlen($slug) > 180) {
                 $slug = substr($slug, 0, 180);
             }
 
             // Limit summary length to 280 characters to comply with short summary policy
-            $summary = mb_substr($description, 0, 280);
-            if (mb_strlen($description) > 280) {
+            $summary = mb_substr($cleanDesc, 0, 280);
+            if (mb_strlen($cleanDesc) > 280) {
                 $summary .= '...';
             }
 
             $items[] = [
                 'id' => 'rss_' . md5($link),
-                'title' => htmlspecialchars($title, ENT_QUOTES, 'UTF-8'),
+                'title' => $cleanTitle,
                 'slug' => $slug,
-                'summary' => htmlspecialchars($summary, ENT_QUOTES, 'UTF-8'),
-                'content' => htmlspecialchars($summary, ENT_QUOTES, 'UTF-8'),
+                'summary' => $summary,
+                'content' => $cleanDesc,
                 'category' => $feedInfo['category'],
                 'sport' => $feedInfo['sport'],
                 'source' => $feedInfo['source'],
@@ -141,5 +145,15 @@ class RSSNewsProvider implements NewsProviderInterface
         }
 
         return $items;
+    }
+
+    private function cleanText(string $str): string
+    {
+        $prev = '';
+        while ($prev !== $str) {
+            $prev = $str;
+            $str = html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        return trim($str);
     }
 }

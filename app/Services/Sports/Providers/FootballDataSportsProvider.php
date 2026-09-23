@@ -300,7 +300,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
         };
 
         $minute = match ($status) {
-            'LIVE' => "75'",
+            'LIVE' => 'LIVE',
             'HT' => 'HT',
             'FT' => 'FT',
             default => date('H:i', strtotime($m['utcDate'] ?? 'now'))
@@ -313,6 +313,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
             'sport' => 'football',
             'competition' => $m['competition']['name'] ?? 'Football Competition',
             'competition_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $m['competition']['name'] ?? 'comp'), '-')),
+            'competition_country' => $m['competition']['area']['name'] ?? null,
             'home_team' => $m['homeTeam']['name'] ?? 'Home Team',
             'home_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $m['homeTeam']['name'] ?? 'home'), '-')),
             'home_logo' => $m['homeTeam']['crest'] ?? null,

@@ -184,19 +184,19 @@
             "section": "21. Database Verification",
             "test": "Table `users` integrity check",
             "status": "PASS",
-            "details": "Row count: 2"
+            "details": "Row count: 4"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `organizations` integrity check",
             "status": "PASS",
-            "details": "Row count: 2"
+            "details": "Row count: 4"
         },
         {
             "section": "21. Database Verification",
             "test": "Table `organization_user` integrity check",
             "status": "PASS",
-            "details": "Row count: 2"
+            "details": "Row count: 3"
         },
         {
             "section": "21. Database Verification",
@@ -244,7 +244,7 @@
             "section": "21. Database Verification",
             "test": "Table `subscriptions` integrity check",
             "status": "PASS",
-            "details": "Row count: 2"
+            "details": "Row count: 4"
         }
     ],
     "bugs": []

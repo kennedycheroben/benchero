@@ -150,6 +150,15 @@ class PricingCardsConsistencyTest
         $this->assert(str_contains($html, 'KSh 10,000'), "Price KSh 10,000 present");
         $this->assert(str_contains($html, 'KSh 25,000'), "Price KSh 25,000 present");
 
+        // Verify savings calculations & rendered badges
+        $stdSavingsKES = (12 * (float)$stdM['price_kes']) - (float)$stdY['price_kes'];
+        $this->assert((float)$stdSavingsKES === 2000.0, "Standard Yearly savings is exactly 2,000.00 KES (12 * 1,000 - 10,000)");
+        $proSavingsKES = (12 * (float)$proM['price_kes']) - (float)$proY['price_kes'];
+        $this->assert((float)$proSavingsKES === 5000.0, "Pro Yearly savings is exactly 5,000.00 KES (12 * 2,500 - 25,000)");
+
+        $this->assert(str_contains($html, 'Save KSh 2,000'), "Standard Yearly savings badge 'Save KSh 2,000' present in HTML");
+        $this->assert(str_contains($html, 'Save KSh 5,000'), "Pro Yearly savings badge 'Save KSh 5,000' present in HTML");
+
         // Verify CTA links
         $this->assert(str_contains($html, '/register?plan=free-trial'), "CTA link for free-trial present");
         $this->assert(str_contains($html, '/register?plan=standard-monthly'), "CTA link for standard-monthly present");

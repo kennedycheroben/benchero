@@ -264,7 +264,7 @@ class ApiFootballSportsProvider implements SportsProviderInterface
 
         $elapsed = $m['fixture']['status']['elapsed'] ?? null;
         $minute = match ($status) {
-            'LIVE' => $elapsed ? "{$elapsed}'" : "75'",
+            'LIVE' => $elapsed ? "{$elapsed}'" : 'LIVE',
             'HT' => 'HT',
             'FT' => 'FT',
             default => date('H:i', strtotime($m['fixture']['date'] ?? 'now'))
@@ -279,6 +279,7 @@ class ApiFootballSportsProvider implements SportsProviderInterface
             'sport' => 'football',
             'competition' => $compName,
             'competition_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $compName), '-')),
+            'competition_country' => $m['league']['country'] ?? null,
             'home_team' => $m['teams']['home']['name'] ?? 'Home Team',
             'home_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $m['teams']['home']['name'] ?? 'home'), '-')),
             'home_logo' => $m['teams']['home']['logo'] ?? null,

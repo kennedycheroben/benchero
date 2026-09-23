@@ -232,3 +232,25 @@ html {
         min-width: initial;
     }
 }
+
+/* ==========================================================================
+   8. Sports Sidebar Sticky Positioning (Desktop >= 1200px only)
+   ========================================================================== */
+@media (min-width: 1200px) {
+    .sports-sidebar-sticky {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 90px;
+        align-self: flex-start;
+        z-index: 10;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .sports-sidebar-sticky {
+        position: static !important;
+        top: auto !important;
+        align-self: auto !important;
+    }
+}
+

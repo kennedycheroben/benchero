@@ -22,7 +22,7 @@
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden benchero-interactive-card">
                         <?php if (!empty($article['image_url'])): ?>
-                            <img src="<?= $this->e($article['image_url']) ?>" class="card-img-top" alt="<?= $this->e(html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>" style="height: 200px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80'">
+                            <img src="<?= $this->e($article['image_url']) ?>" class="card-img-top" alt="<?= $this->e($article['title']) ?>" style="height: 200px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80'">
                         <?php else: ?>
                             <div class="bg-dark text-white p-4 text-center d-flex align-items-center justify-content-center" style="height: 200px;">
                                 <i class="bi bi-newspaper fs-1 text-primary"></i>
@@ -37,11 +37,11 @@
                             </div>
                             <h5 class="card-title fw-bold text-slate-900 mb-2">
                                 <a href="<?= url('/sports/news/' . $article['slug']) ?>" class="text-dark text-decoration-none">
-                                    <?= $this->e(html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
+                                    <?= $this->e($article['title']) ?>
                                 </a>
                             </h5>
                             <p class="card-text text-muted small flex-grow-1 mb-3">
-                                <?= $this->e(html_entity_decode($article['summary'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
+                                <?= $this->e($article['summary'] ?? '') ?>
                             </p>
                             <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
                                 <span class="small text-muted fw-semibold"><?= $this->e($article['source']) ?></span>
