@@ -81,7 +81,13 @@ class PaymentService
         if ($isPayPal) {
             $provider = 'paypal';
             $method = ($method === 'card') ? 'card' : 'paypal';
-            $requestedCurrency = strtoupper($options['currency'] ?? env('PAYPAL_CURRENCY', 'USD'));
+            $requestedCurrency = strtoupper(trim((string)($options['currency'] ?? env('PAYPAL_CURRENCY', 'USD'))));
+            if (!in_array($requestedCurrency, ['USD', 'EUR', 'GBP'], true)) {
+                return [
+                    'success' => false,
+                    'error' => "Unsupported currency: {$requestedCurrency}. Supported international currencies are USD, EUR, GBP."
+                ];
+            }
             $intlPricing = PricingConfig::getInternationalPrice($planId, $requestedCurrency);
 
             $chargedAmount = (float)$intlPricing['charged_amount'];
@@ -89,8 +95,22 @@ class PaymentService
             $baseAmount = (float)$intlPricing['canonical_amount'];
             $baseCurrency = $intlPricing['canonical_currency'];
             $exchangeRate = $intlPricing['exchange_rate'] ?? null;
+
+            $customAmount = isset($options['custom_amount']) ? (float)$options['custom_amount'] : null;
+            if ($customAmount !== null && abs($customAmount - $chargedAmount) > 0.01) {
+                return [
+                    'success' => false,
+                    'error' => 'Submitted payment amount does not match official plan pricing.'
+                ];
+            }
         } else {
             // M-Pesa STK Push
+            if (isset($options['currency']) && strtoupper(trim((string)$options['currency'])) !== 'KES') {
+                return [
+                    'success' => false,
+                    'error' => 'M-Pesa payment gateway only supports transactions in KES (Kenyan Shillings).'
+                ];
+            }
             $provider = 'imbank';
             $method = 'mpesa';
             $phone = (string)($options['phone_number'] ?? $options['phone'] ?? '');

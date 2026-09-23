@@ -80,6 +80,14 @@ class PricingConfig
     }
 
     /**
+     * Check if a currency is supported by Benchero.
+     */
+    public static function isSupportedCurrency(string $currency): bool
+    {
+        return in_array(strtoupper(trim($currency)), ['KES', 'USD', 'EUR', 'GBP'], true);
+    }
+
+    /**
      * Resolve international checkout pricing for PayPal transactions.
      *
      * BUSINESS RATIONALE:

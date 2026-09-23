@@ -47,6 +47,17 @@ class AuthController extends Controller
         if (isset($_SESSION['user_id'])) {
             return $this->redirectBasedOnOrgs($_SESSION['user_id']);
         }
+
+        $currency = $request->input('currency');
+        if ($currency && in_array(strtoupper(trim((string)$currency)), ['KES', 'USD'], true)) {
+            $_SESSION['currency'] = strtoupper(trim((string)$currency));
+        }
+
+        $plan = $request->input('plan');
+        if ($plan) {
+            $_SESSION['selected_plan'] = trim((string)$plan);
+        }
+
         $error = $_SESSION['error'] ?? null;
         unset($_SESSION['error']);
         $success = $_SESSION['success'] ?? null;

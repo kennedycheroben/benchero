@@ -8,6 +8,8 @@ $router = new Router();
 $router->addRoute('GET', '/', ['Benchero\Controllers\HomeController', 'index']);
 $router->addRoute('GET', '/about', ['Benchero\Controllers\HomeController', 'about']);
 $router->addRoute('GET', '/pricing', ['Benchero\Controllers\HomeController', 'pricing']);
+$router->addRoute('POST', '/currency', ['Benchero\Controllers\HomeController', 'setCurrency']);
+$router->addRoute('GET', '/currency', ['Benchero\Controllers\HomeController', 'setCurrency']);
 $router->addRoute('GET', '/contact', ['Benchero\Controllers\HomeController', 'contactForm']);
 $router->addRoute('POST', '/contact', ['Benchero\Controllers\HomeController', 'contactSubmit']);
 $router->addRoute('GET', '/terms', ['Benchero\Controllers\HomeController', 'terms']);

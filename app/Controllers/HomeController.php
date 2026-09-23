@@ -40,10 +40,59 @@ class HomeController extends Controller
         $stmt = $db->query("SELECT * FROM plans WHERE deleted_at IS NULL ORDER BY price_kes ASC");
         $plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+        $currencyParam = $request->input('currency');
+        $rawCurrency = $currencyParam ?? $_SESSION['currency'] ?? $_COOKIE['benchero_currency'] ?? 'KES';
+        $activeCurrency = strtoupper(trim((string)$rawCurrency));
+        if (!in_array($activeCurrency, ['KES', 'USD'], true)) {
+            $activeCurrency = 'KES';
+        }
+        $_SESSION['currency'] = $activeCurrency;
+        if (!headers_sent()) {
+            setcookie('benchero_currency', $activeCurrency, time() + (86400 * 30), '/');
+        }
+
         return $this->render('public/pricing', [
             'title' => 'Benchero Pricing — Simple & Transparent Plans',
-            'plans' => $plans
+            'plans' => $plans,
+            'activeCurrency' => $activeCurrency
         ]);
+    }
+
+    public function setCurrency(Request $request): Response
+    {
+        $rawCurrency = $request->input('currency') ?? $request->post('currency') ?? 'KES';
+        $currency = strtoupper(trim((string)$rawCurrency));
+
+        $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? $request->header('Accept') ?? '';
+        $xReq = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? $request->header('X-Requested-With') ?? '';
+        $isAjax = (!empty($xReq) && strtolower($xReq) === 'xmlhttprequest') 
+            || str_contains($acceptHeader, 'application/json')
+            || $request->input('format') === 'json';
+
+        if (!in_array($currency, ['KES', 'USD'], true)) {
+            if ($isAjax) {
+                return Response::json([
+                    'success' => false,
+                    'error' => 'Unsupported currency. Only KES and USD are currently supported.'
+                ], 400);
+            }
+            $currency = 'KES';
+        }
+
+        $_SESSION['currency'] = $currency;
+        if (!headers_sent()) {
+            setcookie('benchero_currency', $currency, time() + (86400 * 30), '/');
+        }
+
+        if ($isAjax) {
+            return Response::json([
+                'success' => true,
+                'currency' => $currency
+            ]);
+        }
+
+        $redirect = $request->input('redirect') ?? '/pricing?currency=' . $currency;
+        return Response::redirect($redirect);
     }
 
     public function contactForm(Request $request): Response

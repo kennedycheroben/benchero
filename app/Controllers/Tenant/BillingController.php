@@ -28,7 +28,10 @@ class BillingController extends Controller
 
     public function index(Request $request): Response
     {
-        $tenant = $request->getAttribute('tenant');
+        $tenant = $request->getAttribute('tenant') ?? [
+            'id' => $_SESSION['organization_id'] ?? '',
+            'name' => 'Organization'
+        ];
         $db = Database::getConnection();
 
         $subStatus = $this->subscriptionService->getSubscriptionStatus($tenant['id']);
@@ -49,9 +52,56 @@ class BillingController extends Controller
             ORDER BY created_at DESC
         ");
         $payStmt->execute([$tenant['id']]);
-        $payments = $payStmt->fetchAll(PDO::FETCH_ASSOC);
+        $payments = $payStmt->fetchAll(\PDO::FETCH_ASSOC);
+        $requestedCurrency = strtoupper(trim((string)($request->input('currency') ?? $_SESSION['currency'] ?? $_COOKIE['benchero_currency'] ?? '')));
+        if ($requestedCurrency === 'USD') {
+            $defaultMethod = 'paypal';
+            $_SESSION['currency'] = 'USD';
+        } elseif ($requestedCurrency === 'KES') {
+            $defaultMethod = 'mpesa';
+            $_SESSION['currency'] = 'KES';
+        } else {
+            $defaultMethod = (strtoupper($tenant['country'] ?? 'KE') === 'KE') ? 'mpesa' : 'paypal';
+        }
 
-        $defaultMethod = (strtoupper($tenant['country'] ?? 'KE') === 'KE') ? 'mpesa' : 'paypal';
+        // Determine smart pre-selected plan
+        $selectedPlanId = null;
+        $reqPlan = $request->input('plan');
+        if ($reqPlan) {
+            if (is_numeric($reqPlan)) {
+                $selectedPlanId = (int)$reqPlan;
+            } else {
+                $slugMap = [
+                    'standard-monthly' => 2,
+                    'standard-yearly' => 3,
+                    'pro-monthly' => 5,
+                    'benchero-pro' => 4,
+                    'pro-yearly' => 4,
+                ];
+                $selectedPlanId = $slugMap[strtolower((string)$reqPlan)] ?? null;
+            }
+        }
+
+        if (!$selectedPlanId && !empty($subStatus['plan_id']) && in_array((int)$subStatus['plan_id'], [2, 3, 4, 5])) {
+            $selectedPlanId = (int)$subStatus['plan_id'];
+        }
+
+        if (!$selectedPlanId && !empty($payments)) {
+            $lastAmount = (float)($payments[0]['amount'] ?? 0);
+            if ($lastAmount >= 9000 && $lastAmount <= 11000) {
+                $selectedPlanId = 3; // Standard Yearly
+            } elseif ($lastAmount >= 900 && $lastAmount <= 1100) {
+                $selectedPlanId = 2; // Standard Monthly
+            } elseif ($lastAmount >= 19000 && $lastAmount <= 21000) {
+                $selectedPlanId = 4; // Pro Yearly
+            } elseif ($lastAmount >= 2400 && $lastAmount <= 2600) {
+                $selectedPlanId = 5; // Pro Monthly
+            }
+        }
+
+        if (!$selectedPlanId || !in_array($selectedPlanId, [2, 3, 4, 5])) {
+            $selectedPlanId = 5; // Pro Monthly default
+        }
 
         return $this->render('tenant/billing/index', [
             'tenant' => $tenant,
@@ -60,6 +110,7 @@ class BillingController extends Controller
             'plans' => $plansWithPricing,
             'payments' => $payments,
             'defaultMethod' => $defaultMethod,
+            'selectedPlanId' => $selectedPlanId,
             'paypalClientId' => env('PAYPAL_CLIENT_ID', ''),
             'paypalEnvironment' => env('PAYPAL_ENVIRONMENT', 'sandbox'),
             'paypalCurrency' => env('PAYPAL_CURRENCY', 'USD'),
