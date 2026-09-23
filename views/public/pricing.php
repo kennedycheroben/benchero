@@ -307,6 +307,7 @@ $pricingCards = [
 .pricing-scroll-wrapper {
     position: relative;
     width: 100%;
+    padding: 0 1rem;
 }
 
 .pricing-scroll-container {
@@ -381,11 +382,11 @@ $pricingCards = [
 }
 
 .pricing-scroll-prev {
-    left: -12px;
+    left: 0;
 }
 
 .pricing-scroll-next {
-    right: -12px;
+    right: 0;
 }
 
 /* Edge Fade Hints */

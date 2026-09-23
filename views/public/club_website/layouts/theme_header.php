@@ -111,6 +111,28 @@
             border-bottom: 3px solid var(--club-accent);
         }
 
+        .club-navbar .dropdown-menu {
+            background-color: var(--club-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 0.5rem;
+        }
+
+        .club-navbar .dropdown-item {
+            font-family: var(--font-heading);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.04em;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 0.6rem 1.25rem;
+            transition: background 0.15s ease;
+        }
+
+        .club-navbar .dropdown-item:hover, .club-navbar .dropdown-item.active {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
         /* Theme Variants */
         <?php if ($themeId === 'classic_club'): ?>
             .club-navbar { border-bottom: 4px solid var(--club-accent); }
@@ -158,18 +180,56 @@
                             <a class="nav-link club-nav-link <?= $currentRoute === 'home' ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>">Home</a>
                         </li>
 
-                        <?php foreach ($navOrder as $pageKey): ?>
-                            <?php 
+                        <?php 
+                            $visibleItems = [];
+                            foreach ($navOrder as $pageKey) {
                                 $isVisible = $pageVis[$pageKey] ?? true;
-                                if (!$isVisible) continue;
-                                $label = $navLabels[$pageKey] ?? ucfirst($pageKey);
-                            ?>
+                                if ($isVisible) {
+                                    $visibleItems[] = [
+                                        'key' => $pageKey,
+                                        'label' => $navLabels[$pageKey] ?? ucfirst($pageKey),
+                                        'active' => ($currentRoute === $pageKey)
+                                    ];
+                                }
+                            }
+
+                            $primaryLimit = 5;
+                            $hasOverflow = count($visibleItems) > 6;
+                            $primaryItems = $hasOverflow ? array_slice($visibleItems, 0, $primaryLimit) : $visibleItems;
+                            $overflowItems = $hasOverflow ? array_slice($visibleItems, $primaryLimit) : [];
+                            $overflowActive = false;
+                            foreach ($overflowItems as $item) {
+                                if ($item['active']) {
+                                    $overflowActive = true;
+                                    break;
+                                }
+                            }
+                        ?>
+
+                        <?php foreach ($primaryItems as $item): ?>
                             <li class="nav-item">
-                                <a class="nav-link club-nav-link <?= $currentRoute === $pageKey ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>/<?= $pageKey ?>">
-                                    <?= htmlspecialchars($label) ?>
+                                <a class="nav-link club-nav-link <?= $item['active'] ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>/<?= $item['key'] ?>">
+                                    <?= htmlspecialchars($item['label']) ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
+
+                        <?php if ($hasOverflow): ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link club-nav-link dropdown-toggle <?= $overflowActive ? 'active' : '' ?>" href="#" id="clubNavMoreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    More
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark shadow border-0" aria-labelledby="clubNavMoreDropdown">
+                                    <?php foreach ($overflowItems as $item): ?>
+                                        <li>
+                                            <a class="dropdown-item <?= $item['active'] ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>/<?= $item['key'] ?>">
+                                                <?= htmlspecialchars($item['label']) ?>
+                                            </a>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>

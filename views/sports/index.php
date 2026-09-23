@@ -48,10 +48,129 @@
 
 <div class="container py-5">
     <div class="row g-4">
-        <!-- Main Content Area: Results, Fixtures & News -->
+        <!-- Main Content Area: Results, Fixtures & News (Prioritizing Match Day Action) -->
         <div class="col-lg-8">
             
-            <!-- Latest News Section -->
+            <!-- 1. Recent Results -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h3 class="fw-extrabold mb-0 text-slate-900">
+                    <i class="bi bi-check-circle-fill text-success me-2"></i> Recent Match Results
+                </h3>
+                <a href="<?= url('/sports/results') ?>" class="text-decoration-none fw-semibold">View All Results &rarr;</a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+                <ul class="list-group list-group-flush">
+                    <?php if (empty($recentResults)): ?>
+                        <li class="list-group-item p-4 text-center text-muted">No recent finished matches recorded.</li>
+                    <?php else: ?>
+                        <?php foreach ($recentResults as $res): ?>
+                            <li class="list-group-item p-3 border-bottom">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="badge bg-secondary bg-opacity-10 text-dark small fw-bold">
+                                        <?= $this->e($res['competition']) ?>
+                                    </span>
+                                    <span class="badge bg-secondary">FT</span>
+                                </div>
+                                <!-- Desktop Row -->
+                                <div class="row align-items-center py-2 match-row-desktop">
+                                    <div class="col-5 text-end fw-bold text-dark">
+                                        <?= $this->e($res['home_team']) ?>
+                                    </div>
+                                    <div class="col-2 text-center">
+                                        <span class="px-3 py-1 bg-dark text-white rounded-pill fw-extrabold text-nowrap">
+                                            <?= $this->e($res['home_score']) ?> - <?= $this->e($res['away_score']) ?>
+                                        </span>
+                                    </div>
+                                    <div class="col-5 text-start fw-bold text-dark">
+                                        <?= $this->e($res['away_team']) ?>
+                                    </div>
+                                </div>
+                                <!-- Mobile Stack -->
+                                <div class="match-row-mobile py-2">
+                                    <div class="match-mobile-team">
+                                        <div class="match-mobile-team-info">
+                                            <span class="badge bg-light text-muted border me-1">H</span>
+                                            <span class="match-mobile-team-name text-slate-900"><?= $this->e($res['home_team']) ?></span>
+                                        </div>
+                                        <div class="match-mobile-score text-slate-900"><?= $this->e($res['home_score']) ?></div>
+                                    </div>
+                                    <div class="match-mobile-team">
+                                        <div class="match-mobile-team-info">
+                                            <span class="badge bg-light text-muted border me-1">A</span>
+                                            <span class="match-mobile-team-name text-slate-900"><?= $this->e($res['away_team']) ?></span>
+                                        </div>
+                                        <div class="match-mobile-score text-slate-900"><?= $this->e($res['away_score']) ?></div>
+                                    </div>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </ul>
+            </div>
+
+            <!-- 2. Upcoming Fixtures -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h3 class="fw-extrabold mb-0 text-slate-900">
+                    <i class="bi bi-calendar-event-fill text-info me-2"></i> Upcoming Fixtures
+                </h3>
+                <a href="<?= url('/sports/fixtures') ?>" class="text-decoration-none fw-semibold">View All Fixtures &rarr;</a>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+                <ul class="list-group list-group-flush">
+                    <?php if (empty($upcomingFixtures)): ?>
+                        <li class="list-group-item p-4 text-center text-muted">No upcoming fixtures scheduled.</li>
+                    <?php else: ?>
+                        <?php foreach ($upcomingFixtures as $fix): ?>
+                            <li class="list-group-item p-3 border-bottom">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="badge bg-info bg-opacity-10 text-info small fw-bold">
+                                        <?= $this->e($fix['competition']) ?>
+                                    </span>
+                                    <span class="small text-muted fw-semibold">
+                                        <i class="bi bi-clock me-1"></i><?= date('D, M j - H:i', strtotime($fix['start_time'])) ?>
+                                    </span>
+                                </div>
+                                <!-- Desktop Row -->
+                                <div class="row align-items-center py-2 match-row-desktop">
+                                    <div class="col-5 text-end fw-bold text-dark">
+                                        <?= $this->e($fix['home_team']) ?>
+                                    </div>
+                                    <div class="col-2 text-center">
+                                        <span class="px-3 py-1 bg-light border text-muted rounded-pill fw-bold small text-nowrap">
+                                            VS
+                                        </span>
+                                    </div>
+                                    <div class="col-5 text-start fw-bold text-dark">
+                                        <?= $this->e($fix['away_team']) ?>
+                                    </div>
+                                </div>
+                                <!-- Mobile Stack -->
+                                <div class="match-row-mobile py-2">
+                                    <div class="match-mobile-team">
+                                        <div class="match-mobile-team-info">
+                                            <span class="badge bg-light text-muted border me-1">H</span>
+                                            <span class="match-mobile-team-name text-slate-900"><?= $this->e($fix['home_team']) ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center my-1">
+                                        <span class="badge bg-light text-muted border px-2 py-0.5" style="font-size: 0.75rem;">VS</span>
+                                    </div>
+                                    <div class="match-mobile-team">
+                                        <div class="match-mobile-team-info">
+                                            <span class="badge bg-light text-muted border me-1">A</span>
+                                            <span class="match-mobile-team-name text-slate-900"><?= $this->e($fix['away_team']) ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </ul>
+            </div>
+
+            <!-- 3. Latest News Section -->
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <h3 class="fw-extrabold mb-0 text-slate-900">
                     <i class="bi bi-newspaper text-primary me-2"></i> Latest Sports News
@@ -64,7 +183,7 @@
                     <div class="col-md-6">
                         <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden benchero-interactive-card">
                             <?php if (!empty($article['image_url'])): ?>
-                                <img src="<?= $this->e($article['image_url']) ?>" class="card-img-top" alt="<?= $this->e($article['title']) ?>" style="height: 180px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80'">
+                                <img src="<?= $this->e($article['image_url']) ?>" class="card-img-top" alt="<?= $this->e(html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>" style="height: 180px; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=800&auto=format&fit=crop&q=80'">
                             <?php else: ?>
                                 <div class="bg-dark text-white p-4 text-center d-flex align-items-center justify-content-center" style="height: 180px;">
                                     <i class="bi bi-trophy fs-1 text-warning"></i>
@@ -73,17 +192,17 @@
                             <div class="card-body d-flex flex-column p-4">
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-2 py-1 rounded-2">
-                                        <?= $this->e($article['category']) ?>
+                                        <?= $this->e($article['category'] ?? 'Sports') ?>
                                     </span>
-                                    <span class="small text-muted"><?= $this->e($article['source']) ?></span>
+                                    <span class="small text-muted"><?= $this->e($article['source'] ?? 'Benchero') ?></span>
                                 </div>
                                 <h5 class="card-title fw-bold text-slate-900 mb-2">
                                     <a href="<?= url('/sports/news/' . $article['slug']) ?>" class="text-dark text-decoration-none">
-                                        <?= $this->e($article['title']) ?>
+                                        <?= $this->e(html_entity_decode($article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
                                     </a>
                                 </h5>
                                 <p class="card-text text-muted small flex-grow-1 mb-3">
-                                    <?= $this->e($article['summary']) ?>
+                                    <?= $this->e(html_entity_decode($article['summary'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?>
                                 </p>
                                 <a href="<?= url('/sports/news/' . $article['slug']) ?>" class="btn btn-sm btn-outline-primary fw-semibold rounded-3 align-self-start">
                                     Read Story <i class="bi bi-arrow-right ms-1"></i>
@@ -92,80 +211,6 @@
                         </div>
                     </div>
                 <?php endforeach; ?>
-            </div>
-
-            <!-- Recent Results -->
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <h3 class="fw-extrabold mb-0 text-slate-900">
-                    <i class="bi bi-check-circle-fill text-success me-2"></i> Recent Results
-                </h3>
-                <a href="<?= url('/sports/results') ?>" class="text-decoration-none fw-semibold">View All Results &rarr;</a>
-            </div>
-
-            <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
-                <ul class="list-group list-group-flush">
-                    <?php foreach ($recentResults as $res): ?>
-                        <li class="list-group-item p-3 border-bottom">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="badge bg-secondary bg-opacity-10 text-dark small fw-bold">
-                                    <?= $this->e($res['competition']) ?>
-                                </span>
-                                <span class="badge bg-secondary">FT</span>
-                            </div>
-                            <div class="row align-items-center py-2">
-                                <div class="col-5 text-end fw-bold text-dark">
-                                    <?= $this->e($res['home_team']) ?>
-                                </div>
-                                <div class="col-2 text-center">
-                                    <span class="px-3 py-1 bg-dark text-white rounded-pill fw-extrabold">
-                                        <?= $this->e($res['home_score']) ?> - <?= $this->e($res['away_score']) ?>
-                                    </span>
-                                </div>
-                                <div class="col-5 text-start fw-bold text-dark">
-                                    <?= $this->e($res['away_team']) ?>
-                                </div>
-                            </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-
-            <!-- Upcoming Fixtures -->
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <h3 class="fw-extrabold mb-0 text-slate-900">
-                    <i class="bi bi-calendar-event-fill text-info me-2"></i> Upcoming Fixtures
-                </h3>
-                <a href="<?= url('/sports/fixtures') ?>" class="text-decoration-none fw-semibold">View All Fixtures &rarr;</a>
-            </div>
-
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
-                <ul class="list-group list-group-flush">
-                    <?php foreach ($upcomingFixtures as $fix): ?>
-                        <li class="list-group-item p-3 border-bottom">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <span class="badge bg-info bg-opacity-10 text-info small fw-bold">
-                                    <?= $this->e($fix['competition']) ?>
-                                </span>
-                                <span class="small text-muted fw-semibold">
-                                    <i class="bi bi-clock me-1"></i><?= date('D, M j - H:i', strtotime($fix['start_time'])) ?>
-                                </span>
-                            </div>
-                            <div class="row align-items-center py-2">
-                                <div class="col-5 text-end fw-bold text-dark">
-                                    <?= $this->e($fix['home_team']) ?>
-                                </div>
-                                <div class="col-2 text-center">
-                                    <span class="px-3 py-1 bg-light border text-muted rounded-pill fw-bold small">
-                                        VS
-                                    </span>
-                                </div>
-                                <div class="col-5 text-start fw-bold text-dark">
-                                    <?= $this->e($fix['away_team']) ?>
-                                </div>
-                            </div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
             </div>
 
         </div>

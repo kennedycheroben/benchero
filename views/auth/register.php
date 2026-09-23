@@ -1,6 +1,6 @@
 <?php $this->layout('layout', ['title' => 'Create Account — Benchero']); ?>
 
-<div class="container py-5 min-vh-100 d-flex align-items-center">
+<div class="container py-5 my-auto d-flex align-items-center justify-content-center">
     <div class="row justify-content-center w-100">
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm border-0 rounded-4">
@@ -37,10 +37,17 @@
                                     <input type="password" id="password" name="password" class="form-control form-control-lg" required minlength="8" placeholder="At least 8 chars">
                                 </div>
 
-                                <div class="col-md-6 mb-4">
+                                <div class="col-md-6 mb-3">
                                     <label for="password_confirmation" class="form-label fw-semibold small">Confirm Password</label>
                                     <input type="password" id="password_confirmation" name="password_confirmation" class="form-control form-control-lg" required placeholder="Repeat password">
                                 </div>
+                            </div>
+
+                            <div class="mb-4 form-check text-start">
+                                <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                                <label class="form-check-label small text-muted" for="terms">
+                                    I agree to the Benchero <a href="<?= url('/terms') ?>" target="_blank" class="text-primary text-decoration-none fw-semibold">Terms of Service</a> and <a href="<?= url('/privacy') ?>" target="_blank" class="text-primary text-decoration-none fw-semibold">Privacy Policy</a>.
+                                </label>
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-3 mb-3">Start Free Trial</button>

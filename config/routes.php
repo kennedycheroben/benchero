@@ -6,6 +6,7 @@ $router = new Router();
 
 // Public Marketing Routes
 $router->addRoute('GET', '/', ['Benchero\Controllers\HomeController', 'index']);
+$router->addRoute('GET', '/features', ['Benchero\Controllers\HomeController', 'features']);
 $router->addRoute('GET', '/about', ['Benchero\Controllers\HomeController', 'about']);
 $router->addRoute('GET', '/pricing', ['Benchero\Controllers\HomeController', 'pricing']);
 $router->addRoute('POST', '/currency', ['Benchero\Controllers\HomeController', 'setCurrency']);

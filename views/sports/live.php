@@ -7,7 +7,7 @@
                 <span class="badge bg-danger text-uppercase fw-bold px-3 py-2 rounded-2 animate-pulse">
                     <i class="bi bi-broadcast me-1"></i> LIVE NOW
                 </span>
-                <h2 class="fw-extrabold mb-0 fs-3">Live Sports Match Center</h2>
+                <h1 class="fw-extrabold mb-0 fs-3">Live Sports Match Center</h1>
             </div>
             <p class="text-white-50 small mb-0">Real-time match scores and status updates.</p>
         </div>
@@ -30,7 +30,7 @@
         </div>
     <?php endif; ?>
 
-    <div id="liveScoresContainer">
+    <div id="liveScoresContainer" aria-live="polite">
         <?php if (!empty($liveMatches)): ?>
             <div class="row g-4">
                 <?php foreach ($liveMatches as $match): ?>

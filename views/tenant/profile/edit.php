@@ -1,7 +1,7 @@
-<?php $this->layout('layout', ['title' => 'Edit Club Profile — Benchero']) ?>
+<?php require __DIR__ . '/../../layouts/main.php'; ?>
 
-<div class="container py-4">
-    <div class="d-flex align-items-center justify-content-between mb-4">
+<div class="container-fluid">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
         <div>
             <span class="badge bg-primary px-3 py-2 rounded-pill text-uppercase fw-bold mb-1">Club Management</span>
             <h2 class="display-6 fw-bold mb-0">Club Profile & Branding</h2>
@@ -45,8 +45,26 @@
                                 <input type="text" class="form-control" id="name" name="name" required value="<?= htmlspecialchars($org['name'] ?? '') ?>">
                             </div>
                             <div class="col-md-3">
-                                <label for="country" class="form-label fw-semibold">Country Code</label>
-                                <input type="text" class="form-control text-uppercase" id="country" name="country" maxlength="2" value="<?= htmlspecialchars($org['country'] ?? 'KE') ?>">
+                                <label for="country" class="form-label fw-semibold">Country</label>
+                                <select class="form-select" id="country" name="country">
+                                    <?php
+                                    $countries = [
+                                        'KE' => 'Kenya (KE)',
+                                        'UG' => 'Uganda (UG)',
+                                        'TZ' => 'Tanzania (TZ)',
+                                        'RW' => 'Rwanda (RW)',
+                                        'NG' => 'Nigeria (NG)',
+                                        'GH' => 'Ghana (GH)',
+                                        'ZA' => 'South Africa (ZA)',
+                                        'GB' => 'United Kingdom (GB)',
+                                        'US' => 'United States (US)',
+                                    ];
+                                    $currentCountry = strtoupper($org['country'] ?? 'KE');
+                                    foreach ($countries as $code => $cname):
+                                    ?>
+                                        <option value="<?= $code ?>" <?= ($currentCountry === $code) ? 'selected' : '' ?>><?= $cname ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label for="founded_year" class="form-label fw-semibold">Founded Year</label>
@@ -55,7 +73,25 @@
 
                             <div class="col-md-6">
                                 <label for="timezone" class="form-label fw-semibold">Timezone</label>
-                                <input type="text" class="form-control" id="timezone" name="timezone" value="<?= htmlspecialchars($org['timezone'] ?? 'Africa/Nairobi') ?>">
+                                <select class="form-select" id="timezone" name="timezone">
+                                    <?php
+                                    $timezones = [
+                                        'Africa/Nairobi' => 'Africa/Nairobi (EAT, UTC+3)',
+                                        'Africa/Kampala' => 'Africa/Kampala (EAT, UTC+3)',
+                                        'Africa/Dar_es_Salaam' => 'Africa/Dar_es_Salaam (EAT, UTC+3)',
+                                        'Africa/Kigali' => 'Africa/Kigali (CAT, UTC+2)',
+                                        'Africa/Lagos' => 'Africa/Lagos (WAT, UTC+1)',
+                                        'Africa/Johannesburg' => 'Africa/Johannesburg (SAST, UTC+2)',
+                                        'Europe/London' => 'Europe/London (GMT/BST)',
+                                        'UTC' => 'UTC',
+                                        'America/New_York' => 'America/New_York (EST/EDT)',
+                                    ];
+                                    $currentTz = $org['timezone'] ?? 'Africa/Nairobi';
+                                    foreach ($timezones as $tzCode => $tzLabel):
+                                    ?>
+                                        <option value="<?= $tzCode ?>" <?= ($currentTz === $tzCode) ? 'selected' : '' ?>><?= $tzLabel ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label for="club_colors" class="form-label fw-semibold">Club Colors</label>

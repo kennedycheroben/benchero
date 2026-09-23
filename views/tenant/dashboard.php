@@ -57,7 +57,7 @@
                     </div>
                     <div>
                         <h4 class="fw-bold mb-1"><i class="bi bi-globe2 text-primary me-2"></i>Official Club Website Status</h4>
-                        <p class="text-muted mb-0">Your public site is live at <code>https://benchero.co.ke/club/<?= htmlspecialchars($tenant['slug']) ?></code>.</p>
+                        <p class="text-muted mb-0">Your public site is live at <a href="<?= url('/club/' . urlencode($tenant['slug'])) ?>" target="_blank" class="fw-semibold text-primary"><code><?= url('/club/' . urlencode($tenant['slug'])) ?></code></a>.</p>
                     </div>
                 </div>
                 <div class="d-flex gap-2">

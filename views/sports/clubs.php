@@ -2,7 +2,7 @@
 
 <div class="bg-dark text-white py-4 mb-4 border-bottom border-secondary">
     <div class="container">
-        <h2 class="fw-extrabold mb-1 fs-3">Benchero Club Directory</h2>
+        <h1 class="fw-extrabold mb-1 fs-3 text-white">Benchero Club Directory</h1>
         <p class="text-white-50 small mb-0">Discover sports clubs, academies, and community teams powered by Benchero.</p>
     </div>
 </div>

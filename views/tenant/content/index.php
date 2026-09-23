@@ -1,6 +1,9 @@
-<?php $this->layout('layout', ['title' => 'Content & Media Management — Benchero']) ?>
+<?php
+$tenant = $tenant ?? $org ?? [];
+require __DIR__ . '/../../layouts/main.php';
+?>
 
-<div class="container py-4">
+<div class="container-fluid">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <span class="badge bg-info text-dark px-3 py-2 rounded-pill text-uppercase fw-bold mb-1">Club Media</span>

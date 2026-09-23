@@ -2,7 +2,7 @@
 
 <div class="bg-dark text-white py-4 mb-4 border-bottom border-secondary">
     <div class="container">
-        <h2 class="fw-extrabold mb-1 fs-3">Sports Match Results</h2>
+        <h1 class="fw-extrabold mb-1 fs-3 text-white">Sports Match Results</h1>
         <p class="text-white-50 small mb-0">Browse archives of recent finished match scores and results.</p>
     </div>
 </div>
@@ -50,18 +50,39 @@
                                 <i class="bi bi-clock me-1"></i><?= date('M j, Y - H:i', strtotime($res['start_time'])) ?>
                             </span>
                         </div>
-                        <div class="row align-items-center py-2">
+                        <!-- Desktop Row -->
+                        <div class="row align-items-center py-2 match-row-desktop">
                             <div class="col-5 text-end fs-5 fw-extrabold text-slate-900">
                                 <?= $this->e($res['home_team']) ?>
                             </div>
                             <div class="col-2 text-center">
-                                <span class="px-3 py-2 bg-dark text-white rounded-pill fw-extrabold fs-5">
+                                <span class="px-3 py-2 bg-dark text-white rounded-pill fw-extrabold fs-5 text-nowrap">
                                     <?= $this->e($res['home_score']) ?> - <?= $this->e($res['away_score']) ?>
                                 </span>
                                 <div class="small text-muted mt-1 fw-bold">Full Time</div>
                             </div>
                             <div class="col-5 text-start fs-5 fw-extrabold text-slate-900">
                                 <?= $this->e($res['away_team']) ?>
+                            </div>
+                        </div>
+                        <!-- Mobile Stack -->
+                        <div class="match-row-mobile py-2">
+                            <div class="match-mobile-team">
+                                <div class="match-mobile-team-info">
+                                    <span class="badge bg-light text-muted border me-1">H</span>
+                                    <span class="match-mobile-team-name text-slate-900"><?= $this->e($res['home_team']) ?></span>
+                                </div>
+                                <div class="match-mobile-score text-slate-900"><?= $this->e($res['home_score']) ?></div>
+                            </div>
+                            <div class="match-mobile-team">
+                                <div class="match-mobile-team-info">
+                                    <span class="badge bg-light text-muted border me-1">A</span>
+                                    <span class="match-mobile-team-name text-slate-900"><?= $this->e($res['away_team']) ?></span>
+                                </div>
+                                <div class="match-mobile-score text-slate-900"><?= $this->e($res['away_score']) ?></div>
+                            </div>
+                            <div class="text-center mt-1">
+                                <span class="badge bg-secondary" style="font-size: 0.75rem;">Full Time</span>
                             </div>
                         </div>
                         <?php if (!empty($res['venue'])): ?>

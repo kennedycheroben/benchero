@@ -187,6 +187,8 @@ class SportsController extends Controller
             LEFT JOIN subscriptions sub ON o.id = sub.organization_id AND sub.status = 'active'
             LEFT JOIN plans s ON sub.plan_id = s.id
             WHERE o.deleted_at IS NULL
+              AND o.name IS NOT NULL
+              AND TRIM(o.name) != ''
             ORDER BY o.created_at DESC
             LIMIT 24
         ");

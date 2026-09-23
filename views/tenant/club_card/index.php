@@ -1,6 +1,9 @@
-<?php $this->layout('layout', ['title' => 'Digital Club Card — ' . htmlspecialchars($org['name'])]); ?>
+<?php
+$tenant = $tenant ?? $org ?? [];
+require __DIR__ . '/../../layouts/main.php';
+?>
 
-<div class="container py-4">
+<div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 fw-bold mb-1">Digital Club Card</h1>

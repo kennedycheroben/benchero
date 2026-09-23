@@ -1,8 +1,4 @@
-<?php $this->layout('layout', ['title' => 'Profile Temporarily Unavailable — Benchero']) ?>
-
-<head>
-    <meta name="robots" content="noindex, nofollow">
-</head>
+<?php $this->layout('layout', ['title' => 'Profile Temporarily Unavailable — Benchero', 'robots' => 'noindex, nofollow']) ?>
 
 <section class="py-5 bg-light min-vh-75 d-flex align-items-center">
     <div class="container text-center py-5">

@@ -20,12 +20,20 @@ class SitemapController extends Controller
         // 1. Core Public Benchero URLs
         $urls = [
             $appUrl . '/',
+            $appUrl . '/features',
             $appUrl . '/about',
             $appUrl . '/pricing',
             $appUrl . '/contact',
             $appUrl . '/terms',
             $appUrl . '/privacy',
-            $appUrl . '/cookies'
+            $appUrl . '/cookies',
+            $appUrl . '/sports',
+            $appUrl . '/sports/live',
+            $appUrl . '/sports/results',
+            $appUrl . '/sports/fixtures',
+            $appUrl . '/sports/news',
+            $appUrl . '/sports/competitions',
+            $appUrl . '/sports/clubs',
         ];
 
         // 2. Active Public Club Websites with Active Subscriptions

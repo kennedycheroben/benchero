@@ -1,6 +1,9 @@
-<?php $this->layout('layout', ['title' => 'Centralized Media Library — ' . htmlspecialchars($org['name'])]); ?>
+<?php
+$tenant = $tenant ?? $org ?? [];
+require __DIR__ . '/../../layouts/main.php';
+?>
 
-<div class="container py-4">
+<div class="container-fluid">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="h3 fw-bold mb-1">Centralized Media Library</h1>

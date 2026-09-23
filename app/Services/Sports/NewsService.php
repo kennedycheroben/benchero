@@ -64,6 +64,7 @@ class NewsService
             $dbNews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if (!empty($dbNews)) {
+                $dbNews = array_map([$this, 'normalizeArticle'], $dbNews);
                 $this->cache->set($cacheKey, $dbNews, 300);
                 return $dbNews;
             }
@@ -75,6 +76,7 @@ class NewsService
             // Otherwise fetch via provider
             $data = $this->provider->getLatestNews($limit, $sport);
             if (!empty($data)) {
+                $data = array_map([$this, 'normalizeArticle'], $data);
                 $this->cache->set($cacheKey, $data, 600);
                 return $data;
             }
@@ -84,6 +86,17 @@ class NewsService
             error_log("NewsService getLatestNews error: " . $e->getMessage());
             return $cached ?? [];
         }
+    }
+
+    private function normalizeArticle(array $article): array
+    {
+        if (isset($article['title'])) {
+            $article['title'] = html_entity_decode((string)$article['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        if (isset($article['summary'])) {
+            $article['summary'] = html_entity_decode((string)$article['summary'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+        return $article;
     }
 
     public function getNewsBySlug(string $slug): ?array
@@ -103,6 +116,7 @@ class NewsService
             $article = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($article) {
+                $article = $this->normalizeArticle($article);
                 $this->cache->set($cacheKey, $article, 3600);
                 return $article;
             }
@@ -114,6 +128,7 @@ class NewsService
             // Fallback to provider
             $article = $this->provider->getNewsBySlug($slug);
             if ($article) {
+                $article = $this->normalizeArticle($article);
                 $this->cache->set($cacheKey, $article, 3600);
                 return $article;
             }

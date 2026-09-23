@@ -27,6 +27,13 @@ class HomeController extends Controller
         ]);
     }
 
+    public function features(Request $request): Response
+    {
+        return $this->render('public/features', [
+            'title' => 'Features & Capabilities — Benchero Sports Operating System'
+        ]);
+    }
+
     public function about(Request $request): Response
     {
         return $this->render('public/about', [

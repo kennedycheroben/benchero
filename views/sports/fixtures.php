@@ -2,7 +2,7 @@
 
 <div class="bg-dark text-white py-4 mb-4 border-bottom border-secondary">
     <div class="container">
-        <h2 class="fw-extrabold mb-1 fs-3">Upcoming Match Fixtures</h2>
+        <h1 class="fw-extrabold mb-1 fs-3 text-white">Upcoming Match Fixtures</h1>
         <p class="text-white-50 small mb-0">Upcoming schedule and kick-off details displayed in local timezone.</p>
     </div>
 </div>
@@ -50,7 +50,8 @@
                                 <i class="bi bi-clock me-1"></i><?= date('D, M j, Y - H:i', strtotime($fix['start_time'])) ?> (EAT)
                             </span>
                         </div>
-                        <div class="row align-items-center py-2">
+                        <!-- Desktop Row -->
+                        <div class="row align-items-center py-2 match-row-desktop">
                             <div class="col-5 text-end fs-5 fw-extrabold text-slate-900">
                                 <?= $this->e($fix['home_team']) ?>
                             </div>
@@ -61,6 +62,24 @@
                             </div>
                             <div class="col-5 text-start fs-5 fw-extrabold text-slate-900">
                                 <?= $this->e($fix['away_team']) ?>
+                            </div>
+                        </div>
+                        <!-- Mobile Stack -->
+                        <div class="match-row-mobile py-2">
+                            <div class="match-mobile-team">
+                                <div class="match-mobile-team-info">
+                                    <span class="badge bg-light text-muted border me-1">H</span>
+                                    <span class="match-mobile-team-name text-slate-900"><?= $this->e($fix['home_team']) ?></span>
+                                </div>
+                            </div>
+                            <div class="text-center my-1">
+                                <span class="badge bg-light text-muted border px-3 py-1 fw-bold">VS</span>
+                            </div>
+                            <div class="match-mobile-team">
+                                <div class="match-mobile-team-info">
+                                    <span class="badge bg-light text-muted border me-1">A</span>
+                                    <span class="match-mobile-team-name text-slate-900"><?= $this->e($fix['away_team']) ?></span>
+                                </div>
                             </div>
                         </div>
                         <?php if (!empty($fix['venue'])): ?>
