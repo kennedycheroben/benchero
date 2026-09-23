@@ -24,7 +24,7 @@ Defined centrally in the `plans` table:
    - **Features**: Full year club management, team limits (25), player limits (500), fixtures (2000), public club website.
 
 4. **Benchero Pro (`benchero-pro`, ID: 4)**
-   - **Price**: KSh 20,000.00 / year
+   - **Price**: KSh 25,000.00 / year
    - **Features**:
      - Custom Domain connection (`www.myclub.co.ke`)
      - Controlled Video Uploads (2 GB video storage capacity)

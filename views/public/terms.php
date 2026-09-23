@@ -146,7 +146,7 @@
                 <li><strong>Free Trial:</strong> A 14-day promotional trial granting temporary access to test platform capabilities for new Organizations.</li>
                 <li><strong>Standard Monthly Plan (KSh 1,000/month):</strong> Includes core club management, sports, teams, players, staff, seasons, fixtures, results, standings, news, gallery, sponsors, and public website.</li>
                 <li><strong>Standard Yearly Plan (KSh 10,000/year):</strong> Standard plan features with annual billing savings.</li>
-                <li><strong>Benchero Pro Plan (KSh 20,000/year):</strong> Annual premium plan including custom domain connection, video uploads, expanded media storage quota, Digital Club Card, QR codes, structured data export, custom branding, and removal of Benchero branding.</li>
+                <li><strong>Benchero Pro Plan (KSh 25,000/year):</strong> Annual premium plan including custom domain connection, video uploads, expanded media storage quota, Digital Club Card, QR codes, structured data export, custom branding, and removal of Benchero branding.</li>
             </ul>
             <p>Pricing, plan features, and storage quotas are subject to prospective adjustment. Material pricing revisions will be communicated with reasonable advance notice.</p>
 

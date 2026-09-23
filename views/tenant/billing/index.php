@@ -48,7 +48,7 @@
         'id' => 4,
         'name' => 'Benchero Pro Yearly',
         'slug' => 'benchero-pro',
-        'price_kes' => 20000.00,
+        'price_kes' => 25000.00,
         'billing_interval' => 'yearly',
         'intl_pricing' => \Benchero\Core\PricingConfig::getInternationalPrice(4, 'USD'),
     ];
@@ -315,8 +315,8 @@
                                         <div class="d-flex align-items-center gap-1.5 flex-wrap">
                                             <span class="fw-bold text-dark">Standard Yearly</span>
                                             <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill plan-savings-badge"
-                                                data-savings-kes="Save KSh 2,000" data-savings-usd="Save $16.00">
-                                                <?= ($activeMethod === 'paypal') ? 'Save $16.00' : 'Save KSh 2,000' ?>
+                                                data-savings-kes="Save KSh 2,000 • 16.67% off" data-savings-usd="Save $16.00 • 16.67% off">
+                                                <?= ($activeMethod === 'paypal') ? 'Save $16.00 • 16.67% off' : 'Save KSh 2,000 • 16.67% off' ?>
                                             </span>
                                         </div>
                                         <span class="plan-check-icon text-primary <?= $activePlanId === 3 ? '' : 'opacity-0' ?>"><i class="bi bi-check-circle-fill fs-5"></i></span>
@@ -372,22 +372,22 @@
                                 <label class="plan-option-card d-block p-3 rounded-3 border h-100 position-relative cursor-pointer <?= $activePlanId === 4 ? 'selected' : '' ?>" for="plan_4" id="plan_card_4">
                                     <input class="visually-hidden plan-radio" type="radio" name="plan_id" id="plan_4" value="4"
                                         data-plan-name="Benchero Pro Yearly"
-                                        data-price-kes="<?= (float)($proYearly['price_kes'] ?? 20000) ?>"
-                                        data-price-usd="<?= (float)($proYearly['intl_pricing']['charged_amount'] ?? 160) ?>"
+                                        data-price-kes="<?= (float)($proYearly['price_kes'] ?? 25000) ?>"
+                                        data-price-usd="<?= (float)($proYearly['intl_pricing']['charged_amount'] ?? 200) ?>"
                                         data-interval="year"
                                         <?= $activePlanId === 4 ? 'checked' : '' ?> required>
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <div class="d-flex align-items-center gap-1.5 flex-wrap">
                                             <span class="fw-bold text-dark">Pro Yearly</span>
                                             <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill plan-savings-badge"
-                                                data-savings-kes="Best Value • Save KSh 10,000" data-savings-usd="Best Value • Save $80.00">
-                                                <?= ($activeMethod === 'paypal') ? 'Best Value • Save $80.00' : 'Best Value • Save KSh 10,000' ?>
+                                                data-savings-kes="Best Value • Save KSh 5,000 • 16.67% off" data-savings-usd="Best Value • Save $40.00 • 16.67% off">
+                                                <?= ($activeMethod === 'paypal') ? 'Best Value • Save $40.00 • 16.67% off' : 'Best Value • Save KSh 5,000 • 16.67% off' ?>
                                             </span>
                                         </div>
                                         <span class="plan-check-icon text-primary <?= $activePlanId === 4 ? '' : 'opacity-0' ?>"><i class="bi bi-check-circle-fill fs-5"></i></span>
                                     </div>
                                     <div class="fw-bold text-dark fs-5 mb-1 plan-card-price" id="plan_4_price">
-                                        <?= ($activeMethod === 'paypal') ? '$160.00 / year' : 'KSh 20,000 / year' ?>
+                                        <?= ($activeMethod === 'paypal') ? '$200.00 / year' : 'KSh 25,000 / year' ?>
                                     </div>
                                     <div class="fs-8 text-muted">Unlimited players • 2 months free</div>
                                 </label>

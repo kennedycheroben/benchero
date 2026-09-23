@@ -91,7 +91,7 @@ class UnifiedPaymentTestSuite
             'testO_SubscriptionExpiry' => '[O] Subscription Expiry & Access Restriction',
             'testP_TrialConversion' => '[P] Trial Conversion to Paid Active Subscription',
             'testQ_MonthlyPlanPricing' => '[Q] Pro Monthly Plan (KSh 2,500 / $20 USD)',
-            'testR_YearlyPlanPricing' => '[R] Pro Yearly Plan (KSh 20,000 / $160 USD)',
+            'testR_YearlyPlanPricing' => '[R] Pro Yearly Plan (KSh 25,000 / $200 USD)',
             'testS_KshTransactionFlow' => '[S] Kenyan KSh Transaction Flow',
             'testT_ForeignCurrencyTransactionFlow' => '[T] International Foreign Currency Flow (USD)',
             'testU_UnsupportedCurrency' => '[U] Unsupported Currency Rejection',
@@ -208,7 +208,7 @@ class UnifiedPaymentTestSuite
         $this->assert((float)$intentMpesa['amount'] === 2500.0, "Pro Monthly price must be 2,500");
         $this->assert($intentMpesa['provider'] === 'imbank', "Provider must be imbank");
 
-        // PayPal intent (Pro Yearly, plan 4, $160 USD)
+        // PayPal intent (Pro Yearly, plan 4, $200 USD)
         $intentPayPal = $this->paymentService->createPaymentIntent(
             $this->testOrgId,
             $this->testUserId,
@@ -218,8 +218,8 @@ class UnifiedPaymentTestSuite
         );
         $this->assert($intentPayPal['success'] === true, "PayPal intent creation must succeed");
         $this->assert($intentPayPal['currency'] === 'USD', "PayPal currency must be USD");
-        $this->assert((float)$intentPayPal['amount'] === 160.0, "PayPal Pro Yearly price must be $160.00");
-        $this->assert((float)$intentPayPal['base_amount'] === 20000.0, "Base amount must be 20,000 KES");
+        $this->assert((float)$intentPayPal['amount'] === 200.0, "PayPal Pro Yearly price must be $200.00");
+        $this->assert((float)$intentPayPal['base_amount'] === 25000.0, "Base amount must be 25,000 KES");
         $this->assert($intentPayPal['base_currency'] === 'KES', "Base currency must be KES");
         $this->assert($intentPayPal['provider'] === 'paypal', "Provider must be paypal");
     }
@@ -362,7 +362,7 @@ class UnifiedPaymentTestSuite
                     'CallbackMetadata' => [
                         'Item' => [
                             ['Name' => 'MpesaReceiptNumber', 'Value' => $receipt],
-                            ['Name' => 'Amount', 'Value' => 20000.0]
+                            ['Name' => 'Amount', 'Value' => 25000.0]
                         ]
                     ]
                 ]
@@ -479,11 +479,11 @@ class UnifiedPaymentTestSuite
     {
         $plan = $this->subscriptionService->getPlan(4);
         $this->assert($plan !== null, "Plan 4 must exist in plans table");
-        $this->assert((float)$plan['price_kes'] === 20000.00, "Plan 4 price must be exactly KSh 20,000.00");
+        $this->assert((float)$plan['price_kes'] === 25000.00, "Plan 4 price must be exactly KSh 25,000.00");
         $this->assert($plan['billing_interval'] === 'yearly', "Plan 4 must be yearly");
 
         $intl = PricingConfig::getInternationalPrice(4, 'USD');
-        $this->assert((float)$intl['charged_amount'] === 160.00, "Pro Yearly USD price must be $160.00");
+        $this->assert((float)$intl['charged_amount'] === 200.00, "Pro Yearly USD price must be $200.00");
     }
 
     public function testS_KshTransactionFlow(): void
@@ -499,8 +499,8 @@ class UnifiedPaymentTestSuite
         $intent = $this->paymentService->createPaymentIntent($this->testOrgId, $this->testUserId, 4, 'paypal', ['currency' => 'USD']);
         $this->assert($intent['currency'] === 'USD', "International transaction must be USD");
         $this->assert($intent['base_currency'] === 'KES', "Base currency must remain KES");
-        $this->assert((float)$intent['base_amount'] === 20000.00, "Canonical KES amount must be preserved");
-        $this->assert((float)$intent['amount'] === 160.00, "Charged amount must be 160.00 USD");
+        $this->assert((float)$intent['base_amount'] === 25000.00, "Canonical KES amount must be preserved");
+        $this->assert((float)$intent['amount'] === 200.00, "Charged amount must be 200.00 USD");
     }
 
     public function testU_UnsupportedCurrency(): void
@@ -522,7 +522,7 @@ class UnifiedPaymentTestSuite
             'event_type' => 'PAYMENT.CAPTURE.COMPLETED',
             'resource' => [
                 'id' => $captureId,
-                'amount' => ['value' => '160.00', 'currency_code' => 'USD'],
+                'amount' => ['value' => '200.00', 'currency_code' => 'USD'],
                 'custom_id' => $intent['reference']
             ]
         ];

@@ -372,7 +372,7 @@ class StkPushBillingTestSuite
 
     private function testProUpgradePolicy(): void
     {
-        // Upgrade to Benchero Pro (plan 4 - KSh 20,000/yr)
+        // Upgrade to Benchero Pro (plan 4 - KSh 25,000/yr)
         $this->subscriptionService->activateSubscription($this->testOrgId, 4, 'REC_PRO_UPGRADE');
         $sub = $this->subscriptionService->getSubscriptionStatus($this->testOrgId);
 

@@ -56,7 +56,7 @@ class MasterQASuite
             }
         }
         $this->assert(!empty($proPlan), "Benchero Pro plan present in database");
-        $this->assert((float)($proPlan['price_kes'] ?? 0) === 20000.00, "Benchero Pro price is KSh 20,000/year");
+        $this->assert((float)($proPlan['price_kes'] ?? 0) === 25000.00, "Benchero Pro price is KSh 25,000/year");
 
         $domainTable = $this->db->query("SHOW TABLES LIKE 'custom_domains'")->fetchAll();
         $this->assert(!empty($domainTable), "custom_domains table exists in database");

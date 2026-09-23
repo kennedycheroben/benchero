@@ -54,16 +54,16 @@ Benchero enforces a single canonical source of truth for subscription plans:
 | 1 | Free Trial | 14 Days | KSh 0 | $0.00 | Full feature trial for new clubs |
 | 2 | Standard Monthly | Monthly | KSh 1,000 | $8.00 | 100 Players, 10 Teams, 500 Fixtures |
 | 3 | Standard Yearly | Yearly | KSh 10,000 | $80.00 | 500 Players, 25 Teams, 2,000 Fixtures |
-| 4 | Benchero Pro Yearly | Yearly | KSh 20,000 | $160.00 | Full Pro: Custom Domain, Video, Media, QR, Digital Card |
+| 4 | Benchero Pro Yearly | Yearly | KSh 25,000 | $200.00 | Full Pro: Custom Domain, Video, Media, QR, Digital Card |
 | 5 | Benchero Pro Monthly | Monthly | KSh 2,500 | $20.00 | Full Pro: Custom Domain, Video, Media, QR, Digital Card |
 
 ### Currency Architecture & Policy:
 1. **Canonical Source of Truth**: All plan pricing is canonically defined in Kenyan Shillings (`KES`):
    - Pro Monthly: **KSh 2,500 / month**
-   - Pro Yearly: **KSh 20,000 / year**
+   - Pro Yearly: **KSh 25,000 / year** (Save KSh 5,000 / 16.67% off)
 2. **Explicit International Pricing Tiers**:
    - Because PayPal does not support Kenyan Shillings (`KES`) for merchant checkout or direct settlement, international customers are charged in a supported provider checkout currency (primarily `USD`).
-   - The USD amounts ($20.00 / month, $160.00 / year) are **explicit international subscription pricing tiers**, configured via `PAYPAL_PLAN_PRO_MONTHLY_USD` and `PAYPAL_PLAN_PRO_YEARLY_USD`.
+   - The USD amounts ($20.00 / month, $200.00 / year) are **explicit international subscription pricing tiers**, configured via `PAYPAL_PLAN_PRO_MONTHLY_USD` and `PAYPAL_PLAN_PRO_YEARLY_USD`.
    - Benchero does **NOT** use a dynamic or fake foreign exchange rate. In the database, `exchange_rate` is tracked as `NULL` (or omitted) to truthfully reflect that no FOREX conversion was promised or computed by Benchero.
 3. **Database Currency Tracking**:
    - `amount`: Charged provider transaction amount (e.g. `20.00`)
@@ -218,7 +218,7 @@ PAYPAL_WEBHOOK_ID=your_paypal_webhook_id
 PAYPAL_CURRENCY=USD
 PAYPAL_SUPPORTED_CURRENCIES=USD,EUR,GBP
 PAYPAL_PLAN_PRO_MONTHLY_USD=20.00
-PAYPAL_PLAN_PRO_YEARLY_USD=160.00
+PAYPAL_PLAN_PRO_YEARLY_USD=200.00
 ```
 
 ---

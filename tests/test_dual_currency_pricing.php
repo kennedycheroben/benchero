@@ -71,16 +71,16 @@ class DualCurrencyPricingTest
         $this->assert((float)$usdProM === 20.0, "Plan 5 (Pro Monthly) USD price is $20.00");
 
         $usdProY = PricingConfig::getInternationalPrice(4, 'USD')['charged_amount'];
-        $this->assert((float)$usdProY === 160.0, "Plan 4 (Pro Yearly) USD price is $160.00");
+        $this->assert((float)$usdProY === 200.0, "Plan 4 (Pro Yearly) USD price is $200.00");
 
         // Verify savings calculation:
         // Std: 12 * $8 = $96. Yearly = $80. Savings = $16.
         $stdSavingsUSD = (12 * $usdStdM) - $usdStdY;
         $this->assert((float)$stdSavingsUSD === 16.0, "Standard Yearly saves $16.00/yr vs monthly");
 
-        // Pro: 12 * $20 = $240. Yearly = $160. Savings = $80.
+        // Pro: 12 * $20 = $240. Yearly = $200. Savings = $40.
         $proSavingsUSD = (12 * $usdProM) - $usdProY;
-        $this->assert((float)$proSavingsUSD === 80.0, "Pro Yearly saves $80.00/yr vs monthly");
+        $this->assert((float)$proSavingsUSD === 40.0, "Pro Yearly saves $40.00/yr vs monthly");
 
         // ----------------------------------------------------
         // 2. HomeController::pricing Currency Resolution & HTML
@@ -105,8 +105,8 @@ class DualCurrencyPricingTest
         $this->assert(str_contains($htmlDefault, 'data-price-usd="$20.00"'), "Plan 5 contains data-price-usd='$20.00'");
         $this->assert(str_contains($htmlDefault, 'data-price-kes="KSh 10,000"'), "Plan 3 contains data-price-kes='KSh 10,000'");
         $this->assert(str_contains($htmlDefault, 'data-price-usd="$80.00"'), "Plan 3 contains data-price-usd='$80.00'");
-        $this->assert(str_contains($htmlDefault, 'data-price-kes="KSh 20,000"'), "Plan 4 contains data-price-kes='KSh 20,000'");
-        $this->assert(str_contains($htmlDefault, 'data-price-usd="$160.00"'), "Plan 4 contains data-price-usd='$160.00'");
+        $this->assert(str_contains($htmlDefault, 'data-price-kes="KSh 25,000"'), "Plan 4 contains data-price-kes='KSh 25,000'");
+        $this->assert(str_contains($htmlDefault, 'data-price-usd="$200.00"'), "Plan 4 contains data-price-usd='$200.00'");
         $this->assert(str_contains($htmlDefault, 'plan=standard-monthly&currency=USD') || str_contains($htmlDefault, 'plan=standard-monthly&amp;currency=USD'), "Plan 2 has data-cta-usd with currency=USD parameter");
         $this->assert(str_contains($htmlDefault, 'plan=pro-monthly&currency=USD') || str_contains($htmlDefault, 'plan=pro-monthly&amp;currency=USD'), "Plan 5 has data-cta-usd with currency=USD parameter");
 

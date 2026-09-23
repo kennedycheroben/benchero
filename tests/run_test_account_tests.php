@@ -99,7 +99,7 @@ class TestAccountTestSuite
         $this->assert($this->subscriptionService->isSubscriptionActive($org['id']) === true, "Test account subscription status is active");
 
         // 6. Test Mock M-Pesa Payment Activation
-        $res = $this->mpesaService->initiateStkPush($org['id'], '254712345678', 20000.00, 4);
+        $res = $this->mpesaService->initiateStkPush($org['id'], '254712345678', 25000.00, 4);
         $this->assert($res['status'] === 'completed_mock', "M-Pesa STK push for test account auto-completes in mock mode");
 
         $subAfter = $this->subscriptionService->getSubscriptionStatus($org['id']);

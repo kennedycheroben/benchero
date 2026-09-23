@@ -31,7 +31,7 @@
                 <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill mb-2">BENCHERO PRO FEATURE</span>
                 <h3 class="fw-bold mb-2">Connect Your Club's Own Domain</h3>
                 <p class="text-muted max-w-xl mx-auto mb-3">
-                    Custom domain integration is available exclusively on <strong>Benchero Pro</strong> (KSh 20,000/year). Connect <code>www.yourclub.co.ke</code> while keeping your original Benchero link active!
+                    Custom domain integration is available exclusively on <strong>Benchero Pro</strong> (KSh 25,000/year). Connect <code>www.yourclub.co.ke</code> while keeping your original Benchero link active!
                 </p>
                 <a href="<?= url("/o/") ?><?= htmlspecialchars($org['slug']) ?>/billing" class="btn btn-primary btn-lg fw-bold px-4 rounded-3">
                     Upgrade to Benchero Pro Now

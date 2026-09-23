@@ -82,7 +82,7 @@ class PricingCardsConsistencyTest
         // Test Benchero Pro Yearly (Plan 4)
         $proY = $planMap['benchero-pro'] ?? null;
         $this->assert(!empty($proY) && (int)$proY['id'] === 4, "Benchero Pro Yearly exists with ID 4 and slug 'benchero-pro'");
-        $this->assert((float)$proY['price_kes'] === 20000.0, "Benchero Pro Yearly price is exactly 20,000.00 KES");
+        $this->assert((float)$proY['price_kes'] === 25000.0, "Benchero Pro Yearly price is exactly 25,000.00 KES");
         $this->assert($proY['billing_interval'] === 'yearly', "Benchero Pro Yearly interval is 'yearly'");
 
         // 2. PricingConfig Synchronization
@@ -93,7 +93,7 @@ class PricingCardsConsistencyTest
         $this->assert(isset(PricingConfig::PLANS['benchero-pro']), "PricingConfig defines 'benchero-pro'");
 
         $this->assert((float)PricingConfig::PLANS['pro-monthly']['price_monthly_kes'] === 2500.0, "PricingConfig pro-monthly is 2,500 KES");
-        $this->assert((float)PricingConfig::PLANS['benchero-pro']['price_yearly_kes'] === 20000.0, "PricingConfig benchero-pro is 20,000 KES");
+        $this->assert((float)PricingConfig::PLANS['benchero-pro']['price_yearly_kes'] === 25000.0, "PricingConfig benchero-pro is 25,000 KES");
 
         // 3. Payment Intent End-to-End Simulation
         $testOrgId = Ulid::generate();
@@ -104,13 +104,13 @@ class PricingCardsConsistencyTest
         $this->assert($intent5['success'] === true, "Payment intent for Plan 5 (Pro Monthly) created successfully");
         $this->assert((float)$intent5['amount'] === 2500.0, "Plan 5 charged amount is 2,500.00 KES");
 
-        // Intent for Plan 4 (Pro Yearly - 20,000 KES)
+        // Intent for Plan 4 (Pro Yearly - 25,000 KES)
         $intent4 = $this->paymentService->createPaymentIntent($testOrgId, null, 4, 'mpesa', ['phone' => '0712345678']);
         $this->assert($intent4['success'] === true, "Payment intent for Plan 4 (Pro Yearly) created successfully");
-        $this->assert((float)$intent4['amount'] === 20000.0, "Plan 4 charged amount is 20,000.00 KES");
+        $this->assert((float)$intent4['amount'] === 25000.0, "Plan 4 charged amount is 25,000.00 KES");
 
         // Monthly and yearly plans cannot accidentally be swapped
-        $this->assert((float)$intent5['amount'] !== (float)$intent4['amount'], "Plan 5 (Monthly 2,500) and Plan 4 (Yearly 20,000) amounts are distinct and never swapped");
+        $this->assert((float)$intent5['amount'] !== (float)$intent4['amount'], "Plan 5 (Monthly 2,500) and Plan 4 (Yearly 25,000) amounts are distinct and never swapped");
 
         // 4. Subscription Activation & Entitlements for Plan 5
         $activated5 = $this->subscriptionService->activateSubscription($testOrgId, 5, 'TEST_PAY_REF_5');
@@ -148,7 +148,7 @@ class PricingCardsConsistencyTest
         $this->assert(str_contains($html, 'KSh 1,000'), "Price KSh 1,000 present");
         $this->assert(str_contains($html, 'KSh 2,500'), "Price KSh 2,500 present");
         $this->assert(str_contains($html, 'KSh 10,000'), "Price KSh 10,000 present");
-        $this->assert(str_contains($html, 'KSh 20,000'), "Price KSh 20,000 present");
+        $this->assert(str_contains($html, 'KSh 25,000'), "Price KSh 25,000 present");
 
         // Verify CTA links
         $this->assert(str_contains($html, '/register?plan=free-trial'), "CTA link for free-trial present");

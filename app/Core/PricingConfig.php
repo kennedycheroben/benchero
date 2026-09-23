@@ -35,7 +35,7 @@ class PricingConfig
         'pro-monthly' => [
             'name' => 'Benchero Pro Monthly',
             'price_monthly_kes' => 2500,
-            'price_yearly_kes' => 20000,
+            'price_yearly_kes' => 25000,
             'interval' => 'monthly',
             'player_limit' => -1,
             'team_limit' => -1,
@@ -44,11 +44,11 @@ class PricingConfig
         'benchero-pro' => [
             'name' => 'Benchero Pro Yearly',
             'price_monthly_kes' => 2500,
-            'price_yearly_kes' => 20000,
+            'price_yearly_kes' => 25000,
             'interval' => 'yearly',
             'player_limit' => -1,
             'team_limit' => -1,
-            'description' => 'KSh 20,000 per year'
+            'description' => 'KSh 25,000 per year'
         ]
     ];
 
@@ -93,11 +93,13 @@ class PricingConfig
      * BUSINESS RATIONALE:
      * Benchero's canonical source-of-truth pricing is defined in Kenyan Shillings (KES):
      * - Benchero Pro Monthly: KSh 2,500 / month (Plan 5)
-     * - Benchero Pro Yearly:  KSh 20,000 / year (Plan 4)
+     * - Benchero Pro Yearly:  KSh 25,000 / year (Plan 4)
      *
      * Because PayPal does not accept Kenyan Shillings (KES) for merchant checkout or settlement,
      * international customers are charged an explicit international tier price in a supported currency
-     * (primarily USD: $20.00 / month, $160.00 / year).
+     * (primarily USD: $20.00 / month, $200.00 / year).
+     *
+     * Annual savings: 16.67% for both Standard and Pro tiers.
      *
      * These international prices are explicit business subscription price points (configurable via environment
      * variables), NOT a real-time foreign exchange rate conversion. Benchero does not perform or claim
@@ -107,19 +109,19 @@ class PricingConfig
     {
         $currency = strtoupper(trim($currency));
 
-        // Canonical prices in KES
+        // Canonical prices in KES (configurable via environment variables)
         $canonicalMap = [
-            1 => 0.00,
-            2 => 1000.00,
-            3 => 10000.00,
-            4 => 20000.00,
-            5 => 2500.00,
+            1 => (float)env('PLAN_FREE_TRIAL_PRICE_KES', 0.00),
+            2 => (float)env('PLAN_STANDARD_MONTHLY_PRICE_KES', 1000.00),
+            3 => (float)env('PLAN_STANDARD_YEARLY_PRICE_KES', 10000.00),
+            4 => (float)env('PLAN_PRO_YEARLY_PRICE_KES', 25000.00),
+            5 => (float)env('PLAN_PRO_MONTHLY_PRICE_KES', 2500.00),
         ];
         $canonicalAmount = $canonicalMap[$planId] ?? 0.00;
 
         // Configurable explicit USD international tier pricing
         $proMonthlyUsd = (float)env('PAYPAL_PLAN_PRO_MONTHLY_USD', 20.00);
-        $proYearlyUsd  = (float)env('PAYPAL_PLAN_PRO_YEARLY_USD', 160.00);
+        $proYearlyUsd  = (float)env('PAYPAL_PLAN_PRO_YEARLY_USD', 200.00);
         $stdMonthlyUsd = (float)env('PAYPAL_PLAN_STANDARD_MONTHLY_USD', 8.00);
         $stdYearlyUsd  = (float)env('PAYPAL_PLAN_STANDARD_YEARLY_USD', 80.00);
 
@@ -133,14 +135,18 @@ class PricingConfig
 
         // Supported international currencies
         if ($currency === 'EUR') {
+            $eurStdMonthly = (float)env('PAYPAL_PLAN_STANDARD_MONTHLY_EUR', 7.50);
+            $eurStdYearly  = (float)env('PAYPAL_PLAN_STANDARD_YEARLY_EUR', 75.00);
             $eurProMonthly = (float)env('PAYPAL_PLAN_PRO_MONTHLY_EUR', 19.00);
             $eurProYearly  = (float)env('PAYPAL_PLAN_PRO_YEARLY_EUR', 150.00);
-            $eurMap = [1 => 0.00, 2 => 7.50, 3 => 75.00, 4 => $eurProYearly, 5 => $eurProMonthly];
+            $eurMap = [1 => 0.00, 2 => $eurStdMonthly, 3 => $eurStdYearly, 4 => $eurProYearly, 5 => $eurProMonthly];
             $charged = $eurMap[$planId] ?? 0.00;
         } elseif ($currency === 'GBP') {
+            $gbpStdMonthly = (float)env('PAYPAL_PLAN_STANDARD_MONTHLY_GBP', 6.50);
+            $gbpStdYearly  = (float)env('PAYPAL_PLAN_STANDARD_YEARLY_GBP', 65.00);
             $gbpProMonthly = (float)env('PAYPAL_PLAN_PRO_MONTHLY_GBP', 16.00);
             $gbpProYearly  = (float)env('PAYPAL_PLAN_PRO_YEARLY_GBP', 130.00);
-            $gbpMap = [1 => 0.00, 2 => 6.50, 3 => 65.00, 4 => $gbpProYearly, 5 => $gbpProMonthly];
+            $gbpMap = [1 => 0.00, 2 => $gbpStdMonthly, 3 => $gbpStdYearly, 4 => $gbpProYearly, 5 => $gbpProMonthly];
             $charged = $gbpMap[$planId] ?? 0.00;
         } else {
             // Default to USD for all other currencies
@@ -167,6 +173,28 @@ class PricingConfig
             'note' => $canonicalAmount > 0 
                 ? "International checkout: {$symbol}" . number_format($charged, 2) . " {$currency} (canonical base: KSh " . number_format($canonicalAmount) . ")" 
                 : 'Free'
+        ];
+    }
+
+    /**
+     * Calculate annual savings for a plan given monthly and annual prices.
+     *
+     * Returns derived savings values — never hardcode savings separately.
+     *
+     * @param float $monthlyPrice The monthly subscription price.
+     * @param float $annualPrice  The yearly subscription price.
+     * @return array{annual_value: float, annual_saving: float, saving_percentage: float, display_saving_kes: string, display_saving_usd: string}
+     */
+    public static function calculateSavings(float $monthlyPrice, float $annualPrice): array
+    {
+        $annualValue = $monthlyPrice * 12;
+        $annualSaving = $annualValue - $annualPrice;
+        $savingPercentage = ($annualValue > 0) ? round(($annualSaving / $annualValue) * 100, 2) : 0.0;
+
+        return [
+            'annual_value' => $annualValue,
+            'annual_saving' => $annualSaving,
+            'saving_percentage' => $savingPercentage,
         ];
     }
 }
