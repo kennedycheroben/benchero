@@ -54,24 +54,24 @@ return new class {
         // 4. Reassign contaminated matches from English Premier League (slug: 'premier-league')
         // Match 1: Arnett Gardens vs Dunbeholden (external_id: 1639892) -> Jamaica
         $stmtReassignJam = $pdo->prepare("
-            UPDATE sports_matches 
-            SET competition_id = ?, updated_at = NOW() 
+            UPDATE sports_matches
+            SET competition_id = ?, updated_at = NOW()
             WHERE external_id = '1639892' AND provider = 'api-football'
         ");
         $stmtReassignJam->execute([$jamCompId]);
 
         // Match 2: RTC vs Tsirang (external_id: 1636771) -> Bhutan
         $stmtReassignBhu1 = $pdo->prepare("
-            UPDATE sports_matches 
-            SET competition_id = ?, updated_at = NOW() 
+            UPDATE sports_matches
+            SET competition_id = ?, updated_at = NOW()
             WHERE external_id = '1636771' AND provider = 'api-football'
         ");
         $stmtReassignBhu1->execute([$bhuCompId]);
 
         // Match 3: Thimphu City vs Transport United (external_id: 1636772) -> Bhutan & transition from stale LIVE to FINISHED
         $stmtReassignBhu2 = $pdo->prepare("
-            UPDATE sports_matches 
-            SET competition_id = ?, status = 'FINISHED', updated_at = NOW() 
+            UPDATE sports_matches
+            SET competition_id = ?, status = 'FINISHED', updated_at = NOW()
             WHERE external_id = '1636772' AND provider = 'api-football'
         ");
         $stmtReassignBhu2->execute([$bhuCompId]);

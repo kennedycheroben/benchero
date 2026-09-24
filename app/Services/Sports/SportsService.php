@@ -80,9 +80,10 @@ class SportsService
                 LEFT JOIN sports_competitions c ON m.competition_id = c.id
                 LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
                 LEFT JOIN sports_teams at ON m.away_team_id = at.id
-                WHERE m.status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED') 
+                WHERE m.status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
                   AND m.provider != 'mock'
                   AND m.start_time >= DATE_SUB(NOW(), INTERVAL 150 MINUTE)
+                  AND m.start_time <= DATE_ADD(NOW(), INTERVAL 15 MINUTE)
                 ORDER BY m.start_time DESC LIMIT 20
             ");
             $dbMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);

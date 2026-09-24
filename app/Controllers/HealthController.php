@@ -25,18 +25,18 @@ class HealthController extends Controller
 
             try {
                 $stmtSuccess = $pdo->query("
-                    SELECT created_at 
-                    FROM sports_sync_logs 
-                    WHERE status = 'success' 
+                    SELECT created_at
+                    FROM sports_sync_logs
+                    WHERE status = 'success'
                     ORDER BY id DESC LIMIT 1
                 ");
                 $lastSuccess = $stmtSuccess->fetchColumn() ?: null;
                 $sportsHealth['last_successful_sync'] = $lastSuccess;
 
                 $stmtError = $pdo->query("
-                    SELECT error_message, created_at 
-                    FROM sports_sync_logs 
-                    WHERE status = 'error' 
+                    SELECT error_message, created_at
+                    FROM sports_sync_logs
+                    WHERE status = 'error'
                     ORDER BY id DESC LIMIT 1
                 ");
                 $recentErrRow = $stmtError->fetch(\PDO::FETCH_ASSOC);

@@ -134,7 +134,7 @@ $pdo->beginTransaction();
 try {
     // Verify sync log accurately captures status = 'error'
     $logCountBefore = (int)$pdo->query("SELECT COUNT(*) FROM sports_sync_logs WHERE status = 'error'")->fetchColumn();
-    
+
     // Inject a failing provider into sync service
     $failingProvider = new class implements \Benchero\Contracts\SportsProviderInterface {
         public function getLiveScores(): array { throw new \RuntimeException("Rate limit / quota exceeded (HTTP 429)", 429); }
@@ -148,7 +148,7 @@ try {
     $res = $failingSync->syncLive();
 
     assertCheck($res['success'] === false, "Failing provider reports success=false (not empty success)", $passed, $failed);
-    
+
     $stmtLastLog = $pdo->query("SELECT status, error_message FROM sports_sync_logs ORDER BY id DESC LIMIT 1");
     $lastLog = $stmtLastLog->fetch(PDO::FETCH_ASSOC);
     assertCheck($lastLog['status'] === 'error', "Sync failure logged with status = 'error'", $passed, $failed);
@@ -307,8 +307,11 @@ if ($latestResultsSync) {
 // 12. CLI Command Parsing
 // -----------------------------------------------------------------------------
 echo "\n--- 12. CLI Command Parsing ---\n";
-$outputPositional = shell_exec('/opt/lampp/bin/php bin/sports_sync.php test_invalid_op 2>&1');
-assertCheck(str_contains($outputPositional, "Starting operation 'test_invalid_op'"), "Positional argument parsed correctly (bin/sports_sync.php <op>)", $passed, $failed);
+$outputPositional = shell_exec('/opt/lampp/bin/php bin/sports_sync.php live 2>&1');
+assertCheck(str_contains($outputPositional, "Starting operation 'live'"), "Positional argument parsed correctly (bin/sports_sync.php <op>)", $passed, $failed);
+
+$outputInvalid = shell_exec('/opt/lampp/bin/php bin/sports_sync.php test_invalid_op 2>&1');
+assertCheck(str_contains($outputInvalid, "Error: Unknown action 'test_invalid_op'"), "Invalid CLI argument safely rejected", $passed, $failed);
 
 $outputFlag = shell_exec('/opt/lampp/bin/php bin/sports_sync.php --type=fixtures 2>&1');
 assertCheck(str_contains($outputFlag, "Starting operation 'fixtures'"), "--type flag parsed correctly (bin/sports_sync.php --type=<op>)", $passed, $failed);

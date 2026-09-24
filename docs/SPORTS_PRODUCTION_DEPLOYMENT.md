@@ -79,8 +79,10 @@ In cPanel **Cron Jobs**, replace `/home/username/public_html` and `/usr/local/bi
 # BENCHERO SPORTS SYNCHRONIZATION SCHEDULE (Quota-Optimized)
 # -----------------------------------------------------------------------------
 
-# 1. LIVE MATCHES: Every 5 minutes (or every 2 minutes if on paid API quota)
-*/5 * * * * /usr/local/bin/php /home/username/public_html/bin/sports_sync.php live >/dev/null 2>&1
+# 1. LIVE MATCHES: Every 30 minutes (Quota-safe: 48 req/day)
+# WARNING: If on free API-Football (100 req/day), do NOT poll every 5 minutes (288 calls/day exceeds quota).
+# Use */30 * * * * for free tier; upgrade to */5 * * * * ONLY if on a paid tier (7,500+ req/day).
+*/30 * * * * /usr/local/bin/php /home/username/public_html/bin/sports_sync.php live >/dev/null 2>&1
 
 # 2. RESULTS: Twice daily (Morning 07:30 and Evening 23:30 EAT)
 30 7,23 * * * /usr/local/bin/php /home/username/public_html/bin/sports_sync.php results >/dev/null 2>&1
@@ -136,7 +138,7 @@ php bin/sync_sports.php --type=live # Backward-compatible forwarder
 ## 6. Health & Diagnostic Monitoring
 
 ### Public Health Endpoint
-The platform exposes a diagnostic probe at `/health`:
+The platform exposes a diagnostic probe at `https://benchero.co.ke/health`:
 ```json
 {
   "status": "ok",
