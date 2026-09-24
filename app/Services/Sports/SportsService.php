@@ -5,7 +5,9 @@ namespace Benchero\Services\Sports;
 use Benchero\Contracts\SportsProviderInterface;
 use Benchero\Services\Sports\Providers\MockSportsProvider;
 use Benchero\Services\Sports\Providers\FootballDataSportsProvider;
+use Benchero\Services\Sports\Providers\ApiFootballSportsProvider;
 use Benchero\Services\Sports\Providers\NullSportsProvider;
+use Benchero\Services\Sports\SportsProviderRouter;
 use Benchero\Services\CacheService;
 use Benchero\Core\Database\Database;
 use PDO;
@@ -14,17 +16,34 @@ class SportsService
 {
     private SportsProviderInterface $provider;
     private CacheService $cache;
+    private SportsProviderRouter $router;
     private string $providerType;
     private bool $isProduction;
     private PDO $pdo;
 
-    public function __construct(?SportsProviderInterface $provider = null, ?CacheService $cache = null)
-    {
+    public function __construct(
+        ?SportsProviderInterface $provider = null,
+        ?CacheService $cache = null,
+        ?SportsProviderRouter $router = null
+    ) {
         $this->pdo = Database::getConnection();
         $this->cache = $cache ?? new CacheService();
+        $this->router = $router ?? new SportsProviderRouter();
         $this->isProduction = (env('APP_ENV') === 'production');
         $this->providerType = strtolower((string)($_ENV['SPORTS_PROVIDER'] ?? env('SPORTS_PROVIDER', 'mock')));
         $this->provider = $provider ?? $this->resolveProvider();
+    }
+
+    public function getLatestSuccessfulSyncTimestamp(string $operation): ?string
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT created_at FROM sports_sync_logs WHERE status = 'success' AND operation = ? ORDER BY id DESC LIMIT 1");
+            $stmt->execute([$operation]);
+            $ts = $stmt->fetchColumn();
+            return $ts ?: null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function resolveProvider(): SportsProviderInterface
@@ -35,7 +54,7 @@ class SportsService
         }
 
         return match ($this->providerType) {
-            'api-football', 'apifootball' => new \Benchero\Services\Sports\Providers\ApiFootballSportsProvider(),
+            'api-football', 'apifootball' => new ApiFootballSportsProvider(),
             'real', 'football-data', 'football' => new FootballDataSportsProvider(),
             'mock' => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider(),
             default => $this->isProduction ? new NullSportsProvider() : new MockSportsProvider()
@@ -50,7 +69,7 @@ class SportsService
             return $cached;
         }
 
-        // Query Benchero's local normalized database cache
+        // Query Benchero's local normalized database cache with strict live window protection (<= 150 minutes)
         try {
             $stmt = $this->pdo->query("
                 SELECT m.*, 
@@ -61,12 +80,14 @@ class SportsService
                 LEFT JOIN sports_competitions c ON m.competition_id = c.id
                 LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
                 LEFT JOIN sports_teams at ON m.away_team_id = at.id
-                WHERE m.status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED') AND m.provider != 'mock'
+                WHERE m.status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED') 
+                  AND m.provider != 'mock'
+                  AND m.start_time >= DATE_SUB(NOW(), INTERVAL 150 MINUTE)
                 ORDER BY m.start_time DESC LIMIT 20
             ");
             $dbMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $lastSync = $this->pdo->query("SELECT created_at FROM sports_sync_logs WHERE status = 'success' AND operation = 'sync-live' ORDER BY id DESC LIMIT 1")->fetchColumn();
+            $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-live');
             $isStale = false;
             if (!$lastSync || (abs(time() - strtotime($lastSync)) > 900)) {
                 $isStale = true;
@@ -94,7 +115,7 @@ class SportsService
                     $data = $this->provider->getLiveScores();
                     $res = [
                         'matches' => $data ?? [],
-                        'updated_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => $lastSync ?: date('Y-m-d H:i:s'),
                         'is_stale' => false
                     ];
                     $this->cache->set($cacheKey, $res, 30);
@@ -104,9 +125,10 @@ class SportsService
                 }
             }
 
+            $latestMatchUpdate = !empty($dbMatches) ? max(array_map(fn($r) => $r['updated_at'] ?? $r['start_time'], $dbMatches)) : null;
             $result = [
                 'matches' => $matches,
-                'updated_at' => $lastSync ?: date('Y-m-d H:i:s'),
+                'updated_at' => $lastSync ?: ($latestMatchUpdate ?: null),
                 'is_stale' => $isStale
             ];
             $this->cache->set($cacheKey, $result, 30);
@@ -114,12 +136,14 @@ class SportsService
         } catch (\Throwable $e) {
             error_log("SportsService getLiveScores error: " . $e->getMessage());
 
+            $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-live');
+
             if (!$this->isProduction) {
                 try {
                     $data = $this->provider->getLiveScores();
                     $res = [
                         'matches' => $data ?? [],
-                        'updated_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => $lastSync ?: date('Y-m-d H:i:s'),
                         'is_stale' => false
                     ];
                     $this->cache->set($cacheKey, $res, 30);
@@ -131,7 +155,7 @@ class SportsService
 
             return [
                 'matches' => [],
-                'updated_at' => date('Y-m-d H:i:s'),
+                'updated_at' => $lastSync,
                 'is_stale' => true,
                 'notice' => 'Live scores temporarily unavailable.'
             ];
@@ -198,7 +222,11 @@ class SportsService
                     ];
                 }, $dbRows);
 
-                $res = ['results' => $results, 'updated_at' => date('Y-m-d H:i:s')];
+                $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-results');
+                $latestDbTime = max(array_map(fn($r) => $r['updated_at'] ?? $r['created_at'] ?? $r['start_time'], $dbRows));
+                $updatedAt = $lastSync ?: $latestDbTime;
+
+                $res = ['results' => $results, 'updated_at' => $updatedAt];
                 $this->cache->set($cacheKey, $res, 600);
                 return $res;
             }
@@ -206,19 +234,21 @@ class SportsService
             error_log("SportsService getResults DB error: " . $dbEx->getMessage());
         }
 
+        $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-results');
+
         if ($this->isProduction) {
-            return ['results' => [], 'updated_at' => date('Y-m-d H:i:s')];
+            return ['results' => [], 'updated_at' => $lastSync];
         }
 
         // Fallback in dev/testing mode
         try {
             $data = $this->provider->getResults($sport, $date, $limit);
-            $res = ['results' => $data ?? [], 'updated_at' => date('Y-m-d H:i:s')];
+            $res = ['results' => $data ?? [], 'updated_at' => $lastSync ?: date('Y-m-d H:i:s')];
             $this->cache->set($cacheKey, $res, 300);
             return $res;
         } catch (\Throwable $e) {
             error_log("SportsService getResults provider error: " . $e->getMessage());
-            return ['results' => [], 'updated_at' => date('Y-m-d H:i:s')];
+            return ['results' => [], 'updated_at' => $lastSync];
         }
     }
 
@@ -282,7 +312,11 @@ class SportsService
                     ];
                 }, $dbRows);
 
-                $res = ['fixtures' => $fixtures, 'updated_at' => date('Y-m-d H:i:s')];
+                $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-fixtures');
+                $latestDbTime = max(array_map(fn($r) => $r['updated_at'] ?? $r['created_at'] ?? $r['start_time'], $dbRows));
+                $updatedAt = $lastSync ?: $latestDbTime;
+
+                $res = ['fixtures' => $fixtures, 'updated_at' => $updatedAt];
                 $this->cache->set($cacheKey, $res, 600);
                 return $res;
             }
@@ -290,19 +324,21 @@ class SportsService
             error_log("SportsService getFixtures DB error: " . $dbEx->getMessage());
         }
 
+        $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-fixtures');
+
         if ($this->isProduction) {
-            return ['fixtures' => [], 'updated_at' => date('Y-m-d H:i:s')];
+            return ['fixtures' => [], 'updated_at' => $lastSync];
         }
 
         // Fallback in dev/testing mode
         try {
             $data = $this->provider->getFixtures($sport, $date, $limit);
-            $res = ['fixtures' => $data ?? [], 'updated_at' => date('Y-m-d H:i:s')];
+            $res = ['fixtures' => $data ?? [], 'updated_at' => $lastSync ?: date('Y-m-d H:i:s')];
             $this->cache->set($cacheKey, $res, 300);
             return $res;
         } catch (\Throwable $e) {
             error_log("SportsService getFixtures provider error: " . $e->getMessage());
-            return ['fixtures' => [], 'updated_at' => date('Y-m-d H:i:s')];
+            return ['fixtures' => [], 'updated_at' => $lastSync];
         }
     }
 
@@ -465,7 +501,8 @@ class SportsService
         }
 
         try {
-            $data = $this->provider->getStandings($competitionSlug);
+            $compProvider = $this->router->resolveProviderForCompetition($competitionSlug);
+            $data = $compProvider->getStandings($competitionSlug);
             $res = [
                 'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
                 'season' => date('Y') . '/' . (date('Y') + 1),
@@ -486,6 +523,18 @@ class SportsService
     public function getMatchDetail(string $matchId): ?array
     {
         try {
+            if (str_starts_with($matchId, 'af_') || str_starts_with($matchId, 'af_m_')) {
+                $afKey = env('API_FOOTBALL_API_KEY');
+                if (!empty($afKey)) {
+                    return (new ApiFootballSportsProvider())->getMatchDetail($matchId);
+                }
+            }
+            if (str_starts_with($matchId, 'fd_') || str_starts_with($matchId, 'fd_m_')) {
+                $fdKey = env('FOOTBALL_DATA_API_KEY');
+                if (!empty($fdKey)) {
+                    return (new FootballDataSportsProvider())->getMatchDetail($matchId);
+                }
+            }
             return $this->provider->getMatchDetail($matchId);
         } catch (\Throwable $e) {
             error_log("SportsService getMatchDetail error: " . $e->getMessage());

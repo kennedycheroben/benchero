@@ -5,12 +5,14 @@ namespace Benchero\Services;
 class CacheService
 {
     private string $cacheDir;
+    private string $appVersion;
 
     public function __construct(?string $cacheDir = null)
     {
         $this->cacheDir = $cacheDir ?? __DIR__ . '/../../storage/cache';
+        $this->appVersion = (string)env('APP_CACHE_VERSION', '1.0');
         if (!is_dir($this->cacheDir)) {
-            @mkdir($this->cacheDir, 0755, true);
+            @mkdir($this->cacheDir, 0775, true);
         }
     }
 
@@ -35,6 +37,12 @@ class CacheService
             return null;
         }
 
+        // Deployment versioning: invalidate if version mismatch
+        if (isset($data['version']) && $data['version'] !== $this->appVersion) {
+            @unlink($filePath);
+            return null;
+        }
+
         if (time() >= $data['expires_at']) {
             @unlink($filePath);
             return null;
@@ -51,6 +59,7 @@ class CacheService
         $filePath = $this->getFilePath($key);
         $data = [
             'key' => $key,
+            'version' => $this->appVersion,
             'expires_at' => time() + $ttl,
             'value' => $value
         ];
@@ -61,6 +70,8 @@ class CacheService
         if (@file_put_contents($tempPath, $serialized, LOCK_EX) === false) {
             return false;
         }
+
+        @chmod($tempPath, 0664);
 
         return @rename($tempPath, $filePath);
     }
@@ -153,7 +164,7 @@ class CacheService
      */
     private function getFilePath(string $key): string
     {
-        $safeName = md5($key) . '.cache';
+        $safeName = md5($this->appVersion . ':' . $key) . '.cache';
         return $this->cacheDir . '/' . $safeName;
     }
 }

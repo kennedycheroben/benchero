@@ -9,7 +9,7 @@ class ApiFootballSportsProvider implements SportsProviderInterface
     private string $apiKey;
     private string $baseUrl = 'https://v3.football.api-sports.io/';
 
-    private const COMPETITION_SLUG_MAP = [
+    public const COMPETITION_SLUG_MAP = [
         'fkf-premier-league' => 382,
         'kenya-premier-league' => 382,
         'kenya-super-league' => 691,
@@ -28,6 +28,25 @@ class ApiFootballSportsProvider implements SportsProviderInterface
         'primeira-liga' => 94,
         'copa-libertadores' => 13,
         'brasileirao' => 71
+    ];
+
+    public const LEAGUE_ID_MAP = [
+        39 => ['name' => 'English Premier League', 'slug' => 'premier-league', 'country' => 'England'],
+        40 => ['name' => 'Championship', 'slug' => 'championship', 'country' => 'England'],
+        78 => ['name' => 'Bundesliga', 'slug' => 'bundesliga', 'country' => 'Germany'],
+        135 => ['name' => 'Serie A', 'slug' => 'serie-a', 'country' => 'Italy'],
+        140 => ['name' => 'La Liga', 'slug' => 'la-liga', 'country' => 'Spain'],
+        61 => ['name' => 'Ligue 1', 'slug' => 'ligue-1', 'country' => 'France'],
+        88 => ['name' => 'Eredivisie', 'slug' => 'eredivisie', 'country' => 'Netherlands'],
+        94 => ['name' => 'Primeira Liga', 'slug' => 'primeira-liga', 'country' => 'Portugal'],
+        382 => ['name' => 'FKF Premier League', 'slug' => 'fkf-premier-league', 'country' => 'Kenya'],
+        691 => ['name' => 'Kenya Super League', 'slug' => 'kenya-super-league', 'country' => 'Kenya'],
+        12 => ['name' => 'CAF Champions League', 'slug' => 'caf-champions-league', 'country' => 'Africa'],
+        20 => ['name' => 'CAF Confederation Cup', 'slug' => 'caf-confederation-cup', 'country' => 'Africa'],
+        6 => ['name' => 'Africa Cup of Nations', 'slug' => 'afcon', 'country' => 'Africa'],
+        17 => ['name' => 'African Nations Championship', 'slug' => 'chan', 'country' => 'Africa'],
+        13 => ['name' => 'Copa Libertadores', 'slug' => 'copa-libertadores', 'country' => 'South America'],
+        71 => ['name' => 'Campeonato Brasileiro Série A', 'slug' => 'campeonato-brasileiro-s-rie-a', 'country' => 'Brazil'],
     ];
 
     public function __construct(?string $apiKey = null)
@@ -86,10 +105,13 @@ class ApiFootballSportsProvider implements SportsProviderInterface
             throw new \RuntimeException("API-Football returned malformed JSON response.", 502);
         }
 
-        // Validate API-Football error metadata
+        // Validate API-Football error metadata - bubble API errors (e.g. quota limits)
         if (!empty($data['errors'])) {
             $errMessage = is_array($data['errors']) ? implode(', ', array_values($data['errors'])) : (string)$data['errors'];
             error_log("API-Football returned API error metadata: " . $errMessage);
+            // Redact potential credential patterns for safety
+            $safeError = preg_replace('/([a-f0-9]{32}|[a-f0-9]{40})/i', '[REDACTED]', $errMessage);
+            throw new \RuntimeException("API-Football API error: {$safeError}", 400);
         }
 
         return $data;
@@ -97,14 +119,9 @@ class ApiFootballSportsProvider implements SportsProviderInterface
 
     public function getLiveScores(): array
     {
-        try {
-            $data = $this->makeRequest('fixtures', ['live' => 'all']);
-            $matches = $data['response'] ?? [];
-            return array_map([$this, 'normalizeMatch'], $matches);
-        } catch (\Throwable $e) {
-            error_log("ApiFootballSportsProvider getLiveScores error: " . $e->getMessage());
-            return [];
-        }
+        $data = $this->makeRequest('fixtures', ['live' => 'all']);
+        $matches = $data['response'] ?? [];
+        return array_map([$this, 'normalizeMatch'], $matches);
     }
 
     public function getResults(?string $sport = null, ?string $date = null, int $limit = 20): array
@@ -112,24 +129,20 @@ class ApiFootballSportsProvider implements SportsProviderInterface
         $dates = $date ? [$date] : [date('Y-m-d'), date('Y-m-d', strtotime('-1 day'))];
         $allMatches = [];
 
-        try {
-            foreach ($dates as $d) {
-                if (count($allMatches) >= $limit) {
-                    break;
-                }
-                $data = $this->makeRequest('fixtures', ['date' => $d, 'status' => 'FT-AET-PEN']);
-                $matches = $data['response'] ?? [];
-                $allMatches = array_merge($allMatches, $matches);
+        foreach ($dates as $d) {
+            if (count($allMatches) >= $limit) {
+                break;
             }
-            $normalized = array_map([$this, 'normalizeMatch'], $allMatches);
-            usort($normalized, function ($a, $b) {
-                return strcmp($b['start_time'] ?? '', $a['start_time'] ?? '');
-            });
-            return array_slice($normalized, 0, $limit);
-        } catch (\Throwable $e) {
-            error_log("ApiFootballSportsProvider getResults error: " . $e->getMessage());
-            return [];
+            $data = $this->makeRequest('fixtures', ['date' => $d, 'status' => 'FT-AET-PEN']);
+            $matches = $data['response'] ?? [];
+            $allMatches = array_merge($allMatches, $matches);
         }
+
+        $normalized = array_map([$this, 'normalizeMatch'], $allMatches);
+        usort($normalized, function ($a, $b) {
+            return strcmp($b['start_time'] ?? '', $a['start_time'] ?? '');
+        });
+        return array_slice($normalized, 0, $limit);
     }
 
     public function getFixtures(?string $sport = null, ?string $date = null, int $limit = 20): array
@@ -141,30 +154,47 @@ class ApiFootballSportsProvider implements SportsProviderInterface
         ];
         $allMatches = [];
 
-        try {
-            foreach ($dates as $d) {
-                if (count($allMatches) >= $limit) {
-                    break;
-                }
-                $data = $this->makeRequest('fixtures', ['date' => $d, 'status' => 'NS']);
-                $matches = $data['response'] ?? [];
-                $allMatches = array_merge($allMatches, $matches);
+        foreach ($dates as $d) {
+            if (count($allMatches) >= $limit) {
+                break;
             }
-            $normalized = array_map([$this, 'normalizeMatch'], $allMatches);
-            usort($normalized, function ($a, $b) {
-                return strcmp($a['start_time'] ?? '', $b['start_time'] ?? '');
-            });
-            return array_slice($normalized, 0, $limit);
-        } catch (\Throwable $e) {
-            error_log("ApiFootballSportsProvider getFixtures error: " . $e->getMessage());
-            return [];
+            $data = $this->makeRequest('fixtures', ['date' => $d, 'status' => 'NS']);
+            $matches = $data['response'] ?? [];
+            $allMatches = array_merge($allMatches, $matches);
         }
+
+        $normalized = array_map([$this, 'normalizeMatch'], $allMatches);
+        usort($normalized, function ($a, $b) {
+            return strcmp($a['start_time'] ?? '', $b['start_time'] ?? '');
+        });
+        return array_slice($normalized, 0, $limit);
+    }
+
+    /**
+     * Explicit targeted results fetch for specific league ID (e.g. FKF Premier League = 382, CAF CL = 12).
+     */
+    public function getLeagueResults(int $leagueId, int $limit = 10): array
+    {
+        $data = $this->makeRequest('fixtures', ['league' => $leagueId, 'last' => $limit]);
+        $matches = $data['response'] ?? [];
+        return array_map([$this, 'normalizeMatch'], $matches);
+    }
+
+    /**
+     * Explicit targeted fixtures fetch for specific league ID (e.g. FKF Premier League = 382, CAF CL = 12).
+     */
+    public function getLeagueFixtures(int $leagueId, int $limit = 10): array
+    {
+        $data = $this->makeRequest('fixtures', ['league' => $leagueId, 'next' => $limit]);
+        $matches = $data['response'] ?? [];
+        return array_map([$this, 'normalizeMatch'], $matches);
     }
 
     public function getCompetitions(?string $sport = null): array
     {
         $featuredSlugs = [
             'fkf-premier-league' => ['name' => 'FKF Premier League', 'country' => 'Kenya', 'id' => 382],
+            'kenya-super-league' => ['name' => 'Kenya Super League', 'country' => 'Kenya', 'id' => 691],
             'caf-champions-league' => ['name' => 'CAF Champions League', 'country' => 'Africa', 'id' => 12],
             'caf-confederation-cup' => ['name' => 'CAF Confederation Cup', 'country' => 'Africa', 'id' => 20],
             'premier-league' => ['name' => 'Premier League', 'country' => 'England', 'id' => 39],
@@ -202,15 +232,11 @@ class ApiFootballSportsProvider implements SportsProviderInterface
         $currentYear = (int)date('Y');
         $season = ((int)date('m') >= 7) ? $currentYear : ($currentYear - 1);
 
-        try {
-            $data = $this->makeRequest('standings', ['league' => $leagueId, 'season' => $season]);
-            if (empty($data['response']) && $season !== $currentYear) {
-                // Fallback attempt with current year if split-year season yielded empty response
-                $data = $this->makeRequest('standings', ['league' => $leagueId, 'season' => $currentYear]);
-            }
-        } catch (\Throwable $e) {
-            error_log("ApiFootballSportsProvider getStandings error for '{$competitionSlug}': " . $e->getMessage());
-            return [];
+        $data = $this->makeRequest('standings', ['league' => $leagueId, 'season' => $season]);
+        if (empty($data['response'])) {
+            // Fallback attempt with previous season or calendar year if split-year season yielded empty response
+            $fallbackSeason = ($season === $currentYear) ? ($currentYear - 1) : $currentYear;
+            $data = $this->makeRequest('standings', ['league' => $leagueId, 'season' => $fallbackSeason]);
         }
 
         $standingsGroup = $data['response'][0]['league']['standings'][0] ?? [];
@@ -239,14 +265,9 @@ class ApiFootballSportsProvider implements SportsProviderInterface
 
     public function getMatchDetail(string $matchId): ?array
     {
-        try {
-            $data = $this->makeRequest('fixtures', ['id' => $matchId]);
-            $matches = $data['response'] ?? [];
-            return isset($matches[0]) ? $this->normalizeMatch($matches[0]) : null;
-        } catch (\Throwable $e) {
-            error_log("ApiFootballSportsProvider getMatchDetail error: " . $e->getMessage());
-            return null;
-        }
+        $data = $this->makeRequest('fixtures', ['id' => $matchId]);
+        $matches = $data['response'] ?? [];
+        return isset($matches[0]) ? $this->normalizeMatch($matches[0]) : null;
     }
 
     public function normalizeMatch(array $m): array
@@ -270,7 +291,33 @@ class ApiFootballSportsProvider implements SportsProviderInterface
             default => date('H:i', strtotime($m['fixture']['date'] ?? 'now'))
         };
 
-        $compName = $m['league']['name'] ?? 'Football Competition';
+        // Authoritative league identity resolution using League ID & Country
+        $leagueId = isset($m['league']['id']) ? (int)$m['league']['id'] : null;
+        $rawCompName = $m['league']['name'] ?? 'Football Competition';
+        $country = $m['league']['country'] ?? null;
+
+        if ($leagueId !== null && isset(self::LEAGUE_ID_MAP[$leagueId])) {
+            $mapped = self::LEAGUE_ID_MAP[$leagueId];
+            $compName = $mapped['name'];
+            $compSlug = $mapped['slug'];
+            $compCountry = $mapped['country'] ?? $country;
+        } else {
+            // Collision prevention for unmapped competitions
+            $baseSlug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $rawCompName), '-'));
+            $compName = $rawCompName;
+            $compCountry = $country;
+
+            // Prevent generic or multi-national names from colliding with major featured leagues
+            $protectedSlugs = ['premier-league', 'la-liga', 'serie-a', 'bundesliga', 'ligue-1', 'championship'];
+            if (in_array($baseSlug, $protectedSlugs, true)) {
+                $countryPrefix = $country && !in_array(strtolower($country), ['world', 'international'])
+                    ? strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $country), '-'))
+                    : 'intl';
+                $compSlug = $countryPrefix . '-' . $baseSlug;
+            } else {
+                $compSlug = $baseSlug;
+            }
+        }
 
         return [
             'id' => 'af_m_' . ($m['fixture']['id'] ?? ''),
@@ -278,8 +325,8 @@ class ApiFootballSportsProvider implements SportsProviderInterface
             'provider' => 'api-football',
             'sport' => 'football',
             'competition' => $compName,
-            'competition_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $compName), '-')),
-            'competition_country' => $m['league']['country'] ?? null,
+            'competition_slug' => $compSlug,
+            'competition_country' => $compCountry,
             'home_team' => $m['teams']['home']['name'] ?? 'Home Team',
             'home_slug' => strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $m['teams']['home']['name'] ?? 'home'), '-')),
             'home_logo' => $m['teams']['home']['logo'] ?? null,

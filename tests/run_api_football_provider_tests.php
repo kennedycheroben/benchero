@@ -76,16 +76,15 @@ $sampleHTMatch['fixture']['status']['short'] = 'HT';
 $normHT = $provider->normalizeMatch($sampleHTMatch);
 assertTest($normHT['status'] === 'HT', "Short status HT mapped to HT", $passed, $failed);
 
-// Test 4: Missing API Key handles gracefully without crash
+// Test 4: Missing API Key bubbles RuntimeException (no false success)
 $emptyProvider = new ApiFootballSportsProvider('');
-$liveRes = $emptyProvider->getLiveScores();
-assertTest(is_array($liveRes) && empty($liveRes), "Missing API key returns empty array for live scores without crashing", $passed, $failed);
-
-$fixturesRes = $emptyProvider->getFixtures();
-assertTest(is_array($fixturesRes) && empty($fixturesRes), "Missing API key returns empty array for fixtures without crashing", $passed, $failed);
-
-$resultsRes = $emptyProvider->getResults();
-assertTest(is_array($resultsRes) && empty($resultsRes), "Missing API key returns empty array for results without crashing", $passed, $failed);
+$threwError = false;
+try {
+    $emptyProvider->getLiveScores();
+} catch (\RuntimeException $e) {
+    $threwError = ($e->getCode() === 401);
+}
+assertTest($threwError, "Missing API key bubbles RuntimeException (HTTP 401) without masking as empty success", $passed, $failed);
 
 // Test 5: Competitions list returns featured African/Kenyan & International competitions
 $comps = $provider->getCompetitions();
@@ -97,6 +96,27 @@ foreach ($comps as $c) {
     }
 }
 assertTest($hasFKF, "Featured competitions includes FKF Premier League", $passed, $failed);
+
+// Test 6: Competition collision prevention: unmapped "Premier League" from Bhutan / Jamaica does NOT collide with English Premier League
+$bhutanMatch = [
+    'fixture' => ['id' => 9991, 'date' => '2026-09-24T10:00:00+00:00', 'status' => ['short' => 'FT']],
+    'league' => ['id' => 8888, 'name' => 'Premier League', 'country' => 'Bhutan'],
+    'teams' => ['home' => ['name' => 'RTC'], 'away' => ['name' => 'Tsirang']],
+    'goals' => ['home' => 1, 'away' => 1]
+];
+$normBhutan = $provider->normalizeMatch($bhutanMatch);
+assertTest($normBhutan['competition_slug'] === 'bhutan-premier-league', "Bhutan Premier League slug is prefixed (bhutan-premier-league)", $passed, $failed);
+assertTest($normBhutan['competition_slug'] !== 'premier-league', "Bhutan Premier League does NOT collide with English premier-league", $passed, $failed);
+
+$jamaicaMatch = [
+    'fixture' => ['id' => 9992, 'date' => '2026-09-24T10:00:00+00:00', 'status' => ['short' => 'FT']],
+    'league' => ['id' => 8889, 'name' => 'Premier League', 'country' => 'Jamaica'],
+    'teams' => ['home' => ['name' => 'Arnett Gardens'], 'away' => ['name' => 'Dunbeholden']],
+    'goals' => ['home' => 2, 'away' => 0]
+];
+$normJamaica = $provider->normalizeMatch($jamaicaMatch);
+assertTest($normJamaica['competition_slug'] === 'jamaica-premier-league', "Jamaica Premier League slug is prefixed (jamaica-premier-league)", $passed, $failed);
+assertTest($normJamaica['competition_slug'] !== 'premier-league', "Jamaica Premier League does NOT collide with English premier-league", $passed, $failed);
 
 echo "==================================================\n";
 echo " SUMMARY: Passed {$passed} / Failed {$failed}\n";

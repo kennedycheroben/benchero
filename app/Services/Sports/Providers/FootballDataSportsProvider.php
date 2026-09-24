@@ -104,13 +104,9 @@ class FootballDataSportsProvider implements SportsProviderInterface
             $endpoint = "matches?status=FINISHED&dateFrom={$dateFrom}&dateTo={$dateTo}";
         }
 
-        try {
-            $data = $this->makeRequest($endpoint);
-            $matches = $data['matches'] ?? [];
-        } catch (\Throwable $e) {
-            error_log("FootballDataSportsProvider getResults error: " . $e->getMessage());
-            $matches = [];
-        }
+        // Genuine provider errors must bubble to SportsSyncService
+        $data = $this->makeRequest($endpoint);
+        $matches = $data['matches'] ?? [];
 
         $normalized = array_map([$this, 'normalizeMatch'], $matches);
 
@@ -133,13 +129,8 @@ class FootballDataSportsProvider implements SportsProviderInterface
     {
         if ($date) {
             $endpoint = "matches?status=SCHEDULED,TIMED&dateFrom={$date}&dateTo={$date}";
-            try {
-                $data = $this->makeRequest($endpoint);
-                $matches = $data['matches'] ?? [];
-            } catch (\Throwable $e) {
-                error_log("FootballDataSportsProvider getFixtures with date error: " . $e->getMessage());
-                $matches = [];
-            }
+            $data = $this->makeRequest($endpoint);
+            $matches = $data['matches'] ?? [];
             $normalized = array_map([$this, 'normalizeMatch'], $matches);
             $deduped = [];
             foreach ($normalized as $m) {
@@ -154,14 +145,9 @@ class FootballDataSportsProvider implements SportsProviderInterface
         $dateTo = date('Y-m-d', strtotime('+10 days'));
         $endpoint = "matches?status=SCHEDULED,TIMED&dateFrom={$dateFrom}&dateTo={$dateTo}";
 
-        $allMatches = [];
-        try {
-            $data = $this->makeRequest($endpoint);
-            $allMatches = $data['matches'] ?? [];
-        } catch (\Throwable $e) {
-            error_log("FootballDataSportsProvider getFixtures rolling window error: " . $e->getMessage());
-            $allMatches = [];
-        }
+        // Genuine API errors bubble up
+        $data = $this->makeRequest($endpoint);
+        $allMatches = $data['matches'] ?? [];
 
         // If the rolling window yielded 0 fixtures (e.g. between gameweeks or during international breaks),
         // fallback to querying featured tier-one competitions directly for their next scheduled fixtures.
@@ -224,10 +210,12 @@ class FootballDataSportsProvider implements SportsProviderInterface
         return $result;
     }
 
-    private const COMPETITION_CODE_MAP = [
+    public const COMPETITION_CODE_MAP = [
         'premier-league' => 'PL',
         'champions-league' => 'CL',
+        'uefa-champions-league' => 'CL',
         'la-liga' => 'PD',
+        'primera-division' => 'PD',
         'serie-a' => 'SA',
         'bundesliga' => 'BL1',
         'ligue-1' => 'FL1',
@@ -236,6 +224,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
         'primeira-liga' => 'PPL',
         'copa-libertadores' => 'CLI',
         'brasileirao' => 'BSA',
+        'campeonato-brasileiro-s-rie-a' => 'BSA',
         'european-championship' => 'EC',
         'world-cup' => 'WC'
     ];
@@ -249,12 +238,8 @@ class FootballDataSportsProvider implements SportsProviderInterface
 
         $code = self::COMPETITION_CODE_MAP[$competitionSlug];
 
-        try {
-            $data = $this->makeRequest("competitions/{$code}/standings");
-        } catch (\Throwable $e) {
-            error_log("FootballDataSportsProvider: Failed to fetch standings for '{$competitionSlug}' ({$code}): " . $e->getMessage());
-            return [];
-        }
+        // Bubble exceptions if API fails
+        $data = $this->makeRequest("competitions/{$code}/standings");
 
         $tables = $data['standings'][0]['table'] ?? [];
         $result = [];
@@ -279,6 +264,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
 
         return $result;
     }
+
 
     public function getMatchDetail(string $matchId): ?array
     {

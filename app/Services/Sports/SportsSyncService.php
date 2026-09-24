@@ -9,6 +9,7 @@ use Benchero\Services\Sports\Providers\MockSportsProvider;
 use Benchero\Services\Sports\Providers\NullSportsProvider;
 use Benchero\Services\Sports\Providers\RSSNewsProvider;
 use Benchero\Services\Sports\Providers\MockNewsProvider;
+use Benchero\Services\Sports\SportsProviderRouter;
 use Benchero\Core\Database\Database;
 use Benchero\Core\Ulid;
 use PDO;
@@ -18,12 +19,18 @@ class SportsSyncService
     private PDO $pdo;
     private SportsProviderInterface $provider;
     private NewsProviderInterface $newsProvider;
+    private SportsProviderRouter $router;
     private string $lockFile;
     private bool $hasExplicitProvider = false;
 
-    public function __construct(?PDO $pdo = null, ?SportsProviderInterface $provider = null, ?NewsProviderInterface $newsProvider = null)
-    {
+    public function __construct(
+        ?PDO $pdo = null,
+        ?SportsProviderInterface $provider = null,
+        ?NewsProviderInterface $newsProvider = null,
+        ?SportsProviderRouter $router = null
+    ) {
         $this->pdo = $pdo ?? Database::getConnection();
+        $this->router = $router ?? new SportsProviderRouter();
         $this->hasExplicitProvider = ($provider !== null);
         $this->provider = $provider ?? $this->resolveProvider();
         $this->newsProvider = $newsProvider ?? $this->resolveNewsProvider();
@@ -112,25 +119,7 @@ class SportsSyncService
             return [$this->getProviderName() => $this->provider];
         }
 
-        $providers = [];
-
-        // 1. API-Football (provides real-time global live scores and daily active fixtures/results)
-        $afKey = env('API_FOOTBALL_API_KEY');
-        if (!empty($afKey)) {
-            $providers['api-football'] = new \Benchero\Services\Sports\Providers\ApiFootballSportsProvider();
-        }
-
-        // 2. Football-Data.org (provides European tier-one leagues, upcoming matchdays & standings)
-        $fdKey = env('FOOTBALL_DATA_API_KEY');
-        if (!empty($fdKey)) {
-            $providers['football-data'] = new FootballDataSportsProvider();
-        }
-
-        if (empty($providers)) {
-            $providers[$this->getProviderName()] = $this->provider;
-        }
-
-        return $providers;
+        return $this->router->getActiveProviders();
     }
 
     public function acquireLock(): mixed
@@ -167,6 +156,10 @@ class SportsSyncService
         $totalProcessed = 0;
         $totalUpdated = 0;
         $errors = [];
+
+        // Unconditionally clean up matches stuck in LIVE older than 150 minutes
+        $this->cleanupStaleLiveMatches(150);
+
         $activeProviders = $this->getActiveProviders();
 
         foreach ($activeProviders as $providerName => $provider) {
@@ -207,9 +200,14 @@ class SportsSyncService
                         $match['away_logo'] ?? null
                     );
 
-                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
-                    $stmtCheck->execute([$mProv, $match['external_id'] ?? $match['id']]);
-                    $existingId = $stmtCheck->fetchColumn();
+                    $existingId = $this->findExistingMatch(
+                        $mProv,
+                        (string)($match['external_id'] ?? $match['id']),
+                        $homeId,
+                        $awayId,
+                        $match['start_time'] ?? date('Y-m-d H:i:s'),
+                        $compId
+                    );
 
                     if ($existingId) {
                         $stmtUpdate = $this->pdo->prepare("
@@ -318,6 +316,20 @@ class SportsSyncService
 
             try {
                 $matches = $provider->getFixtures();
+
+                // If provider is API-Football, also fetch targeted fixtures for critical African/Kenyan leagues
+                if ($provider instanceof \Benchero\Services\Sports\Providers\ApiFootballSportsProvider) {
+                    $targetedLeagues = [382, 12, 20]; // FKF Premier League, CAF Champions League, CAF Confederation Cup
+                    foreach ($targetedLeagues as $leagueId) {
+                        try {
+                            $leagueMatches = $provider->getLeagueFixtures($leagueId, 10);
+                            $matches = array_merge($matches, $leagueMatches);
+                        } catch (\Throwable $leagueEx) {
+                            error_log("API-Football getLeagueFixtures error for {$leagueId}: " . $leagueEx->getMessage());
+                        }
+                    }
+                }
+
                 $processed = count($matches);
 
                 foreach ($matches as $match) {
@@ -349,9 +361,14 @@ class SportsSyncService
                         $match['away_logo'] ?? null
                     );
 
-                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
-                    $stmtCheck->execute([$mProv, $match['external_id'] ?? $match['id']]);
-                    $existingId = $stmtCheck->fetchColumn();
+                    $existingId = $this->findExistingMatch(
+                        $mProv,
+                        (string)($match['external_id'] ?? $match['id']),
+                        $homeId,
+                        $awayId,
+                        $match['start_time'] ?? date('Y-m-d H:i:s'),
+                        $compId
+                    );
 
                     if ($existingId) {
                         $stmtUpdate = $this->pdo->prepare("
@@ -438,6 +455,20 @@ class SportsSyncService
 
             try {
                 $matches = $provider->getResults();
+
+                // If provider is API-Football, also fetch targeted results for critical African/Kenyan leagues
+                if ($provider instanceof \Benchero\Services\Sports\Providers\ApiFootballSportsProvider) {
+                    $targetedLeagues = [382, 12, 20]; // FKF Premier League, CAF Champions League, CAF Confederation Cup
+                    foreach ($targetedLeagues as $leagueId) {
+                        try {
+                            $leagueMatches = $provider->getLeagueResults($leagueId, 10);
+                            $matches = array_merge($matches, $leagueMatches);
+                        } catch (\Throwable $leagueEx) {
+                            error_log("API-Football getLeagueResults error for {$leagueId}: " . $leagueEx->getMessage());
+                        }
+                    }
+                }
+
                 $processed = count($matches);
 
                 foreach ($matches as $match) {
@@ -469,9 +500,14 @@ class SportsSyncService
                         $match['away_logo'] ?? null
                     );
 
-                    $stmtCheck = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ?");
-                    $stmtCheck->execute([$mProv, $match['external_id'] ?? $match['id']]);
-                    $existingId = $stmtCheck->fetchColumn();
+                    $existingId = $this->findExistingMatch(
+                        $mProv,
+                        (string)($match['external_id'] ?? $match['id']),
+                        $homeId,
+                        $awayId,
+                        $match['start_time'] ?? date('Y-m-d H:i:s'),
+                        $compId
+                    );
 
                     if ($existingId) {
                         $stmtUpdate = $this->pdo->prepare("
@@ -558,6 +594,11 @@ class SportsSyncService
                 foreach ($comps as $comp) {
                     $slug = $comp['slug'] ?? '';
                     if (empty($slug)) {
+                        continue;
+                    }
+
+                    // Enforce competition provider authority to prevent standings cross-overwrites in multi-provider mode
+                    if (!$this->hasExplicitProvider && !$this->router->isProviderAuthoritativeForCompetition($providerName, $slug)) {
                         continue;
                     }
 
@@ -781,13 +822,67 @@ class SportsSyncService
         return $newId;
     }
 
-    private function ensureTeam(string $name, string $slug, string $sportId, string $provider, ?string $externalId = null, ?string $logo = null): string
+    public function cleanupStaleLiveMatches(int $windowMinutes = 150): int
     {
-        $stmt = $this->pdo->prepare("SELECT id FROM sports_teams WHERE slug = ? AND sport_id = ?");
-        $stmt->execute([$slug, $sportId]);
+        try {
+            $stmt = $this->pdo->prepare("
+                UPDATE sports_matches
+                SET status = 'FINISHED', updated_at = NOW()
+                WHERE status IN ('LIVE', 'IN_PLAY', 'HT', 'PAUSED')
+                  AND start_time < DATE_SUB(NOW(), INTERVAL ? MINUTE)
+            ");
+            $stmt->execute([$windowMinutes]);
+            return $stmt->rowCount();
+        } catch (\Throwable $e) {
+            error_log("Failed to clean up stale live matches: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function findExistingMatch(
+        string $provider,
+        string $externalId,
+        string $homeTeamId,
+        string $awayTeamId,
+        string $startTime,
+        ?string $competitionId = null
+    ): ?string {
+        // 1. Exact provider + external_id lookup
+        $stmt = $this->pdo->prepare("SELECT id FROM sports_matches WHERE provider = ? AND external_id = ? LIMIT 1");
+        $stmt->execute([$provider, $externalId]);
         $id = $stmt->fetchColumn();
         if ($id) {
-            return $id;
+            return (string)$id;
+        }
+
+        // 2. Cross-provider match deduplication by (home_team_id, away_team_id, kickoff window +/- 120 mins)
+        $sql = "
+            SELECT id FROM sports_matches
+            WHERE home_team_id = ? AND away_team_id = ?
+              AND ABS(TIMESTAMPDIFF(MINUTE, start_time, ?)) <= 120
+        ";
+        $params = [$homeTeamId, $awayTeamId, $startTime];
+        if ($competitionId) {
+            $sql .= " ORDER BY (competition_id = ?) DESC, id ASC LIMIT 1";
+            $params[] = $competitionId;
+        } else {
+            $sql .= " LIMIT 1";
+        }
+
+        $stmtCross = $this->pdo->prepare($sql);
+        $stmtCross->execute($params);
+        $crossId = $stmtCross->fetchColumn();
+
+        return $crossId ? (string)$crossId : null;
+    }
+
+    private function ensureTeam(string $name, string $slug, string $sportId, string $provider, ?string $externalId = null, ?string $logo = null): string
+    {
+        $stmt = $this->pdo->prepare("SELECT id FROM sports_teams WHERE (slug = ? OR name = ?) AND sport_id = ? LIMIT 1");
+        $stmt->execute([$slug, $name, $sportId]);
+        $id = $stmt->fetchColumn();
+        if ($id) {
+            return (string)$id;
         }
 
         $newId = Ulid::generate();

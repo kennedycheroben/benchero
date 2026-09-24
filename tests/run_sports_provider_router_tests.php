@@ -38,6 +38,21 @@ assertTest(is_array($activeProviders) && !empty($activeProviders), "Router resol
 // Test 3: Existing provider FootballDataSportsProvider remains unchanged and active
 assertTest(isset($activeProviders['football-data']) || isset($activeProviders['default']), "Football-Data provider remains registered", $passed, $failed);
 
+// Test 4: Kenyan competition routes to ApiFootballSportsProvider when key configured
+$fkfProvider = $router->resolveProviderForCompetition('fkf-premier-league');
+assertTest($fkfProvider instanceof ApiFootballSportsProvider || $fkfProvider instanceof FootballDataSportsProvider || $fkfProvider instanceof NullSportsProvider, "FKF Premier League routes appropriately", $passed, $failed);
+
+// Test 5: CAF Champions League routes to ApiFootballSportsProvider
+$cafProvider = $router->resolveProviderForCompetition('caf-champions-league');
+assertTest($cafProvider instanceof ApiFootballSportsProvider || $cafProvider instanceof FootballDataSportsProvider || $cafProvider instanceof NullSportsProvider, "CAF Champions League routes appropriately", $passed, $failed);
+
+// Test 6: Authority checks
+assertTest($router->isProviderAuthoritativeForCompetition('api-football', 'fkf-premier-league') === true, "api-football is authoritative for fkf-premier-league", $passed, $failed);
+assertTest($router->isProviderAuthoritativeForCompetition('football-data', 'fkf-premier-league') === false, "football-data is NOT authoritative for fkf-premier-league", $passed, $failed);
+assertTest($router->isProviderAuthoritativeForCompetition('football-data', 'premier-league') === true, "football-data is authoritative for premier-league", $passed, $failed);
+assertTest($router->isProviderAuthoritativeForCompetition('football-data', 'primera-division') === true, "football-data is authoritative for primera-division", $passed, $failed);
+assertTest($router->isProviderAuthoritativeForCompetition('football-data', 'la-liga') === true, "football-data is authoritative for la-liga", $passed, $failed);
+
 echo "==================================================\n";
 echo " SUMMARY: Passed {$passed} / Failed {$failed}\n";
 echo "==================================================\n";

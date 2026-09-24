@@ -4,7 +4,11 @@ require_once __DIR__ . '/../app/bootstrap.php';
 
 use Benchero\Services\Sports\SportsSyncService;
 
-$action = $argv[1] ?? 'all';
+$options = getopt('', ['type:']);
+$action = $options['type'] ?? 'all';
+if (!isset($options['type']) && isset($argv[1]) && !str_starts_with($argv[1], '-')) {
+    $action = $argv[1];
+}
 
 $syncService = new SportsSyncService();
 

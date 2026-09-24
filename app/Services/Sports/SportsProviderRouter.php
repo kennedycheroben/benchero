@@ -13,7 +13,7 @@ class SportsProviderRouter
     private bool $isProduction;
     private array $providers = [];
 
-    private const KENYA_AFRICA_SLUGS = [
+    public const KENYA_AFRICA_SLUGS = [
         'fkf-premier-league',
         'kenya-premier-league',
         'kenya-super-league',
@@ -27,6 +27,29 @@ class SportsProviderRouter
     public function __construct()
     {
         $this->isProduction = (env('APP_ENV') === 'production');
+    }
+
+    /**
+     * Checks if a provider is the authoritative source for a given competition slug.
+     */
+    public function isProviderAuthoritativeForCompetition(string $providerName, string $competitionSlug): bool
+    {
+        if ($providerName === 'mock' || str_starts_with($providerName, 'test_')) {
+            return true;
+        }
+
+        $slug = strtolower($competitionSlug);
+        $isAfrican = in_array($slug, self::KENYA_AFRICA_SLUGS, true);
+
+        if ($isAfrican) {
+            return ($providerName === 'api-football');
+        }
+
+        if ($providerName === 'football-data') {
+            return isset(FootballDataSportsProvider::COMPETITION_CODE_MAP[$slug]);
+        }
+
+        return false;
     }
 
     public function resolveProviderForCompetition(?string $competitionSlug = null): SportsProviderInterface
