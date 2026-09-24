@@ -331,30 +331,89 @@
                 </div>
             </div>
 
-            <div class="col-lg-6">
+            <div class="col-12">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                    <h5 class="fw-bold mb-3">Recent Custom Domains</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Customer Custom Domains Management</h5>
+                        <span class="badge bg-primary px-3 py-2"><?= count($domains) ?> Connected</span>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table table-hover align-middle mb-0 small">
                             <thead class="table-light">
                                 <tr>
                                     <th>Organization</th>
-                                    <th>Domain</th>
-                                    <th>Status</th>
+                                    <th>Hostname</th>
+                                    <th>Ownership TXT</th>
+                                    <th>Routing</th>
+                                    <th>SSL / TLS</th>
+                                    <th>Created / Active</th>
+                                    <th>Last Verification Diagnostic</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($domains)): ?>
-                                    <tr><td colspan="3" class="text-center text-muted py-3">No custom domains connected yet</td></tr>
+                                    <tr><td colspan="7" class="text-center text-muted py-4">No custom domains connected yet</td></tr>
                                 <?php else: ?>
                                     <?php foreach ($domains as $dom): ?>
                                         <tr>
-                                            <td class="fw-bold small"><?= htmlspecialchars($dom['org_name'] ?? 'N/A') ?></td>
-                                            <td><code><?= htmlspecialchars($dom['domain']) ?></code></td>
                                             <td>
-                                                <span class="badge bg-<?= $dom['status'] === 'active' ? 'success' : 'warning' ?>">
-                                                    <?= htmlspecialchars(strtoupper($dom['status'])) ?>
-                                                </span>
+                                                <div class="fw-bold"><?= htmlspecialchars($dom['org_name'] ?? 'N/A') ?></div>
+                                                <small class="text-muted">Slug: <code><?= htmlspecialchars($dom['org_slug'] ?? '') ?></code></small>
+                                            </td>
+                                            <td>
+                                                <a href="<?= ($dom['ssl_status'] === 'active' ? 'https://' : 'http://') . htmlspecialchars($dom['domain']) ?>" target="_blank" class="fw-semibold text-primary text-decoration-none">
+                                                    <?= htmlspecialchars($dom['domain']) ?> <i class="bi bi-box-arrow-up-right small"></i>
+                                                </a>
+                                                <?php if ($dom['domain'] !== $dom['normalized_domain']): ?>
+                                                    <small class="text-muted d-block font-monospace">Norm: <?= htmlspecialchars($dom['normalized_domain']) ?></small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($dom['verification_status'] === 'verified'): ?>
+                                                    <span class="badge bg-success"><i class="bi bi-check2"></i> VERIFIED</span>
+                                                <?php elseif ($dom['verification_status'] === 'failed'): ?>
+                                                    <span class="badge bg-danger"><i class="bi bi-x"></i> FAILED</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> PENDING</span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($dom['verified_at'])): ?>
+                                                    <small class="text-muted d-block" style="font-size:0.75rem;"><?= date('M j, Y', strtotime($dom['verified_at'])) ?></small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($dom['activation_status'] === 'active'): ?>
+                                                    <span class="badge bg-success"><i class="bi bi-power"></i> ACTIVE</span>
+                                                <?php elseif ($dom['activation_status'] === 'disabled'): ?>
+                                                    <span class="badge bg-secondary">DISABLED</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-warning text-dark">PENDING</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php if ($dom['ssl_status'] === 'active'): ?>
+                                                    <span class="badge bg-success"><i class="bi bi-shield-check"></i> ACTIVE</span>
+                                                <?php elseif ($dom['ssl_status'] === 'pending'): ?>
+                                                    <span class="badge bg-warning text-dark"><i class="bi bi-shield-exclamation"></i> PENDING</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary">NOT READY</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div><?= date('M j, Y', strtotime($dom['created_at'])) ?></div>
+                                                <?php if (!empty($dom['activated_at'])): ?>
+                                                    <small class="text-success" style="font-size:0.75rem;">Active: <?= date('M j, Y', strtotime($dom['activated_at'])) ?></small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="max-width:280px;">
+                                                <?php if (!empty($dom['last_verification_error'])): ?>
+                                                    <span class="text-danger small d-inline-block text-truncate" style="max-width:260px;" title="<?= htmlspecialchars($dom['last_verification_error']) ?>">
+                                                        <i class="bi bi-exclamation-circle me-1"></i><?= htmlspecialchars($dom['last_verification_error']) ?>
+                                                    </span>
+                                                <?php elseif ($dom['verification_status'] === 'verified'): ?>
+                                                    <span class="text-success small"><i class="bi bi-check-circle me-1"></i>TXT record verified</span>
+                                                <?php else: ?>
+                                                    <span class="text-muted small">No verification attempted yet</span>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

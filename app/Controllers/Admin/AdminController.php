@@ -75,7 +75,7 @@ class AdminController extends Controller
         $plans = $db->query("SELECT * FROM plans WHERE deleted_at IS NULL ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
         $recentOrgs = $db->query("SELECT id, name, slug, country, created_at FROM organizations ORDER BY created_at DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
         $recentPayments = $db->query("SELECT p.*, o.name as org_name FROM payments p LEFT JOIN organizations o ON p.organization_id = o.id ORDER BY p.created_at DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
-        $domains = $db->query("SELECT cd.*, o.name as org_name FROM custom_domains cd LEFT JOIN organizations o ON cd.organization_id = o.id ORDER BY cd.created_at DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+        $domains = $db->query("SELECT cd.*, o.name as org_name, o.slug as org_slug FROM custom_domains cd LEFT JOIN organizations o ON cd.organization_id = o.id ORDER BY cd.created_at DESC LIMIT 25")->fetchAll(PDO::FETCH_ASSOC);
 
         $recentMessages = $db->query("
             SELECT cm.*, o.name as org_name

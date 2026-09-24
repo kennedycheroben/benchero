@@ -70,9 +70,18 @@ if (!function_exists('base_path_url')) {
      */
     function base_path_url(): string
     {
+        // Custom domains never have a base path prefix
+        if (class_exists(\Benchero\Core\CustomDomainContext::class) && \Benchero\Core\CustomDomainContext::isActive()) {
+            return '';
+        }
+
         $envBase = env('BASE_PATH', null);
         if ($envBase !== null) {
             return rtrim($envBase, '/');
+        }
+
+        if (php_sapi_name() === 'cli') {
+            return '';
         }
 
         $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
@@ -106,6 +115,20 @@ if (!function_exists('url')) {
     {
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
+        }
+
+        // When serving on a verified active custom domain, strip /club/{currentOrgSlug}
+        if (\Benchero\Core\CustomDomainContext::isActive()) {
+            $activeOrg = \Benchero\Core\CustomDomainContext::getOrg();
+            $slug = $activeOrg['slug'] ?? '';
+            if ($slug !== '') {
+                $prefix = '/club/' . $slug;
+                if ($path === $prefix) {
+                    $path = '/';
+                } elseif (str_starts_with($path, $prefix . '/')) {
+                    $path = substr($path, strlen($prefix));
+                }
+            }
         }
 
         $base = base_path_url();
@@ -183,4 +206,38 @@ if (!function_exists('is_test_account')) {
         return false;
     }
 }
+
+if (!function_exists('is_custom_domain_request')) {
+    function is_custom_domain_request(): bool
+    {
+        return \Benchero\Core\CustomDomainContext::isActive();
+    }
+}
+
+if (!function_exists('club_url')) {
+    /**
+     * Generate URL for public club pages.
+     * When accessed via custom domain: generates root-relative path (e.g. /about, /teams).
+     * When accessed via primary domain: generates /club/{slug}/{subpath}.
+     */
+    function club_url(string $subpath = '', ?string $orgSlug = null): string
+    {
+        $cleanSubpath = ltrim($subpath, '/');
+
+        // If currently serving through a verified active custom domain
+        if (\Benchero\Core\CustomDomainContext::isActive()) {
+            return url('/' . $cleanSubpath);
+        }
+
+        // On primary Benchero domain
+        if ($orgSlug === null || $orgSlug === '') {
+            $currentOrg = \Benchero\Core\CustomDomainContext::getOrg();
+            $orgSlug = $currentOrg['slug'] ?? '';
+        }
+
+        $clubPath = '/club/' . $orgSlug . ($cleanSubpath !== '' ? '/' . $cleanSubpath : '');
+        return url($clubPath);
+    }
+}
+
 

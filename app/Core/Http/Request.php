@@ -48,7 +48,31 @@ class Request
         return strtoupper($method);
     }
 
-    public function path(): string
+    private ?string $rewrittenPath = null;
+    private bool $isCustomDomain = false;
+
+    public function host(): string
+    {
+        $host = $this->server['HTTP_X_FORWARDED_HOST'] ?? $this->server['HTTP_HOST'] ?? $this->server['SERVER_NAME'] ?? '';
+        return strtolower(trim(explode(':', $host)[0]));
+    }
+
+    public function isCustomDomain(): bool
+    {
+        return $this->isCustomDomain;
+    }
+
+    public function setIsCustomDomain(bool $isCustom): void
+    {
+        $this->isCustomDomain = $isCustom;
+    }
+
+    public function setPath(string $path): void
+    {
+        $this->rewrittenPath = '/' . ltrim($path, '/');
+    }
+
+    public function originalPath(): string
     {
         $uri = $this->server['REQUEST_URI'] ?? '/';
         
@@ -60,16 +84,13 @@ class Request
         
         // Remove base path if applicable (e.g. /benchero or /benchero/public)
         $scriptName = $this->server['SCRIPT_NAME'] ?? '';
-        $basePath = dirname($scriptName); // e.g. /benchero/public
+        $basePath = dirname($scriptName);
         
         if ($basePath !== '/' && $basePath !== '\\') {
-            // Check if URI starts with /benchero/public
             if (strpos($uri, $basePath) === 0) {
                 $uri = substr($uri, strlen($basePath));
             } else {
-                // If the URI is just /benchero/login (redirected silently to public/)
-                // we should strip /benchero
-                $parentBase = dirname($basePath); // e.g. /benchero
+                $parentBase = dirname($basePath);
                 if ($parentBase !== '/' && $parentBase !== '\\' && strpos($uri, $parentBase) === 0) {
                     $uri = substr($uri, strlen($parentBase));
                 }
@@ -77,6 +98,15 @@ class Request
         }
 
         return '/' . ltrim($uri, '/');
+    }
+
+    public function path(): string
+    {
+        if ($this->rewrittenPath !== null) {
+            return $this->rewrittenPath;
+        }
+
+        return $this->originalPath();
     }
 
     public function query(?string $key = null, mixed $default = null): mixed

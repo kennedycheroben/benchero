@@ -32,6 +32,21 @@ class Response
         return $this->statusCode;
     }
 
+    public function statusCode(): int
+    {
+        return $this->statusCode;
+    }
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    public function headers(): array
+    {
+        return $this->headers;
+    }
+
     public function setContent(string $content): self
     {
         $this->content = $content;
@@ -39,6 +54,11 @@ class Response
     }
 
     public function getContent(): string
+    {
+        return $this->content;
+    }
+
+    public function content(): string
     {
         return $this->content;
     }

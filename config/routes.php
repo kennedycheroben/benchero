@@ -190,6 +190,9 @@ $router->addRoute(['GET', 'POST'], '/billing/paypal/cancel', ['Benchero\Controll
 $router->addRoute('GET', '/o/{slug}/domain', ['Benchero\Controllers\Tenant\DomainController', 'index']);
 $router->addRoute('POST', '/o/{slug}/domain', ['Benchero\Controllers\Tenant\DomainController', 'save']);
 $router->addRoute('POST', '/o/{slug}/domain/verify', ['Benchero\Controllers\Tenant\DomainController', 'verify']);
+$router->addRoute('POST', '/o/{slug}/domain/activate', ['Benchero\Controllers\Tenant\DomainController', 'activate']);
+$router->addRoute('POST', '/o/{slug}/domain/ssl', ['Benchero\Controllers\Tenant\DomainController', 'checkSsl']);
+$router->addRoute('POST', '/o/{slug}/domain/regenerate', ['Benchero\Controllers\Tenant\DomainController', 'regenerate']);
 $router->addRoute('POST', '/o/{slug}/domain/delete', ['Benchero\Controllers\Tenant\DomainController', 'delete']);
 
 // Tenant Digital Club Card & QR Codes

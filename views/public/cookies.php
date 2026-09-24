@@ -6,7 +6,7 @@
             <div>
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-2">Cookies & Security</span>
                 <h1 class="display-5 fw-extrabold mb-1">Cookie Policy</h1>
-                <p class="text-muted mb-0">Last Updated: September 17, 2026</p>
+                <p class="text-muted mb-0">Last Updated: September 23, 2026</p>
             </div>
             <!-- Legal Documents Sub-Navigation -->
             <div class="nav nav-pills bg-light p-1 rounded-pill border d-inline-flex self-md-center">
@@ -79,7 +79,7 @@
             </div>
 
             <div class="mt-4 pt-3 border-top text-center text-muted small">
-                <em>Disclaimer: This Cookie Policy describes the technical cookies utilized by Benchero. It is provided for operational clarity and is not a substitute for formal legal advice.</em>
+                <em>Disclaimer: This Cookie Policy describes the technical cookies utilized by Benchero. It is provided for operational clarity and does not constitute formal legal counsel. Organizations should consult their own legal advisors regarding specific local compliance requirements in their jurisdictions.</em>
             </div>
         </div>
     </div>

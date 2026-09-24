@@ -49,20 +49,20 @@
                     <div class="row g-2">
                         <div class="col-6">
                             <ul class="list-unstyled mb-0 d-grid gap-2 small">
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Home</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/about" class="text-white-50 text-decoration-none hover-white">About Us</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/teams" class="text-white-50 text-decoration-none hover-white">Teams</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/players" class="text-white-50 text-decoration-none hover-white">Players</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/staff" class="text-white-50 text-decoration-none hover-white">Staff</a></li>
+                                <li><a href="<?= club_url('', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Home</a></li>
+                                <li><a href="<?= club_url('about', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">About Us</a></li>
+                                <li><a href="<?= club_url('teams', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Teams</a></li>
+                                <li><a href="<?= club_url('players', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Players</a></li>
+                                <li><a href="<?= club_url('staff', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Staff</a></li>
                             </ul>
                         </div>
                         <div class="col-6">
                             <ul class="list-unstyled mb-0 d-grid gap-2 small">
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/fixtures" class="text-white-50 text-decoration-none hover-white">Fixtures</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/results" class="text-white-50 text-decoration-none hover-white">Results</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/standings" class="text-white-50 text-decoration-none hover-white">Standings</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/news" class="text-white-50 text-decoration-none hover-white">News</a></li>
-                                <li><a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/gallery" class="text-white-50 text-decoration-none hover-white">Gallery</a></li>
+                                <li><a href="<?= club_url('fixtures', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Fixtures</a></li>
+                                <li><a href="<?= club_url('results', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Results</a></li>
+                                <li><a href="<?= club_url('standings', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Standings</a></li>
+                                <li><a href="<?= club_url('news', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">News</a></li>
+                                <li><a href="<?= club_url('gallery', $org['slug']) ?>" class="text-white-50 text-decoration-none hover-white">Gallery</a></li>
                             </ul>
                         </div>
                     </div>
@@ -82,7 +82,7 @@
                             <li><i class="bi bi-geo-alt me-2 text-white"></i><?= htmlspecialchars($org['address']) ?></li>
                         <?php endif; ?>
                     </ul>
-                    <a href="<?= url("/club/") ?><?= htmlspecialchars($org['slug']) ?>/contact" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                    <a href="<?= club_url('contact', $org['slug']) ?>" class="btn btn-outline-light btn-sm rounded-pill px-3">
                         <i class="bi bi-chat-dots me-1"></i> Send Direct Message
                     </a>
                 </div>

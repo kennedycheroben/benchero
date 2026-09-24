@@ -6,7 +6,7 @@
             <div>
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-2">Legal Agreement</span>
                 <h1 class="display-5 fw-extrabold mb-1">Terms of Service</h1>
-                <p class="text-muted mb-0">Last Updated: September 17, 2026</p>
+                <p class="text-muted mb-0">Last Updated: September 23, 2026</p>
             </div>
             <!-- Legal Documents Sub-Navigation -->
             <div class="nav nav-pills bg-light p-1 rounded-pill border d-inline-flex self-md-center">
@@ -24,41 +24,41 @@
             
             <h4 class="fw-bold text-dark mb-3">1. Acceptance of Terms</h4>
             <p>By registering for an account, accessing, or using the Benchero multi-tenant sports management software platform available at <code>https://benchero.co.ke</code> ("Platform"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you must immediately cease accessing or using the Platform.</p>
-            <p>If you register for or use Benchero on behalf of a sports club, academy, school, league, association, or other entity ("Organization"), you represent and warrant that you have full authority to bind that Organization to these Terms. In such cases, references to "you" or "your" shall refer jointly to the individual user and the Organization.</p>
+            <p>If you register for or use Benchero on behalf of a sports club, academy, school, league, association, or other sports organization ("Organization"), you represent and warrant that you have full authority to bind that Organization to these Terms. In such cases, references to "you" or "your" shall refer jointly to the individual user and the Organization.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">2. Definitions</h4>
             <p>For the purposes of these Terms, the following definitions apply:</p>
             <ul>
-                <li><strong>Benchero ("we", "our", "us"):</strong> The multi-sport club management software platform operating at <code>https://benchero.co.ke</code>.</li>
-                <li><strong>Platform:</strong> The web applications, administration dashboards, public club site generators, APIs, and associated infrastructure provided by Benchero.</li>
-                <li><strong>Organization ("Tenant"):</strong> A sports club, academy, school, league, or team registered on the Platform.</li>
+                <li><strong>Benchero ("we", "our", "us"):</strong> The multi-sport club management software platform operating from Kenya at <code>https://benchero.co.ke</code>.</li>
+                <li><strong>Platform:</strong> The web applications, administration dashboards, public club site generators, APIs, and associated software infrastructure provided by Benchero.</li>
+                <li><strong>Organization ("Tenant"):</strong> A sports club, academy, school, league, or sports body registered on the Platform.</li>
                 <li><strong>Account:</strong> A registered user account created to access or manage an Organization.</li>
                 <li><strong>Administrator:</strong> An authorized user granted administrative access to manage an Organization's profile, squads, content, and subscriptions.</li>
-                <li><strong>User:</strong> Any administrator, coach, staff member, athlete, or visitor accessing the Platform.</li>
+                <li><strong>User:</strong> Any administrator, coach, staff member, athlete, parent, or visitor accessing the Platform.</li>
                 <li><strong>Player:</strong> An athlete or squad member listed in an Organization's team rosters or public pages.</li>
-                <li><strong>Public Club Website:</strong> The web pages automatically published by Benchero for an Organization (e.g. <code>https://benchero.co.ke/club/{slug}</code> or connected custom domains).</li>
-                <li><strong>Subscription:</strong> A commercial access plan (Free Trial, Standard Monthly, Standard Yearly, or Benchero Pro) granting specific Platform capabilities.</li>
+                <li><strong>Public Club Website:</strong> The web pages published by Benchero for an Organization (e.g. <code>https://benchero.co.ke/club/{slug}</code> or connected custom domains).</li>
+                <li><strong>Subscription:</strong> A commercial access plan (Free Trial, Standard Monthly, Standard Yearly, Benchero Pro Monthly, or Benchero Pro Yearly) granting specific Platform capabilities.</li>
                 <li><strong>Content & Media:</strong> Information, text, logos, photographs, graphics, match scores, video clips, and documents uploaded to or displayed on the Platform.</li>
-                <li><strong>Payment:</strong> A financial transaction executed via supported payment providers (e.g., M-Pesa STK push) to initiate or extend a Subscription.</li>
+                <li><strong>Payment:</strong> A financial transaction executed via supported payment gateways (such as M-Pesa STK push for KES billing, or PayPal checkout for USD billing) to initiate or extend a Subscription.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">3. About Benchero</h4>
-            <p>Benchero is a multi-sport club management and digital presence software platform designed for sports organizations across Kenya and Africa. Depending on enabled features and active Subscription tiers, Organizations may utilize Benchero to manage and publish:</p>
+            <p>Benchero is a multi-sport club management and digital presence software platform designed for sports organizations, clubs, academies, leagues, schools, and other sports organizations internationally. Operating from Kenya, Benchero provides cloud-based software tools accessible to sports bodies globally. Depending on enabled features and active Subscription tiers, Organizations may utilize Benchero to manage and publish:</p>
             <ul>
                 <li>Multi-sport categories, teams, and age-group squads;</li>
                 <li>Player rosters, positions, profiles, and staff member roles;</li>
                 <li>Seasons, match fixtures, live scores, results, and league standings;</li>
                 <li>Club announcements, news articles, history timelines, and photo galleries;</li>
                 <li>Official partners and sponsor logo displays;</li>
-                <li>Public contact messaging channels for incoming fan/parent inquiries;</li>
+                <li>Public contact messaging channels for incoming fan and member inquiries;</li>
                 <li>Digital Club Cards and quick-response (QR) verification codes;</li>
                 <li>Custom domain routing, media library assets, and structured data exports.</li>
             </ul>
-            <p>Benchero provides the technical software infrastructure to enable these workflows but does not manage the day-to-day operations or field activities of individual Organizations.</p>
+            <p>Benchero provides the technical software infrastructure to enable these workflows but does not manage the day-to-day operations or physical activities of individual Organizations.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -74,12 +74,12 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">5. Organization and Club Responsibilities</h4>
-            <p>Organizations retain complete ownership and responsibility for the information and media they choose to upload, store, or publish through Benchero. Each Organization is explicitly responsible for:</p>
+            <p>Organizations retain complete ownership and responsibility for the information and media they choose to upload, store, or publish through Benchero. Each Organization is responsible for:</p>
             <ul>
                 <li>Ensuring the accuracy and truthfulness of player details, staff information, match fixtures, and competition results;</li>
-                <li>Lawfully collecting and managing personal information regarding its players, coaches, and staff;</li>
-                <li>Obtaining all necessary permissions, photo consents, and legal authorizations before uploading media or publishing player profiles;</li>
-                <li>Appropriately safeguarding children's and minors' privacy in compliance with applicable laws;</li>
+                <li>Determining and complying with the privacy, child-protection, data protection, and other legal requirements applicable to their activities, including laws governing the collection, processing, storage, disclosure, and publication of personal information in the jurisdictions in which they operate or serve individuals;</li>
+                <li>Obtaining all necessary permissions, photo/media consents, and legal authorizations before uploading media or publishing player profiles;</li>
+                <li>Appropriately safeguarding children's and minors' privacy in compliance with applicable youth protection and privacy laws;</li>
                 <li>Ensuring uploaded photographs, videos, logos, and graphics do not violate copyright, trademark, or third-party privacy rights;</li>
                 <li>Promptly reviewing and responding to messages sent by public visitors through the Organization's public contact form.</li>
             </ul>
@@ -107,9 +107,9 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">8. Player and Minor Information</h4>
-            <p>Benchero is frequently used by sports academies, schools, and youth clubs managing young athletes under 18 years of age ("Minors").</p>
-            <p>Organizations are solely responsible for ensuring an appropriate legal basis under the <strong>Kenya Data Protection Act (2019)</strong> and obtaining explicit consent from parents or legal guardians before adding Minor players to team rosters, uploading Minor player photographs, or publishing Minor performance statistics.</p>
-            <p>Organizations must prioritize the safety and privacy of children. Benchero does not directly solicit or collect personal information from children without Organization administration.</p>
+            <p>Benchero is frequently used by sports academies, schools, and youth organizations managing young athletes under the age of majority in their respective jurisdictions ("Minors").</p>
+            <p>Organizations are responsible for determining and complying with applicable child-protection, privacy, parental consent, and data protection requirements in their jurisdiction. Organizations must ensure an appropriate lawful basis and obtain any required verifiable parental or legal guardian consents, permissions, or authorizations before adding Minor players to team rosters, uploading Minor player photographs or videos, or publishing Minor performance statistics.</p>
+            <p>Organizations must prioritize the safety and privacy of children. Benchero does not directly solicit or collect personal information from children without Organization administration, and the Organization remains the legal custodian of youth data it collects and manages.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -126,9 +126,9 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">11. Media Uploads & Storage Rules</h4>
-            <p>Uploaded media assets are stored in tenant-isolated directories with strict MIME validation, image dimension verification, and execution protection scripts.</p>
+            <p>Uploaded media assets are stored in tenant-isolated directories with MIME validation, image dimension verification, and execution protection scripts.</p>
             <ul>
-                <li>Media upload storage limits are subject to your subscription plan quota (Free: 50 MB image storage; Pro: 5 GB media library storage + 2 GB video storage).</li>
+                <li>Media upload storage limits are subject to your subscription plan quota (e.g. Free Trial: 100 MB total storage; Standard Monthly: 500 MB storage; Standard Yearly: 1,000 MB storage; Benchero Pro: 5 GB media library storage with dedicated 2 GB video storage for eligible video uploads).</li>
                 <li>Content containing illegal material, hate speech, explicit content, or copyrighted assets without license is strictly prohibited and subject to immediate removal and account termination.</li>
             </ul>
 
@@ -141,24 +141,27 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">13. Subscription Plans</h4>
-            <p>Benchero provides structured Subscription plans to accommodate grassroots clubs, academies, and professional organizations:</p>
+            <p>Benchero provides structured Subscription plans to accommodate grassroots clubs, academies, and professional organizations across both supported billing currencies (KES and USD):</p>
             <ul>
-                <li><strong>Free Trial:</strong> A 14-day promotional trial granting temporary access to test platform capabilities for new Organizations.</li>
-                <li><strong>Standard Monthly Plan (KSh 1,000/month):</strong> Includes core club management, sports, teams, players, staff, seasons, fixtures, results, standings, news, gallery, sponsors, and public website.</li>
-                <li><strong>Standard Yearly Plan (KSh 10,000/year):</strong> Standard plan features with annual billing savings.</li>
-                <li><strong>Benchero Pro Plan (KSh 25,000/year):</strong> Annual premium plan including custom domain connection, video uploads, expanded media storage quota, Digital Club Card, QR codes, structured data export, custom branding, and removal of Benchero branding.</li>
+                <li><strong>Free Trial:</strong> A 14-day promotional trial (KSh 0 / $0) granting temporary access to test core platform capabilities for new Organizations (up to 25 players, 2 teams).</li>
+                <li><strong>Standard Monthly Plan (KSh 1,000/month or $8/month):</strong> Includes essential club management, multi-sport categories, teams (up to 10), players (up to 100), staff roles, seasons, fixtures, results, standings, news, gallery, sponsors, and public club website.</li>
+                <li><strong>Standard Yearly Plan (KSh 10,000/year or $80/year):</strong> Standard plan features with annual billing savings (Save KSh 2,000/year or $16/year; includes expanded capacity up to 25 teams and 500 players).</li>
+                <li><strong>Benchero Pro Monthly Plan (KSh 2,500/month or $20/month):</strong> Complete digital presence on flexible monthly terms, including custom domain connection, video uploads, expanded media storage quota (5 GB media + 2 GB video), unlimited teams and players, Digital Club Card, QR verification codes, structured CSV/JSON data export, custom branding, and removal of Benchero branding.</li>
+                <li><strong>Benchero Pro Yearly Plan (KSh 25,000/year or $200/year):</strong> Complete annual premium plan with maximum annual savings. Subscribers save KSh 5,000/year (or $40/year) compared to 12 months on the Pro Monthly plan (KSh 2,500 × 12 = KSh 30,000; KSh 30,000 − KSh 25,000 = KSh 5,000 savings; or $20 × 12 = $240; $240 − $200 = $40 savings).</li>
             </ul>
             <p>Pricing, plan features, and storage quotas are subject to prospective adjustment. Material pricing revisions will be communicated with reasonable advance notice.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">14. Billing and Payments</h4>
-            <p>Commercial Subscriptions require payment in Kenya Shillings (KSh) via supported payment providers.</p>
+            <p>Benchero supports multi-currency billing according to implemented payment gateways:</p>
             <ul>
-                <li>Benchero <strong>never</strong> requests, collects, or stores a customer's M-Pesa PIN or private financial credentials.</li>
-                <li>Payments are validated via secure callback notifications and transaction verification endpoints.</li>
-                <li>Subscription activation or extension occurs automatically following successful payment confirmation.</li>
-                <li>Unconfirmed, failed, or canceled STK push requests do not activate paid plan entitlements.</li>
+                <li><strong>Kenyan Shillings (KES) Billing:</strong> Supported via M-Pesa STK push (Daraja / I&M Bank).</li>
+                <li><strong>US Dollars (USD) Billing:</strong> Supported via PayPal checkout (supporting PayPal accounts and major credit and debit cards).</li>
+                <li>Benchero does not request, collect, or store customer payment PINs, CVV codes, or full banking card credentials on its servers. All payments are processed through the respective third-party payment gateway.</li>
+                <li>Payment transactions are verified through the respective provider's notification and callback endpoints. Subscription activation or extension occurs automatically following successful payment confirmation by the payment provider.</li>
+                <li>Unconfirmed, failed, or canceled payment requests do not activate paid plan entitlements.</li>
+                <li>Subscriptions are pre-paid for the selected billing interval (monthly, annual, or promotional trial period). Except where otherwise required by applicable mandatory consumer laws, subscription fees are non-refundable once the service period has commenced.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
@@ -180,7 +183,7 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">17. Custom Domains</h4>
-            <p>Benchero Pro subscribers may connect a custom domain name (e.g., <code>www.myclub.co.ke</code>) to point to their Benchero public club website.</p>
+            <p>Benchero Pro subscribers may connect a custom domain name (e.g., <code>www.myclub.com</code>) to point to their Benchero public club website.</p>
             <ul>
                 <li>The Customer is solely responsible for purchasing, registering, and renewing their domain name with an accredited domain registrar.</li>
                 <li>Benchero provides DNS configuration instructions (such as CNAME, A, or TXT challenge records) but does not act as a domain registrar or sell domain names directly.</li>
@@ -197,13 +200,13 @@
                 <li>Uploading malicious code, trojans, web shells, or executable scripts;</li>
                 <li>Engaging in automated scraping, denial-of-service (DoS) attacks, or API rate-limit abuse;</li>
                 <li>Attempting to bypass payment verifications, subscription locks, or security controls;</li>
-                <li>Using the Platform for fraudulent, deceptive, or illegal activities under Kenyan law.</li>
+                <li>Using the Platform for fraudulent, deceptive, or unlawful activities under applicable laws and regulations in the jurisdictions where the Organization or User operates, or where Benchero is based.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">19. Third-Party Services</h4>
-            <p>Benchero integrates with trusted third-party service providers to deliver specialized capabilities, including payment gateways (M-Pesa STK push via Daraja / I&M Bank) and SMTP transactional email hosts. Third-party services operate under their own service terms and privacy practices.</p>
+            <p>Benchero integrates with third-party service providers to deliver specific platform capabilities, including payment gateways (M-Pesa STK push via Daraja / I&M Bank for KES billing, and PayPal for USD international billing) and SMTP transactional email delivery. Third-party services operate under their own applicable terms and privacy policies.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -218,7 +221,7 @@
                 <li>Material or repeated violations of these Terms of Service;</li>
                 <li>Non-payment of applicable Subscription fees following grace periods;</li>
                 <li>Suspected fraudulent activity, illegal conduct, or security abuse;</li>
-                <li>Court orders or lawful requests by Kenyan regulatory authorities.</li>
+                <li>Court orders, lawful governmental requests, or regulatory requirements applicable to Benchero or the relevant Organization.</li>
             </ul>
             <p>Where appropriate and lawful, Benchero will provide reasonable notice to allow Organizations to address compliance issues before permanent suspension.</p>
 
@@ -235,7 +238,8 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">24. Limitation of Liability</h4>
-            <p>To the maximum extent permitted by applicable law in Kenya, Benchero and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of data, loss of profits, or business interruption arising out of or in connection with your use of the Platform.</p>
+            <p>To the maximum extent permitted by applicable law, Benchero and its operators, directors, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of data, loss of profits, or business interruption arising out of or in connection with your use of the Platform.</p>
+            <p>Nothing in these Terms excludes or limits Benchero's liability to the extent that such exclusion or limitation is prohibited by applicable law. If mandatory consumer protection or other laws applicable to you grant non-waivable statutory rights, those provisions shall apply to the extent required by such law.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -245,7 +249,8 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">26. Governing Law & Jurisdiction</h4>
-            <p>These Terms of Service are governed by and construed in accordance with the laws of the <strong>Republic of Kenya</strong>. Any legal dispute, controversy, or claim arising out of or relating to these Terms or the Platform shall be subject to the jurisdiction of the competent courts of Kenya.</p>
+            <p>These Terms of Service and any dispute or claim arising out of or in connection with them are governed by and construed in accordance with the laws of the <strong>Republic of Kenya</strong>, without regard to conflict-of-law principles, except to the extent that mandatory laws of the user's jurisdiction apply.</p>
+            <p>Any legal dispute, controversy, or claim arising out of or relating to these Terms or the Platform shall be subject to the jurisdiction of the competent courts of Kenya, except to the extent that mandatory consumer protection or jurisdictional laws of the user's country of residence entitle the user to initiate proceedings before another competent court.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -259,7 +264,7 @@
             </div>
 
             <div class="mt-4 pt-3 border-top text-center text-muted small">
-                <em>Disclaimer: These Terms of Service accurately describe Benchero's software operations and rights. They are provided for operational clarity and are not a substitute for formal legal advice.</em>
+                <em>Disclaimer: These Terms of Service describe Benchero's software operations and rights. They are provided for operational clarity and do not constitute formal legal advice. Organizations should seek independent legal counsel regarding their specific local regulatory requirements.</em>
             </div>
         </div>
     </div>

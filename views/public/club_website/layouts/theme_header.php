@@ -26,6 +26,15 @@
         <meta property="og:image" content="<?= htmlspecialchars($org['logo_url']) ?>">
     <?php endif; ?>
 
+    <?php
+        $canonicalHost = \Benchero\Core\CustomDomainContext::getDomain();
+        $routeSuffix = ($currentRoute === 'home' || $currentRoute === '') ? '' : '/' . $currentRoute;
+        $canonicalUrl = $canonicalHost 
+            ? ('https://' . $canonicalHost . $routeSuffix) 
+            : (rtrim(env('APP_URL', 'https://benchero.co.ke'), '/') . '/club/' . $orgSlug . $routeSuffix);
+    ?>
+    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>">
+
     <!-- Favicon & Fonts -->
     <link rel="icon" type="image/x-icon" href="<?= !empty($org['logo_url']) ? htmlspecialchars($org['logo_url']) : url('/favicon.ico') ?>">
     <link rel="icon" type="image/png" sizes="32x32" href="<?= !empty($org['logo_url']) ? htmlspecialchars($org['logo_url']) : url('/favicon.png') ?>">
@@ -148,7 +157,7 @@
     <!-- Main Navigation Bar -->
     <nav class="navbar navbar-expand-xl sticky-top club-navbar bg-club-header navbar-dark py-2">
         <div class="container-fluid px-lg-4">
-            <a class="navbar-brand d-flex align-items-center gap-3" href="<?= url("/club/") ?><?= $orgSlug ?>">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="<?= club_url('', $orgSlug) ?>">
                 <?php if (!empty($org['logo_url'])): ?>
                     <img src="<?= htmlspecialchars($org['logo_url']) ?>" alt="<?= htmlspecialchars($org['name']) ?>" height="46" class="rounded-2 bg-white p-1">
                 <?php else: ?>
@@ -177,7 +186,7 @@
                 <div class="offcanvas-body bg-club-header">
                     <ul class="navbar-nav ms-auto align-items-xl-center gap-1">
                         <li class="nav-item">
-                            <a class="nav-link club-nav-link <?= $currentRoute === 'home' ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>">Home</a>
+                            <a class="nav-link club-nav-link <?= $currentRoute === 'home' ? 'active' : '' ?>" href="<?= club_url('', $orgSlug) ?>">Home</a>
                         </li>
 
                         <?php 
@@ -208,7 +217,7 @@
 
                         <?php foreach ($primaryItems as $item): ?>
                             <li class="nav-item">
-                                <a class="nav-link club-nav-link <?= $item['active'] ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>/<?= $item['key'] ?>">
+                                <a class="nav-link club-nav-link <?= $item['active'] ? 'active' : '' ?>" href="<?= club_url($item['key'], $orgSlug) ?>">
                                     <?= htmlspecialchars($item['label']) ?>
                                 </a>
                             </li>
@@ -222,7 +231,7 @@
                                 <ul class="dropdown-menu dropdown-menu-dark shadow border-0" aria-labelledby="clubNavMoreDropdown">
                                     <?php foreach ($overflowItems as $item): ?>
                                         <li>
-                                            <a class="dropdown-item <?= $item['active'] ? 'active' : '' ?>" href="<?= url("/club/") ?><?= $orgSlug ?>/<?= $item['key'] ?>">
+                                            <a class="dropdown-item <?= $item['active'] ? 'active' : '' ?>" href="<?= club_url($item['key'], $orgSlug) ?>">
                                                 <?= htmlspecialchars($item['label']) ?>
                                             </a>
                                         </li>

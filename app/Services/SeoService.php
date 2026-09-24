@@ -2,17 +2,32 @@
 
 namespace Benchero\Services;
 
+use Benchero\Core\CustomDomainContext;
+
 class SeoService
 {
     private string $baseUrl;
+    private bool $isCustomDomain = false;
 
     public function __construct(?string $baseUrl = null)
     {
-        $appUrl = env('APP_URL', 'https://benchero.co.ke');
-        if (!str_starts_with($appUrl, 'http')) {
-            $appUrl = 'https://' . $appUrl;
+        if ($baseUrl !== null) {
+            $this->baseUrl = rtrim($baseUrl, '/');
+        } elseif (class_exists(CustomDomainContext::class) && CustomDomainContext::isActive()) {
+            $domain = CustomDomainContext::getDomain();
+            if ($domain) {
+                $this->baseUrl = 'https://' . $domain;
+                $this->isCustomDomain = true;
+            }
         }
-        $this->baseUrl = $baseUrl ?? rtrim($appUrl, '/');
+
+        if (empty($this->baseUrl)) {
+            $appUrl = env('APP_URL', 'https://benchero.co.ke');
+            if (!str_starts_with($appUrl, 'http')) {
+                $appUrl = 'https://' . $appUrl;
+            }
+            $this->baseUrl = rtrim($appUrl, '/');
+        }
     }
 
     /**
@@ -25,7 +40,11 @@ class SeoService
         $description = $options['description'] ?? "Official web presence of {$clubName}. View teams, roster, match fixtures, results, standings, and latest news on Benchero.";
         
         $path = '/' . ltrim($options['path'] ?? '', '/');
-        $canonicalUrl = $this->baseUrl . $path;
+        if ($this->isCustomDomain && preg_match('#^/club/[^/]+(.*)$#', $path, $matches)) {
+            $path = $matches[1] !== '' ? $matches[1] : '/';
+        }
+
+        $canonicalUrl = rtrim($this->baseUrl, '/') . ($path === '/' ? '' : $path);
 
         // Determine Open Graph image
         $ogImage = $options['image_url'] ?? null;

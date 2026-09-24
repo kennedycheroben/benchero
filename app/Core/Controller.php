@@ -13,6 +13,7 @@ abstract class Controller
     {
         $this->templates = new Engine(__DIR__ . '/../../views');
         $this->templates->registerFunction('url', 'url');
+        $this->templates->registerFunction('club_url', 'club_url');
     }
 
     protected function render(string $template, array $data = [], int $statusCode = 200): Response

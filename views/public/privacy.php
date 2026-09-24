@@ -6,7 +6,7 @@
             <div>
                 <span class="badge bg-primary-subtle text-primary fw-semibold px-3 py-2 rounded-pill mb-2">Privacy & Governance</span>
                 <h1 class="display-5 fw-extrabold mb-1">Privacy Policy</h1>
-                <p class="text-muted mb-0">Last Updated: September 17, 2026</p>
+                <p class="text-muted mb-0">Last Updated: September 23, 2026</p>
             </div>
             <!-- Legal Documents Sub-Navigation -->
             <div class="nav nav-pills bg-light p-1 rounded-pill border d-inline-flex self-md-center">
@@ -23,13 +23,13 @@
         <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white text-secondary leading-relaxed max-w-4xl mx-auto">
             
             <h4 class="fw-bold text-dark mb-3">1. Introduction</h4>
-            <p>Benchero ("we", "our", "us") operates the sports club management software platform available at <code>https://benchero.co.ke</code> ("Platform"). We are committed to processing personal data transparently, securely, and in compliance with applicable privacy laws.</p>
+            <p>Benchero ("we", "our", "us") operates the sports club management software platform available at <code>https://benchero.co.ke</code> ("Platform"). Benchero processes personal information in accordance with applicable law and its published privacy practices.</p>
             <p>This Privacy Policy explains how personal and organizational information is collected, processed, stored, shared, and protected when administrators, coaches, staff members, athletes, parents, and public visitors interact with Benchero.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">2. Who Benchero Is</h4>
-            <p>Benchero is a multi-tenant sports software provider based in Kenya, offering digital management dashboards, media libraries, squad management tools, and public web presences for sports clubs, academies, schools, and leagues across Kenya and Africa.</p>
+            <p>Benchero is a multi-tenant sports software provider based in Nairobi, Kenya, offering digital management dashboards, media libraries, squad management tools, and public web presences for sports clubs, academies, schools, and leagues internationally.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -55,7 +55,7 @@
                 <li><strong>Player Rosters:</strong> Display names, first and last names, jersey numbers, positions, preferred foot/hand, nationality, date of birth, emergency contact phone numbers, and profile photographs;</li>
                 <li><strong>Staff Members:</strong> Staff display names, technical roles (e.g., Head Coach, Physio), contact email, phone numbers, bios, and profile images;</li>
                 <li><strong>Match & Competition Data:</strong> Seasons, match fixtures, scores, results, standings, news articles, and history timelines;</li>
-                <li><strong>Media Assets:</strong> Photographs, hero cover images, partner/sponsor logos, and match video clips.</li>
+                <li><strong>Media Assets:</strong> Photographs, hero cover images, partner and sponsor logos, and match video clips.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
@@ -66,32 +66,32 @@
                 <li>Creating, authenticating, and maintaining user Accounts and tenant permissions;</li>
                 <li>Generating and operating public club websites as configured by Organizations;</li>
                 <li>Managing team rosters, match schedules, results, and digital club cards;</li>
-                <li>Processing commercial Subscription payments and sending transactional invoices;</li>
+                <li>Processing commercial Subscription payments and issuing transactional invoices;</li>
                 <li>Preventing fraud, platform abuse, rate-limit violations, and security incidents;</li>
                 <li>Sending transactional system emails (email verification, password resets, security alerts);</li>
-                <li>Complying with statutory accounting and legal obligations under Kenyan law.</li>
+                <li>Complying with applicable statutory accounting, tax, and legal obligations under governing laws and regulations.</li>
             </ul>
             <p>Benchero does <strong>not</strong> sell personal data or use customer data for third-party advertising networks.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">7. Legal Bases / Lawful Processing</h4>
-            <p>Under the <strong>Kenya Data Protection Act (2019)</strong>, processing of personal data relies on the following lawful bases:</p>
+            <p>Benchero operates from Kenya and is subject to applicable Kenyan law, including the <strong>Kenya Data Protection Act, 2019</strong>. In conducting its processing activities, Benchero relies on lawful bases recognized under applicable law, including:</p>
             <ul>
-                <li><strong>Contractual Performance:</strong> Processing necessary to fulfill our contract with you or your Organization to deliver software services;</li>
-                <li><strong>Legitimate Interests:</strong> Operating a secure, reliable platform, preventing fraud, and facilitating sports administration;</li>
+                <li><strong>Contractual Performance:</strong> Processing necessary to fulfill our contract with you or your Organization to deliver the Platform services;</li>
+                <li><strong>Legitimate Interests:</strong> Operating a secure and reliable platform, preventing fraud, and facilitating sports administration;</li>
                 <li><strong>Legal Obligation:</strong> Retaining financial transaction records for statutory accounting and tax compliance;</li>
-                <li><strong>Consent:</strong> Where explicit consent has been obtained by Organizations or users for specific publications.</li>
+                <li><strong>Consent:</strong> Where explicit consent has been obtained by Organizations or users for specific publications or features.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
 
-            <h4 class="fw-bold text-dark mb-3">8. Clubs as Data Controllers & Benchero's Role</h4>
-            <p>Depending on the processing activity, roles are allocated as follows:</p>
+            <h4 class="fw-bold text-dark mb-3">8. Allocation of Responsibilities & Data Roles</h4>
+            <p>Organizations are responsible for determining the legal requirements applicable to the personal information they collect and process through Benchero. Benchero remains responsible for its own processing activities and obligations under applicable law. Depending on the processing activity, roles are allocated as follows:</p>
             <ul>
-                <li><strong>Data Controller:</strong> The sports Organization acts as the Data Controller for all player, staff, minor, and match data uploaded to its tenant space. The Organization determines what data is collected and published.</li>
-                <li><strong>Data Processor:</strong> Benchero acts as a Data Processor processing Organization data strictly in accordance with the Organization's configuration and instructions.</li>
-                <li><strong>Benchero as Controller:</strong> Benchero acts as a Data Controller for Account registration data, billing records, and technical security logs required to operate the Platform.</li>
+                <li><strong>Data Controller:</strong> The sports Organization acts as the Data Controller for all player, staff, minor, and match data uploaded to its tenant space. The Organization determines what data is collected, displayed, or published.</li>
+                <li><strong>Data Processor:</strong> Benchero acts as a Data Processor processing Organization data strictly in accordance with the Organization's instructions and system configurations to deliver the Platform service.</li>
+                <li><strong>Benchero as Controller:</strong> Benchero acts as a Data Controller for Account registration data, billing records, and technical security logs required to operate and maintain the Platform.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
@@ -103,100 +103,102 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">10. Player and Minor Information</h4>
-            <p>Sports organizations frequently manage youth squads and minor players (under 18 years of age). Organizations are responsible for ensuring parental or guardian consent before adding minor players to team rosters or publishing minor profile media.</p>
+            <p>Sports organizations frequently manage youth squads and minor players (under the age of majority in their respective jurisdictions). Organizations are responsible for obtaining whatever parental or guardian consent, permission, or other lawful authorization is required by the applicable jurisdiction before collecting, roster listing, or publishing personal details, photographs, or videos of minors.</p>
             <p>Benchero processes minor data strictly on behalf of the Organization. Organizations are advised to minimize the publication of unnecessary personal details regarding young athletes.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">11. Public Contact Messages</h4>
-            <p>When a visitor submits a inquiry through an Organization's public website contact form, the message (including sender name, email, subject, and content) is stored in Benchero's database (`contact_messages`) and made available to authorized Organization Administrators. Benchero stores these messages to provide contact functionality but does not independently respond on behalf of the club.</p>
+            <p>When a visitor submits an inquiry through an Organization's public website contact form, the message (including sender name, email, subject, and content) is stored in Benchero's database (<code>contact_messages</code>) and made available to authorized Organization Administrators. Benchero stores these messages to provide contact functionality but does not independently respond on behalf of the club.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">12. Payments & Financial Telemetry</h4>
-            <p>Commercial Subscriptions are processed via M-Pesa.</p>
+            <p>Commercial Subscriptions may be billed in Kenyan Shillings (KES) via M-Pesa or in US Dollars (USD) via PayPal checkout:</p>
             <ul>
-                <li>Benchero receives transaction reference numbers, receipt codes, payment phone numbers, transaction amounts, and subscription period statuses.</li>
-                <li>Benchero <strong>never</strong> requests, collects, or stores M-Pesa PINs or private banking credentials.</li>
-                <li>Payment transaction records are retained for financial accounting and audit compliance.</li>
+                <li>For M-Pesa transactions, Benchero receives transaction reference codes, receipt numbers, phone numbers used for billing, and amounts paid.</li>
+                <li>For PayPal transactions, Benchero receives PayPal transaction/order identifiers, payer email addresses, order statuses, and amounts paid.</li>
+                <li>Benchero does not request, collect, or store customer payment PINs, CVV codes, or full banking card credentials on its servers. All payments are securely processed through the respective payment provider.</li>
+                <li>Payment transaction records are retained for financial accounting, audit, and tax compliance.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">13. Cookies and Session Management</h4>
-            <p>Benchero utilizes essential session cookies (`PHPSESSID`, duration 480 minutes) and CSRF security tokens (`_csrf` / `csrf_token`) to maintain user authentication and form security. Benchero does <strong>not</strong> deploy third-party advertising or cross-site tracking cookies. For full details, please refer to our <a href="<?= url('/cookies') ?>" class="text-primary fw-semibold">Cookie Policy</a>.</p>
+            <p>Benchero utilizes essential session cookies (<code>PHPSESSID</code>, duration 480 minutes) and CSRF security tokens (<code>_csrf</code> / <code>csrf_token</code>) to maintain user authentication and form security. Benchero does <strong>not</strong> deploy third-party advertising or cross-site tracking cookies. For full details, please review our <a href="<?= url('/cookies') ?>" class="text-primary fw-semibold">Cookie Policy</a>.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">14. Email Communications</h4>
-            <p>Benchero sends transactional emails via configured SMTP servers (`MAIL_HOST`) for account verification, password resets, and account security notifications. Benchero does not send unsolicited marketing emails.</p>
+            <p>Benchero sends transactional emails via configured SMTP servers (<code>MAIL_HOST</code>) for account verification, password resets, and account security notifications. Benchero does not send unsolicited marketing emails.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">15. Third-Party Processors</h4>
-            <p>Benchero engages trusted service providers to support Platform delivery:</p>
+            <p>Benchero engages service providers to support Platform delivery:</p>
             <ul>
-                <li><strong>Payment Providers:</strong> Safaricom M-Pesa / I&M Bank (for processing STK push payments);</li>
+                <li><strong>Payment Providers:</strong> Safaricom M-Pesa / I&M Bank (for processing KES STK push transactions) and PayPal (for processing USD international card and account checkout);</li>
                 <li><strong>Email Delivery:</strong> SMTP infrastructure (for delivering transactional notifications);</li>
-                <li><strong>Hosting & Cloud Infrastructure:</strong> Secure server infrastructure located in monitored data centers.</li>
+                <li><strong>Hosting & Server Infrastructure:</strong> Server and database hosting infrastructure used to deliver the web application.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
 
-            <h4 class="fw-bold text-dark mb-3">16. International Data Transfers</h4>
-            <p>Where cloud infrastructure or service providers process data outside Kenya, Benchero ensures appropriate technical safeguards, encrypted channels, and contractual requirements are in place consistent with the Kenya Data Protection Act (2019).</p>
+            <h4 class="fw-bold text-dark mb-3">16. International Data Processing</h4>
+            <p>Depending on the services used to operate Benchero, personal information may be processed in locations outside the user's country. Where required by applicable law, Benchero applies appropriate technical and organizational safeguards to protect personal information during transit and storage.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">17. Data Retention</h4>
-            <p>Personal and tenant data is retained for the duration of an active Subscription or trial account. Upon account deletion or written termination request, Benchero soft-deletes and permanently purges personal records, squad rosters, and media files within 30 business days, excepting transaction records required for statutory tax and accounting laws.</p>
+            <p>Personal and tenant data is retained for the duration of an active Subscription or trial account. Upon account deletion or written termination request, Benchero soft-deletes and permanently purges personal records, squad rosters, and media files within 30 business days, excepting transaction records required for statutory tax and accounting obligations.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">18. Data Subject Rights</h4>
-            <p>Under the <strong>Kenya Data Protection Act (2019)</strong>, individuals have specific rights regarding their personal data:</p>
+            <p>Depending on the applicable law, individuals may have specific rights regarding their personal data, including:</p>
             <ul>
                 <li><strong>Right to Be Informed:</strong> To know how your personal data is collected and processed;</li>
                 <li><strong>Right of Access:</strong> To request a copy of personal data held about you;</li>
                 <li><strong>Right to Rectification:</strong> To request correction of inaccurate or incomplete records;</li>
                 <li><strong>Right to Erasure / Deletion:</strong> To request deletion of personal data subject to legal retention duties;</li>
-                <li><strong>Right to Object / Restrict:</strong> To object to or restrict processing under specific conditions;</li>
-                <li><strong>Right to Data Portability:</strong> To receive your data in a structured CSV or JSON format (available via Pro export tools).</li>
+                <li><strong>Right to Restrict or Object:</strong> To object to or request restriction of processing under certain legal conditions;</li>
+                <li><strong>Right to Data Portability:</strong> To receive personal data in a structured format (available for Organizations via Pro CSV and JSON export tools);</li>
+                <li><strong>Right to Withdraw Consent:</strong> Where processing is based on consent, the right to withdraw that consent prospectively.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">19. Privacy Request Process</h4>
-            <p>To exercise your data subject rights, please follow these steps:</p>
+            <p>To exercise applicable data subject rights, please follow these steps:</p>
             <ol>
                 <li>Send a written request to <a href="mailto:contact@benchero.co.ke" class="text-primary fw-semibold">contact@benchero.co.ke</a>;</li>
                 <li>Specify your identity, account details, and the specific right you wish to exercise;</li>
                 <li>Benchero may verify your identity before fulfilling the request;</li>
-                <li>Benchero will review and respond to valid requests within statutory timeframes.</li>
+                <li>Benchero will review and respond to valid requests within statutory timeframes applicable to the request.</li>
             </ol>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">20. Security Measures & Technical Safeguards</h4>
-            <p>Benchero implements rigorous technical and organizational security controls:</p>
+            <p>Benchero implements technical and organizational security controls designed to protect personal information:</p>
             <ul>
-                <li>HTTPS / TLS encryption for all data in transit;</li>
-                <li>Bcrypt / Argon2 password hashing for user account security;</li>
+                <li>HTTPS / TLS encryption for data in transit;</li>
+                <li>Bcrypt / Argon2 password hashing for user account credentials;</li>
                 <li>Parameterized SQL prepared statements protecting against SQL injection;</li>
-                <li>Strict MIME verification and automated `.htaccess` script execution protection in file upload directories;</li>
-                <li>CSRF validation tokens on all state-modifying POST forms;</li>
+                <li>Strict MIME verification and script execution protection in file upload directories;</li>
+                <li>CSRF validation tokens on state-modifying POST forms;</li>
                 <li>Database tenant isolation separating Organization data spaces.</li>
             </ul>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">21. Data Breaches & Incident Notification</h4>
-            <p>In the event of a confirmed security incident compromising personal data, Benchero will investigate, mitigate the impact, and notify affected Users and relevant Kenyan supervisory authorities (ODPC) in accordance with statutory requirements under the Data Protection Act (2019).</p>
+            <p>In the event of a confirmed security incident compromising personal data, Benchero will investigate, take prompt mitigation measures, and notify affected Users and Organizations where required. Where mandated by applicable law, Benchero will also notify relevant regulatory authorities, including the Office of the Data Protection Commissioner (ODPC) in Kenya in accordance with statutory requirements under the Data Protection Act, 2019.</p>
 
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">22. Complaints & Supervisory Authority</h4>
-            <p>If you have unresolved concerns about how your data is handled, you may contact Benchero at `contact@benchero.co.ke`. You also have the right to lodge a complaint with the <strong>Office of the Data Protection Commissioner (ODPC)</strong> of Kenya.</p>
+            <p>If you have unresolved concerns about how your data is handled, you may contact Benchero at <code>contact@benchero.co.ke</code>. Individuals may also have the right to lodge a complaint with the data protection or privacy supervisory authority applicable to them. For matters concerning Benchero's Kenyan operations, individuals may also contact the <strong>Office of the Data Protection Commissioner (ODPC)</strong> of Kenya.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -211,7 +213,7 @@
             <hr class="my-4 opacity-25">
 
             <h4 class="fw-bold text-dark mb-3">25. Last Updated Date</h4>
-            <p>This Privacy Policy was last reviewed and updated on <strong>September 17, 2026</strong>.</p>
+            <p>This Privacy Policy was last reviewed and updated on <strong>September 23, 2026</strong>.</p>
 
             <hr class="my-4 opacity-25">
 
@@ -225,7 +227,7 @@
             </div>
 
             <div class="mt-4 pt-3 border-top text-center text-muted small">
-                <em>Disclaimer: This Privacy Policy describes Benchero's data protection practices in accordance with Kenyan privacy principles. It is provided for operational transparency and is not a substitute for formal legal counsel.</em>
+                <em>Disclaimer: This Privacy Policy describes Benchero's data protection practices and technical architecture. It is provided for operational transparency and does not constitute formal legal counsel. Organizations should consult their own legal advisors regarding specific local compliance requirements in their jurisdictions.</em>
             </div>
         </div>
     </div>

@@ -34,6 +34,7 @@ class Router
             case Dispatcher::NOT_FOUND:
                 $templates = new \League\Plates\Engine(__DIR__ . '/../../../views');
                 $templates->registerFunction('url', 'url');
+                $templates->registerFunction('club_url', 'club_url');
                 return new Response($templates->render('errors/404', ['title' => 'Page Not Found']), 404, ['Content-Type' => 'text/html; charset=utf-8']);
             case Dispatcher::METHOD_NOT_ALLOWED:
                 $allowedMethods = $routeInfo[1];

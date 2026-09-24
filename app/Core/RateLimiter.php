@@ -2,15 +2,16 @@
 
 namespace Benchero\Core;
 
+use Benchero\Core\Database\Database;
 use PDO;
 
 class RateLimiter
 {
     private PDO $pdo;
 
-    public function __construct(PDO $pdo)
+    public function __construct(?PDO $pdo = null)
     {
-        $this->pdo = $pdo;
+        $this->pdo = $pdo ?? Database::getConnection();
     }
 
     public function hit(string $key, int $maxAttempts = 5, int $decaySeconds = 60): bool
@@ -33,6 +34,38 @@ class RateLimiter
         $attempts = (int)$check->fetchColumn();
 
         return $attempts <= $maxAttempts;
+    }
+
+    /**
+     * Check if key has exceeded allowed maximum attempts.
+     */
+    public function tooManyAttempts(string $key, int $maxAttempts): bool
+    {
+        $stmt = $this->pdo->prepare("SELECT attempts, expires_at FROM rate_limits WHERE rate_key = ?");
+        $stmt->execute([$key]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return false;
+        }
+        if (strtotime($row['expires_at']) <= time()) {
+            return false;
+        }
+        return (int)$row['attempts'] >= $maxAttempts;
+    }
+
+    /**
+     * Get remaining seconds until key is available again.
+     */
+    public function availableIn(string $key): int
+    {
+        $stmt = $this->pdo->prepare("SELECT expires_at FROM rate_limits WHERE rate_key = ?");
+        $stmt->execute([$key]);
+        $expiresAt = $stmt->fetchColumn();
+        if (!$expiresAt) {
+            return 0;
+        }
+        $diff = strtotime($expiresAt) - time();
+        return max(0, $diff);
     }
 
     /**
