@@ -20,6 +20,8 @@ class SportsSyncService
     private SportsProviderInterface $provider;
     private NewsProviderInterface $newsProvider;
     private SportsProviderRouter $router;
+    private SportsQuotaTracker $quotaTracker;
+    private AdaptiveLiveSyncEngine $adaptiveEngine;
     private string $lockFile;
     private bool $hasExplicitProvider = false;
 
@@ -27,10 +29,14 @@ class SportsSyncService
         ?PDO $pdo = null,
         ?SportsProviderInterface $provider = null,
         ?NewsProviderInterface $newsProvider = null,
-        ?SportsProviderRouter $router = null
+        ?SportsProviderRouter $router = null,
+        ?SportsQuotaTracker $quotaTracker = null,
+        ?AdaptiveLiveSyncEngine $adaptiveEngine = null
     ) {
         $this->pdo = $pdo ?? Database::getConnection();
         $this->router = $router ?? new SportsProviderRouter();
+        $this->quotaTracker = $quotaTracker ?? new SportsQuotaTracker($this->pdo);
+        $this->adaptiveEngine = $adaptiveEngine ?? new AdaptiveLiveSyncEngine($this->pdo, $this->quotaTracker);
         $this->hasExplicitProvider = ($provider !== null);
         $this->provider = $provider ?? $this->resolveProvider();
         $this->newsProvider = $newsProvider ?? $this->resolveNewsProvider();
@@ -122,14 +128,28 @@ class SportsSyncService
         return $this->router->getActiveProviders();
     }
 
-    public function acquireLock(): mixed
+    public function getQuotaTracker(): SportsQuotaTracker
     {
-        $dir = dirname($this->lockFile);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
+        return $this->quotaTracker;
+    }
+
+    public function getAdaptiveEngine(): AdaptiveLiveSyncEngine
+    {
+        return $this->adaptiveEngine;
+    }
+
+    public function acquireLock(?string $action = null): mixed
+    {
+        $locksDir = dirname(__DIR__, 3) . '/storage/locks';
+        if (!is_dir($locksDir)) {
+            @mkdir($locksDir, 0755, true);
         }
 
-        $fp = @fopen($this->lockFile, 'w+');
+        $lockPath = ($action && in_array($action, ['live', 'fixtures', 'results', 'standings', 'news'], true))
+            ? $locksDir . "/sports_sync_{$action}.lock"
+            : $this->lockFile;
+
+        $fp = @fopen($lockPath, 'c+');
         if (!$fp) {
             return false;
         }
@@ -138,6 +158,14 @@ class SportsSyncService
             fclose($fp);
             return false;
         }
+
+        @ftruncate($fp, 0);
+        @fwrite($fp, json_encode([
+            'pid' => getmypid(),
+            'action' => $action ?? 'all',
+            'locked_at' => date('Y-m-d H:i:s')
+        ]));
+        @fflush($fp);
 
         return $fp;
     }
@@ -150,8 +178,45 @@ class SportsSyncService
         }
     }
 
-    public function syncLive(): array
+    public function isLocked(?string $action = null): bool
     {
+        $locksDir = dirname(__DIR__, 3) . '/storage/locks';
+        $lockPath = ($action && in_array($action, ['live', 'fixtures', 'results', 'standings', 'news'], true))
+            ? $locksDir . "/sports_sync_{$action}.lock"
+            : $this->lockFile;
+
+        if (!file_exists($lockPath)) {
+            return false;
+        }
+
+        $fp = @fopen($lockPath, 'c+');
+        if (!$fp) {
+            return false;
+        }
+
+        $locked = !@flock($fp, LOCK_EX | LOCK_NB);
+        if (!$locked) {
+            @flock($fp, LOCK_UN);
+        }
+        fclose($fp);
+        return $locked;
+    }
+
+    public function syncLive(bool $force = false): array
+    {
+        // 1. Adaptive live scheduling: unless forced or explicit provider injected, check if live sync is currently due
+        if (!$force && !$this->hasExplicitProvider && !$this->adaptiveEngine->isSyncDue('live')) {
+            $state = $this->adaptiveEngine->determineLiveSyncState();
+            return [
+                'success' => true,
+                'skipped' => true,
+                'reason' => $state['reason'],
+                'processed' => 0,
+                'updated' => 0,
+                'state' => $state
+            ];
+        }
+
         $startTime = microtime(true);
         $totalProcessed = 0;
         $totalUpdated = 0;
@@ -166,6 +231,16 @@ class SportsSyncService
             $processed = 0;
             $updated = 0;
             $provStartTime = microtime(true);
+
+            // Rate limit / quota backoff guard
+            if ($this->quotaTracker->isProviderInBackoff($providerName)) {
+                $rem = $this->quotaTracker->getRemainingBackoffSeconds($providerName);
+                $msg = "Provider '{$providerName}' is in rate limit / quota backoff ({$rem}s remaining). Skipping live sync.";
+                error_log($msg);
+                $this->logSync($providerName, 'sync-live', 'degraded', 0, 0, 0, $msg);
+                $errors[$providerName] = $msg;
+                continue;
+            }
 
             try {
                 $matches = $provider->getLiveScores();
@@ -278,6 +353,7 @@ class SportsSyncService
 
                 $duration = (int)round((microtime(true) - $provStartTime) * 1000);
                 $this->logSync($providerName, 'sync-live', 'success', $duration, $processed, $updated);
+                $this->quotaTracker->recordSuccessfulSync($providerName, 'live');
 
                 $totalProcessed += $processed;
                 $totalUpdated += $updated;
@@ -294,10 +370,16 @@ class SportsSyncService
         // Invalidate live scores and sports cache
         (new \Benchero\Services\CacheService())->flushSportsCache();
 
+        $overallSuccess = empty($errors) || $totalUpdated > 0 || $totalProcessed > 0;
+        if (!empty($errors) && $totalProcessed === 0 && $totalUpdated === 0) {
+            $overallSuccess = false;
+        }
+
         return [
-            'success' => empty($errors) || $totalUpdated > 0 || $totalProcessed > 0,
+            'success' => $overallSuccess,
             'processed' => $totalProcessed,
-            'updated' => $totalUpdated
+            'updated' => $totalUpdated,
+            'errors' => $errors
         ];
     }
 
@@ -313,6 +395,16 @@ class SportsSyncService
             $processed = 0;
             $updated = 0;
             $provStartTime = microtime(true);
+
+            // Rate limit / quota backoff guard
+            if ($this->quotaTracker->isProviderInBackoff($providerName)) {
+                $rem = $this->quotaTracker->getRemainingBackoffSeconds($providerName);
+                $msg = "Provider '{$providerName}' is in rate limit / quota backoff ({$rem}s remaining). Skipping fixtures sync.";
+                error_log($msg);
+                $this->logSync($providerName, 'sync-fixtures', 'degraded', 0, 0, 0, $msg);
+                $errors[$providerName] = $msg;
+                continue;
+            }
 
             try {
                 $matches = $provider->getFixtures();
@@ -405,6 +497,7 @@ class SportsSyncService
 
                 $duration = (int)round((microtime(true) - $provStartTime) * 1000);
                 $this->logSync($providerName, 'sync-fixtures', 'success', $duration, $processed, $updated);
+                $this->quotaTracker->recordSuccessfulSync($providerName, 'fixtures');
 
                 $totalProcessed += $processed;
                 $totalUpdated += $updated;
@@ -452,6 +545,16 @@ class SportsSyncService
             $processed = 0;
             $updated = 0;
             $provStartTime = microtime(true);
+
+            // Rate limit / quota backoff guard
+            if ($this->quotaTracker->isProviderInBackoff($providerName)) {
+                $rem = $this->quotaTracker->getRemainingBackoffSeconds($providerName);
+                $msg = "Provider '{$providerName}' is in rate limit / quota backoff ({$rem}s remaining). Skipping results sync.";
+                error_log($msg);
+                $this->logSync($providerName, 'sync-results', 'degraded', 0, 0, 0, $msg);
+                $errors[$providerName] = $msg;
+                continue;
+            }
 
             try {
                 $matches = $provider->getResults();
@@ -547,6 +650,7 @@ class SportsSyncService
 
                 $duration = (int)round((microtime(true) - $provStartTime) * 1000);
                 $this->logSync($providerName, 'sync-results', 'success', $duration, $processed, $updated);
+                $this->quotaTracker->recordSuccessfulSync($providerName, 'results');
 
                 $totalProcessed += $processed;
                 $totalUpdated += $updated;
@@ -582,6 +686,16 @@ class SportsSyncService
             $processed = 0;
             $updated = 0;
             $provStartTime = microtime(true);
+
+            // Rate limit / quota backoff guard
+            if ($this->quotaTracker->isProviderInBackoff($providerName)) {
+                $rem = $this->quotaTracker->getRemainingBackoffSeconds($providerName);
+                $msg = "Provider '{$providerName}' is in rate limit / quota backoff ({$rem}s remaining). Skipping standings sync.";
+                error_log($msg);
+                $this->logSync($providerName, 'sync-standings', 'degraded', 0, 0, 0, $msg);
+                $errors[$providerName] = $msg;
+                continue;
+            }
 
             try {
                 $comps = $provider->getCompetitions('football');
@@ -710,6 +824,7 @@ class SportsSyncService
 
                 $duration = (int)round((microtime(true) - $provStartTime) * 1000);
                 $this->logSync($providerName, 'sync-standings', 'success', $duration, $processed, $updated);
+                $this->quotaTracker->recordSuccessfulSync($providerName, 'standings');
 
                 $totalProcessed += $processed;
                 $totalUpdated += $updated;
@@ -776,6 +891,7 @@ class SportsSyncService
 
             $duration = (int)round((microtime(true) - $startTime) * 1000);
             $this->logSync($providerName, 'sync-news', 'success', $duration, $processed, $updated);
+            $this->quotaTracker->recordSuccessfulSync($providerName, 'news');
 
             return ['success' => true, 'processed' => $processed, 'updated' => $updated];
         } catch (\Throwable $e) {

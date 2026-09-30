@@ -61,9 +61,50 @@ class SportsService
         };
     }
 
+    /**
+     * Get per-provider data freshness and quota status from database.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function getProviderFreshness(): array
+    {
+        $freshness = [];
+        try {
+            $stmt = $this->pdo->query("
+                SELECT provider, requests_today, daily_limit, requests_remaining, 
+                       backoff_until, last_successful_sync, last_successful_live_sync,
+                       last_error_message, updated_at
+                FROM sports_provider_states
+            ");
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($rows as $row) {
+                $p = $row['provider'];
+                $lastLiveSync = $row['last_successful_live_sync'] ?? $row['last_successful_sync'];
+                $age = $lastLiveSync ? max(0, time() - strtotime($lastLiveSync)) : null;
+                $isBackoff = !empty($row['backoff_until']) && (strtotime($row['backoff_until']) > time());
+                
+                $freshness[$p] = [
+                    'provider' => $p,
+                    'last_successful_sync' => $row['last_successful_sync'],
+                    'last_successful_live_sync' => $row['last_successful_live_sync'],
+                    'data_age_seconds' => $age,
+                    'requests_today' => (int)($row['requests_today'] ?? 0),
+                    'requests_remaining' => isset($row['requests_remaining']) ? (int)$row['requests_remaining'] : null,
+                    'daily_limit' => isset($row['daily_limit']) ? (int)$row['daily_limit'] : null,
+                    'degraded' => $isBackoff || !empty($row['last_error_message']),
+                    'backoff' => $isBackoff
+                ];
+            }
+        } catch (\Throwable) {
+            // Table might not exist in early tests or migration check
+        }
+
+        return $freshness;
+    }
+
     public function getLiveScores(): array
     {
-        $cacheKey = 'sports_live_scores_v3';
+        $cacheKey = 'sports_live_scores_v4';
         $cached = $this->cache->get($cacheKey);
         if ($cached !== null) {
             return $cached;
@@ -89,9 +130,21 @@ class SportsService
             $dbMatches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-live');
-            $isStale = false;
-            if (!$lastSync || (abs(time() - strtotime($lastSync)) > 900)) {
-                $isStale = true;
+            $maxStaleSeconds = (int)($_ENV['SPORTS_LIVE_MAX_STALE_SECONDS'] ?? env('SPORTS_LIVE_MAX_STALE_SECONDS', 120));
+            if ($maxStaleSeconds <= 0) {
+                $maxStaleSeconds = 120;
+            }
+
+            $dataAge = $lastSync ? max(0, time() - strtotime($lastSync)) : null;
+            $isStale = ($dataAge === null || $dataAge > $maxStaleSeconds);
+
+            $providerFreshness = $this->getProviderFreshness();
+            $isDegraded = false;
+            foreach ($providerFreshness as $pf) {
+                if (!empty($pf['degraded'])) {
+                    $isDegraded = true;
+                    break;
+                }
             }
 
             $matches = array_map(function($r) {
@@ -100,65 +153,73 @@ class SportsService
                     'external_id' => $r['external_id'],
                     'provider' => $r['provider'],
                     'competition' => $r['competition_name'] ?? 'League',
+                    'competition_slug' => $r['competition_slug'] ?? 'league',
                     'home_team' => $r['home_team_name'] ?? 'Home Team',
                     'away_team' => $r['away_team_name'] ?? 'Away Team',
                     'home_score' => (int)($r['home_score'] ?? 0),
                     'away_score' => (int)($r['away_score'] ?? 0),
                     'status' => $r['status'],
                     'minute' => $r['minute'] ?? null,
-                    'start_time' => $r['start_time']
+                    'start_time' => $r['start_time'],
+                    'venue' => $r['venue'] ?? null
                 ];
             }, $dbMatches);
 
-            // In non-production, fall back to direct provider call if DB is empty or stale
-            if ((empty($matches) || $isStale) && !$this->isProduction) {
-                try {
-                    $data = $this->provider->getLiveScores();
-                    $res = [
-                        'matches' => $data ?? [],
-                        'updated_at' => $lastSync ?: date('Y-m-d H:i:s'),
-                        'is_stale' => false
-                    ];
-                    $this->cache->set($cacheKey, $res, 30);
-                    return $res;
-                } catch (\Throwable $provEx) {
-                    error_log("SportsService getLiveScores provider fallback error: " . $provEx->getMessage());
-                }
-            }
-
             $latestMatchUpdate = !empty($dbMatches) ? max(array_map(fn($r) => $r['updated_at'] ?? $r['start_time'], $dbMatches)) : null;
+            $updatedAt = $lastSync ?: ($latestMatchUpdate ?: date('Y-m-d H:i:s'));
+
             $result = [
                 'matches' => $matches,
-                'updated_at' => $lastSync ?: ($latestMatchUpdate ?: null),
-                'is_stale' => $isStale
+                'updated_at' => $updatedAt,
+                'last_updated' => $updatedAt,
+                'is_stale' => $isStale,
+                'stale' => $isStale,
+                'degraded' => $isDegraded,
+                'age_seconds' => $dataAge,
+                'data_age_seconds' => $dataAge,
+                'last_successful_sync' => $lastSync,
+                'provider' => $this->providerType,
+                'providers' => $providerFreshness,
+                'meta' => [
+                    'last_updated' => $updatedAt,
+                    'age_seconds' => $dataAge,
+                    'stale' => $isStale,
+                    'degraded' => $isDegraded,
+                    'live_count' => count($matches),
+                    'provider' => $this->providerType
+                ]
             ];
-            $this->cache->set($cacheKey, $result, 30);
+
+            // Cache for 15 seconds to serve multiple concurrent visitors without re-querying
+            $this->cache->set($cacheKey, $result, 15);
             return $result;
         } catch (\Throwable $e) {
             error_log("SportsService getLiveScores error: " . $e->getMessage());
 
             $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-live');
-
-            if (!$this->isProduction) {
-                try {
-                    $data = $this->provider->getLiveScores();
-                    $res = [
-                        'matches' => $data ?? [],
-                        'updated_at' => $lastSync ?: date('Y-m-d H:i:s'),
-                        'is_stale' => false
-                    ];
-                    $this->cache->set($cacheKey, $res, 30);
-                    return $res;
-                } catch (\Throwable $provEx) {
-                    error_log("SportsService getLiveScores fallback error: " . $provEx->getMessage());
-                }
-            }
+            $dataAge = $lastSync ? max(0, time() - strtotime($lastSync)) : null;
 
             return [
                 'matches' => [],
-                'updated_at' => $lastSync,
+                'updated_at' => $lastSync ?: date('Y-m-d H:i:s'),
+                'last_updated' => $lastSync ?: date('Y-m-d H:i:s'),
                 'is_stale' => true,
-                'notice' => 'Live scores temporarily unavailable.'
+                'stale' => true,
+                'degraded' => true,
+                'age_seconds' => $dataAge,
+                'data_age_seconds' => $dataAge,
+                'last_successful_sync' => $lastSync,
+                'provider' => $this->providerType,
+                'providers' => [],
+                'notice' => 'Live scores temporarily unavailable.',
+                'meta' => [
+                    'last_updated' => $lastSync ?: date('Y-m-d H:i:s'),
+                    'age_seconds' => $dataAge,
+                    'stale' => true,
+                    'degraded' => true,
+                    'live_count' => 0,
+                    'provider' => $this->providerType
+                ]
             ];
         }
     }
@@ -236,21 +297,7 @@ class SportsService
         }
 
         $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-results');
-
-        if ($this->isProduction) {
-            return ['results' => [], 'updated_at' => $lastSync];
-        }
-
-        // Fallback in dev/testing mode
-        try {
-            $data = $this->provider->getResults($sport, $date, $limit);
-            $res = ['results' => $data ?? [], 'updated_at' => $lastSync ?: date('Y-m-d H:i:s')];
-            $this->cache->set($cacheKey, $res, 300);
-            return $res;
-        } catch (\Throwable $e) {
-            error_log("SportsService getResults provider error: " . $e->getMessage());
-            return ['results' => [], 'updated_at' => $lastSync];
-        }
+        return ['results' => [], 'updated_at' => $lastSync ?: date('Y-m-d H:i:s')];
     }
 
     public function getFixtures(?string $sport = null, ?string $date = null, int $limit = 20, ?string $competitionId = null): array
@@ -267,7 +314,7 @@ class SportsService
                 SELECT m.*, 
                        c.name as competition_name, c.slug as competition_slug,
                        ht.name as home_team_name, ht.slug as home_slug,
-                       at.name as away_team_name, at.slug as away_slug
+                       at.name as away_team_name, at.slug as away_team_slug
                 FROM sports_matches m
                 LEFT JOIN sports_competitions c ON m.competition_id = c.id
                 LEFT JOIN sports_teams ht ON m.home_team_id = ht.id
@@ -326,21 +373,7 @@ class SportsService
         }
 
         $lastSync = $this->getLatestSuccessfulSyncTimestamp('sync-fixtures');
-
-        if ($this->isProduction) {
-            return ['fixtures' => [], 'updated_at' => $lastSync];
-        }
-
-        // Fallback in dev/testing mode
-        try {
-            $data = $this->provider->getFixtures($sport, $date, $limit);
-            $res = ['fixtures' => $data ?? [], 'updated_at' => $lastSync ?: date('Y-m-d H:i:s')];
-            $this->cache->set($cacheKey, $res, 300);
-            return $res;
-        } catch (\Throwable $e) {
-            error_log("SportsService getFixtures provider error: " . $e->getMessage());
-            return ['fixtures' => [], 'updated_at' => $lastSync];
-        }
+        return ['fixtures' => [], 'updated_at' => $lastSync ?: date('Y-m-d H:i:s')];
     }
 
     public function getCompetitions(?string $sport = null): array
@@ -369,18 +402,7 @@ class SportsService
             error_log("SportsService getCompetitions DB error: " . $dbEx->getMessage());
         }
 
-        if ($this->isProduction) {
-            return [];
-        }
-
-        try {
-            $data = $this->provider->getCompetitions($sport);
-            $this->cache->set($cacheKey, $data, 3600);
-            return $data;
-        } catch (\Throwable $e) {
-            error_log("SportsService getCompetitions provider error: " . $e->getMessage());
-            return $cached ?? [];
-        }
+        return [];
     }
 
     /**
@@ -493,32 +515,11 @@ class SportsService
             error_log("SportsService getStandings DB error: " . $dbEx->getMessage());
         }
 
-        if ($this->isProduction) {
-            return [
-                'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
-                'season' => date('Y') . '/' . (date('Y') + 1),
-                'table' => []
-            ];
-        }
-
-        try {
-            $compProvider = $this->router->resolveProviderForCompetition($competitionSlug);
-            $data = $compProvider->getStandings($competitionSlug);
-            $res = [
-                'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
-                'season' => date('Y') . '/' . (date('Y') + 1),
-                'table' => $data
-            ];
-            $this->cache->set($cacheKey, $res, 1800);
-            return $res;
-        } catch (\Throwable $e) {
-            error_log("SportsService getStandings provider error: " . $e->getMessage());
-            return $cached ?? [
-                'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
-                'season' => date('Y') . '/' . (date('Y') + 1),
-                'table' => []
-            ];
-        }
+        return [
+            'competition' => ['name' => ucfirst(str_replace('-', ' ', $competitionSlug)), 'slug' => $competitionSlug],
+            'season' => date('Y') . '/' . (date('Y') + 1),
+            'table' => []
+        ];
     }
 
     public function getMatchDetail(string $matchId): ?array

@@ -53,7 +53,11 @@ class SportsController extends Controller
             'description' => 'Real-time live scores for Football, Basketball, Rugby and local Kenyan sports.',
             'liveMatches' => $liveData['matches'] ?? [],
             'updatedAt' => $liveData['updated_at'] ?? date('Y-m-d H:i:s'),
-            'isStale' => $liveData['is_stale'] ?? false
+            'isStale' => $liveData['is_stale'] ?? false,
+            'isDegraded' => $liveData['degraded'] ?? false,
+            'dataAgeSeconds' => $liveData['age_seconds'] ?? null,
+            'provider' => $liveData['provider'] ?? 'provider',
+            'providerFreshness' => $liveData['providers'] ?? []
         ]);
     }
 
@@ -208,13 +212,27 @@ class SportsController extends Controller
     public function apiLive(Request $request, array $vars = []): Response
     {
         $liveData = $this->sportsService->getLiveScores();
+        $updatedAt = $liveData['updated_at'] ?? date('Y-m-d H:i:s');
+        $isStale = $liveData['is_stale'] ?? false;
+        $isDegraded = $liveData['degraded'] ?? false;
+        $ageSeconds = $liveData['age_seconds'] ?? null;
+
         return $this->json([
             'success' => true,
             'data' => $liveData['matches'] ?? [],
             'meta' => [
-                'updated_at' => $liveData['updated_at'] ?? date('Y-m-d H:i:s'),
-                'is_stale' => $liveData['is_stale'] ?? false,
-                'source' => env('SPORTS_PROVIDER', 'mock')
+                'updated_at' => $updatedAt,
+                'last_updated' => $updatedAt,
+                'is_stale' => $isStale,
+                'stale' => $isStale,
+                'degraded' => $isDegraded,
+                'age_seconds' => $ageSeconds,
+                'data_age_seconds' => $ageSeconds,
+                'last_successful_sync' => $liveData['last_successful_sync'] ?? null,
+                'live_count' => count($liveData['matches'] ?? []),
+                'provider' => $liveData['provider'] ?? env('SPORTS_PROVIDER', 'mock'),
+                'source' => $liveData['provider'] ?? env('SPORTS_PROVIDER', 'mock'),
+                'providers' => $liveData['providers'] ?? []
             ]
         ]);
     }

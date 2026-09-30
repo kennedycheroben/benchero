@@ -52,6 +52,21 @@ class SportsProviderRouter
         return false;
     }
 
+    /**
+     * Get authoritative provider name string for a competition slug.
+     */
+    public function getAuthoritativeProvider(string $competitionSlug): string
+    {
+        $slug = strtolower($competitionSlug);
+        if (in_array($slug, self::KENYA_AFRICA_SLUGS, true)) {
+            return 'api-football';
+        }
+        if (isset(FootballDataSportsProvider::COMPETITION_CODE_MAP[$slug])) {
+            return 'football-data';
+        }
+        return 'football-data';
+    }
+
     public function resolveProviderForCompetition(?string $competitionSlug = null): SportsProviderInterface
     {
         $configuredProvider = strtolower((string)($_ENV['SPORTS_PROVIDER'] ?? env('SPORTS_PROVIDER', 'football-data')));

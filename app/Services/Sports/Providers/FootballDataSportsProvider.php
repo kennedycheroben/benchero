@@ -9,20 +9,44 @@ class FootballDataSportsProvider implements SportsProviderInterface
     private string $apiKey;
     private string $baseUrl = 'https://api.football-data.org/v4/';
 
-    public function __construct(?string $apiKey = null)
+    private ?\Benchero\Services\Sports\SportsQuotaTracker $quotaTracker = null;
+
+    public function __construct(?string $apiKey = null, ?\Benchero\Services\Sports\SportsQuotaTracker $quotaTracker = null)
     {
         $this->apiKey = $apiKey ?? (string)env('FOOTBALL_DATA_API_KEY', '');
+        $this->quotaTracker = $quotaTracker;
     }
 
-    private function makeRequest(string $endpoint): array
+    public function getQuotaTracker(): \Benchero\Services\Sports\SportsQuotaTracker
+    {
+        if ($this->quotaTracker === null) {
+            $this->quotaTracker = new \Benchero\Services\Sports\SportsQuotaTracker();
+        }
+        return $this->quotaTracker;
+    }
+
+    public function setQuotaTracker(\Benchero\Services\Sports\SportsQuotaTracker $tracker): void
+    {
+        $this->quotaTracker = $tracker;
+    }
+
+    private function makeRequest(string $endpoint, string $action = 'live'): array
     {
         if (empty($this->apiKey)) {
             throw new \RuntimeException("Football-Data.org API key missing. Configure FOOTBALL_DATA_API_KEY in .env.", 401);
         }
 
-        $url = $this->baseUrl . ltrim($endpoint, '/');
-        $ch = curl_init();
+        // Check if provider is currently in active backoff
+        if ($this->getQuotaTracker()->isProviderInBackoff('football-data')) {
+            $rem = $this->getQuotaTracker()->getRemainingBackoffSeconds('football-data');
+            throw new \RuntimeException("Football-Data.org rate limit or quota backoff active. Deferred for {$rem}s.", 429);
+        }
 
+        $url = $this->baseUrl . ltrim($endpoint, '/');
+        $headers = [];
+        $reqStart = microtime(true);
+
+        $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
@@ -30,6 +54,14 @@ class FootballDataSportsProvider implements SportsProviderInterface
                 'X-Auth-Token: ' . $this->apiKey,
                 'Accept: application/json'
             ],
+            CURLOPT_HEADERFUNCTION => function ($curl, $headerLine) use (&$headers) {
+                $len = strlen($headerLine);
+                $parts = explode(':', $headerLine, 2);
+                if (count($parts) === 2) {
+                    $headers[strtolower(trim($parts[0]))] = trim($parts[1]);
+                }
+                return $len;
+            },
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_TIMEOUT => 10,
             CURLOPT_SSL_VERIFYPEER => true,
@@ -41,17 +73,28 @@ class FootballDataSportsProvider implements SportsProviderInterface
         $curlError = curl_error($ch);
         curl_close($ch);
 
+        $durationMs = (int)round((microtime(true) - $reqStart) * 1000);
+
+        // Parse minute quota headers
+        $quotaRemaining = null;
+        if (isset($headers['x-requests-available-minute'])) {
+            $quotaRemaining = (int)$headers['x-requests-available-minute'];
+        }
+
         if ($response === false) {
+            $this->getQuotaTracker()->recordRequest('football-data', $action, $endpoint, 504, $durationMs, $quotaRemaining, 10, "Connection failed: {$curlError}");
             throw new \RuntimeException("Football-Data.org connection timeout or network failure: {$curlError}", 504);
         }
 
         if ($httpCode === 401 || $httpCode === 403) {
+            $this->getQuotaTracker()->recordRequest('football-data', $action, $endpoint, $httpCode, $durationMs, $quotaRemaining, 10, "Authentication failed (HTTP {$httpCode})");
             throw new \RuntimeException("Football-Data.org authentication failed (HTTP {$httpCode}). Verify FOOTBALL_DATA_API_KEY.", $httpCode);
         }
 
         if ($httpCode === 429) {
             // Short backoff and single retry for momentary rate limits
             sleep(2);
+            $retryHeaders = [];
             $chRetry = curl_init();
             curl_setopt_array($chRetry, [
                 CURLOPT_URL => $url,
@@ -60,6 +103,14 @@ class FootballDataSportsProvider implements SportsProviderInterface
                     'X-Auth-Token: ' . $this->apiKey,
                     'Accept: application/json'
                 ],
+                CURLOPT_HEADERFUNCTION => function ($curl, $headerLine) use (&$retryHeaders) {
+                    $len = strlen($headerLine);
+                    $parts = explode(':', $headerLine, 2);
+                    if (count($parts) === 2) {
+                        $retryHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
+                    }
+                    return $len;
+                },
                 CURLOPT_CONNECTTIMEOUT => 5,
                 CURLOPT_TIMEOUT => 10,
                 CURLOPT_SSL_VERIFYPEER => true,
@@ -70,25 +121,31 @@ class FootballDataSportsProvider implements SportsProviderInterface
             curl_close($chRetry);
 
             if ($httpCode === 429) {
+                $this->getQuotaTracker()->recordRequest('football-data', $action, $endpoint, 429, $durationMs, 0, 10, "Rate limit exceeded (HTTP 429)");
                 throw new \RuntimeException("Football-Data.org rate limit exceeded (HTTP 429).", 429);
             }
         }
 
         if ($httpCode >= 500) {
+            $this->getQuotaTracker()->recordRequest('football-data', $action, $endpoint, $httpCode, $durationMs, $quotaRemaining, 10, "Server error (HTTP {$httpCode})");
             throw new \RuntimeException("Football-Data.org service error (HTTP {$httpCode}).", 500);
         }
 
         $data = json_decode($response, true);
         if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            $this->getQuotaTracker()->recordRequest('football-data', $action, $endpoint, 502, $durationMs, $quotaRemaining, 10, "Malformed JSON response");
             throw new \RuntimeException("Football-Data.org returned malformed JSON response.", 502);
         }
+
+        // Record successful request
+        $this->getQuotaTracker()->recordRequest('football-data', $action, $endpoint, 200, $durationMs, $quotaRemaining, 10);
 
         return $data;
     }
 
     public function getLiveScores(): array
     {
-        $data = $this->makeRequest('matches?status=IN_PLAY,PAUSED');
+        $data = $this->makeRequest('matches?status=IN_PLAY,PAUSED', 'live');
         $matches = $data['matches'] ?? [];
         return array_map([$this, 'normalizeMatch'], $matches);
     }
@@ -105,7 +162,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
         }
 
         // Genuine provider errors must bubble to SportsSyncService
-        $data = $this->makeRequest($endpoint);
+        $data = $this->makeRequest($endpoint, 'results');
         $matches = $data['matches'] ?? [];
 
         $normalized = array_map([$this, 'normalizeMatch'], $matches);
@@ -129,7 +186,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
     {
         if ($date) {
             $endpoint = "matches?status=SCHEDULED,TIMED&dateFrom={$date}&dateTo={$date}";
-            $data = $this->makeRequest($endpoint);
+            $data = $this->makeRequest($endpoint, 'fixtures');
             $matches = $data['matches'] ?? [];
             $normalized = array_map([$this, 'normalizeMatch'], $matches);
             $deduped = [];
@@ -146,7 +203,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
         $endpoint = "matches?status=SCHEDULED,TIMED&dateFrom={$dateFrom}&dateTo={$dateTo}";
 
         // Genuine API errors bubble up
-        $data = $this->makeRequest($endpoint);
+        $data = $this->makeRequest($endpoint, 'fixtures');
         $allMatches = $data['matches'] ?? [];
 
         // If the rolling window yielded 0 fixtures (e.g. between gameweeks or during international breaks),
@@ -158,7 +215,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
                     break;
                 }
                 try {
-                    $compData = $this->makeRequest("competitions/{$code}/matches?status=SCHEDULED");
+                    $compData = $this->makeRequest("competitions/{$code}/matches?status=SCHEDULED", 'fixtures');
                     $compMatches = $compData['matches'] ?? [];
                     if (!empty($compMatches)) {
                         $batch = array_slice($compMatches, 0, 10);
@@ -189,7 +246,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
 
     public function getCompetitions(?string $sport = null): array
     {
-        $data = $this->makeRequest('competitions?plan=TIER_ONE');
+        $data = $this->makeRequest('competitions?plan=TIER_ONE', 'competitions');
         $competitions = $data['competitions'] ?? [];
         $result = [];
 
@@ -239,7 +296,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
         $code = self::COMPETITION_CODE_MAP[$competitionSlug];
 
         // Bubble exceptions if API fails
-        $data = $this->makeRequest("competitions/{$code}/standings");
+        $data = $this->makeRequest("competitions/{$code}/standings", 'standings');
 
         $tables = $data['standings'][0]['table'] ?? [];
         $result = [];
@@ -268,7 +325,7 @@ class FootballDataSportsProvider implements SportsProviderInterface
 
     public function getMatchDetail(string $matchId): ?array
     {
-        $data = $this->makeRequest("matches/{$matchId}");
+        $data = $this->makeRequest("matches/{$matchId}", 'match_detail');
         return isset($data['id']) ? $this->normalizeMatch($data) : null;
     }
 
