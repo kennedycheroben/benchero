@@ -117,10 +117,13 @@ class PublicClubController extends Controller
         // Fetch fixtures & results
         $fixturesStmt = $db->prepare("
             SELECT f.id, f.scheduled_at, f.venue_name, f.competition_type, f.competition_name, f.status, f.home_score, f.away_score, f.result_notes,
-                   ht.name as home_team_name, at.name as away_team_name, s.name as sport_name
+                   f.home_team_id, f.away_team_id, f.home_opponent_name, f.away_opponent_name,
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name, 
+                   s.name as sport_name
             FROM fixtures f
-            JOIN teams ht ON f.home_team_id = ht.id
-            JOIN teams at ON f.away_team_id = at.id
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
             JOIN sports s ON f.sport_id = s.id
             WHERE f.organization_id = ? AND f.deleted_at IS NULL
             ORDER BY f.scheduled_at ASC
@@ -294,10 +297,13 @@ class PublicClubController extends Controller
 
         $db = Database::getConnection();
         $stmt = $db->prepare("
-            SELECT f.*, ht.name as home_team_name, at.name as away_team_name, s.name as sport_name
+            SELECT f.*, 
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name, 
+                   s.name as sport_name
             FROM fixtures f
-            JOIN teams ht ON f.home_team_id = ht.id
-            JOIN teams at ON f.away_team_id = at.id
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
             JOIN sports s ON f.sport_id = s.id
             WHERE f.organization_id = ? AND f.deleted_at IS NULL AND f.status != 'completed'
             ORDER BY f.scheduled_at ASC
@@ -319,10 +325,13 @@ class PublicClubController extends Controller
 
         $db = Database::getConnection();
         $stmt = $db->prepare("
-            SELECT f.*, ht.name as home_team_name, at.name as away_team_name, s.name as sport_name
+            SELECT f.*, 
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name, 
+                   s.name as sport_name
             FROM fixtures f
-            JOIN teams ht ON f.home_team_id = ht.id
-            JOIN teams at ON f.away_team_id = at.id
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
             JOIN sports s ON f.sport_id = s.id
             WHERE f.organization_id = ? AND f.deleted_at IS NULL AND f.status = 'completed'
             ORDER BY f.scheduled_at DESC

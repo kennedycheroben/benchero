@@ -69,6 +69,9 @@
                                         <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/fixtures/<?= htmlspecialchars($f['id']) ?>" class="text-decoration-none text-dark fw-bold">
                                             <?= htmlspecialchars($f['home_team_name']) ?> vs <?= htmlspecialchars($f['away_team_name']) ?>
                                         </a>
+                                        <?php if (empty($f['home_team_id']) || empty($f['away_team_id'])): ?>
+                                            <span class="badge bg-light text-muted border ms-1">External Opponent</span>
+                                        <?php endif; ?>
                                         <?php if ($f['venue_name']): ?>
                                             <div class="text-muted small"><i class="bi bi-geo-alt"></i> <?= htmlspecialchars($f['venue_name']) ?></div>
                                         <?php endif; ?>

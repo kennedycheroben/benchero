@@ -18,12 +18,12 @@ class FixtureRepository
     {
         $stmt = $this->db->prepare("
             SELECT f.*, 
-                   ht.name as home_team_name, 
-                   at.name as away_team_name,
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name,
                    s.name as season_name
             FROM fixtures f
-            JOIN teams ht ON f.home_team_id = ht.id
-            JOIN teams at ON f.away_team_id = at.id
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
             JOIN seasons s ON f.season_id = s.id
             WHERE f.season_id = :season_id
             AND f.organization_id = :org_id 
@@ -43,12 +43,12 @@ class FixtureRepository
     {
         $stmt = $this->db->prepare("
             SELECT f.*, 
-                   ht.name as home_team_name, 
-                   at.name as away_team_name,
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name,
                    s.name as season_name
             FROM fixtures f
-            JOIN teams ht ON f.home_team_id = ht.id
-            JOIN teams at ON f.away_team_id = at.id
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
             JOIN seasons s ON f.season_id = s.id
             WHERE f.id = :id 
             AND f.organization_id = :org_id 
@@ -64,16 +64,28 @@ class FixtureRepository
     {
         $id = Ulid::generate();
         $stmt = $this->db->prepare("
-            INSERT INTO fixtures (id, organization_id, sport_id, season_id, home_team_id, away_team_id, scheduled_at, venue_name, competition_type, competition_name, status, notes) 
-            VALUES (:id, :org_id, :sport_id, :season_id, :home_team_id, :away_team_id, :scheduled_at, :venue_name, :competition_type, :competition_name, :status, :notes)
+            INSERT INTO fixtures (
+                id, organization_id, sport_id, season_id, 
+                home_team_id, home_opponent_name, 
+                away_team_id, away_opponent_name, 
+                scheduled_at, venue_name, competition_type, competition_name, status, notes
+            ) 
+            VALUES (
+                :id, :org_id, :sport_id, :season_id, 
+                :home_team_id, :home_opponent_name, 
+                :away_team_id, :away_opponent_name, 
+                :scheduled_at, :venue_name, :competition_type, :competition_name, :status, :notes
+            )
         ");
         $stmt->execute([
             'id' => $id,
             'org_id' => $data['organization_id'],
             'sport_id' => $data['sport_id'],
             'season_id' => $data['season_id'],
-            'home_team_id' => $data['home_team_id'],
-            'away_team_id' => $data['away_team_id'],
+            'home_team_id' => $data['home_team_id'] ?? null,
+            'home_opponent_name' => $data['home_opponent_name'] ?? null,
+            'away_team_id' => $data['away_team_id'] ?? null,
+            'away_opponent_name' => $data['away_opponent_name'] ?? null,
             'scheduled_at' => $data['scheduled_at'],
             'venue_name' => $data['venue_name'] ?? null,
             'competition_type' => $data['competition_type'] ?? 'league',
@@ -89,7 +101,9 @@ class FixtureRepository
         $stmt = $this->db->prepare("
             UPDATE fixtures 
             SET home_team_id = :home_team_id, 
+                home_opponent_name = :home_opponent_name,
                 away_team_id = :away_team_id, 
+                away_opponent_name = :away_opponent_name,
                 scheduled_at = :scheduled_at, 
                 venue_name = :venue_name, 
                 competition_type = :competition_type, 
@@ -98,8 +112,10 @@ class FixtureRepository
             WHERE id = :id AND organization_id = :org_id AND sport_id = :sport_id
         ");
         return $stmt->execute([
-            'home_team_id' => $data['home_team_id'],
-            'away_team_id' => $data['away_team_id'],
+            'home_team_id' => $data['home_team_id'] ?? null,
+            'home_opponent_name' => $data['home_opponent_name'] ?? null,
+            'away_team_id' => $data['away_team_id'] ?? null,
+            'away_opponent_name' => $data['away_opponent_name'] ?? null,
             'scheduled_at' => $data['scheduled_at'],
             'venue_name' => $data['venue_name'] ?? null,
             'competition_type' => $data['competition_type'] ?? 'league',
@@ -163,14 +179,15 @@ class FixtureRepository
     public function findPublicBySeason(string $seasonId, string $orgId, string $sportId): array
     {
         $stmt = $this->db->prepare("
-            SELECT f.id, f.home_team_id, f.away_team_id, f.scheduled_at, f.venue_name, 
+            SELECT f.id, f.home_team_id, f.home_opponent_name, f.away_team_id, f.away_opponent_name,
+                   f.scheduled_at, f.venue_name, 
                    f.competition_type, f.competition_name, f.status, f.home_score, f.away_score,
-                   ht.name as home_team_name, 
-                   at.name as away_team_name,
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name,
                    s.name as season_name
             FROM fixtures f
-            JOIN teams ht ON f.home_team_id = ht.id
-            JOIN teams at ON f.away_team_id = at.id
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
             JOIN seasons s ON f.season_id = s.id
             WHERE f.season_id = :season_id
             AND f.organization_id = :org_id 

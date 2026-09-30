@@ -9,6 +9,7 @@ use Benchero\Services\OrganizationService;
 use Benchero\Core\Ulid;
 
 $db = Database::getConnection();
+$db->exec("DELETE FROM payments");
 $db->exec("DELETE FROM organization_sports");
 $db->exec("DELETE FROM teams");
 $db->exec("DELETE FROM subscriptions");
@@ -42,7 +43,7 @@ $footballId = $db->query("SELECT id FROM sports WHERE slug = 'football'")->fetch
 $basketballId = $db->query("SELECT id FROM sports WHERE slug = 'basketball'")->fetchColumn();
 
 // 3. Test Organization can activate a sport
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$footballId')");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$footballId') ON DUPLICATE KEY UPDATE is_active = 1");
 $activated = $db->query("SELECT * FROM organization_sports WHERE organization_id = '$orgA' AND sport_id = '$footballId'")->fetch();
 logResult('Org Sport Activation', (bool)$activated, 'Org A activated football');
 
@@ -66,12 +67,12 @@ $res = runMiddlewareTest($middleware, 'org-a', 'basketball', $userA);
 logResult('User A -> Org A Basketball', $res->getStatusCode() === 404, 'Blocked (not activated by org)');
 
 // User A accesses Org B / Football -> Should block (403) cross tenant
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgB', '$footballId')"); // B activates football
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgB', '$footballId') ON DUPLICATE KEY UPDATE is_active = 1"); // B activates football
 $res = runMiddlewareTest($middleware, 'org-b', 'football', $userA);
 logResult('User A -> Org B Football', $res->getStatusCode() === 403, 'Blocked with 403 cross-tenant');
 
 // 5. Test Teams can exist with same slug across sports in same org
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$basketballId')");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$basketballId') ON DUPLICATE KEY UPDATE is_active = 1");
 try {
     $db->exec("INSERT INTO teams (id, organization_id, sport_id, name, slug) VALUES ('" . Ulid::generate() . "', '$orgA', '$footballId', 'Senior Men', 'senior-men')");
     

@@ -9,7 +9,9 @@ use Benchero\Core\Middleware\MiddlewareInterface;
 class CsrfMiddleware implements MiddlewareInterface
 {
     private array $exempt = [
-        '/billing/mpesa/callback'
+        '/billing/mpesa/callback',
+        '/billing/imbank/callback',
+        '/billing/paypal/webhook'
     ];
 
     public function handle(Request $request, callable $next): Response
@@ -19,9 +21,9 @@ class CsrfMiddleware implements MiddlewareInterface
             $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
         }
 
-        $path = $request->path();
+        $path = rtrim($request->path(), '/') ?: '/';
         foreach ($this->exempt as $exemptPath) {
-            if (strpos($path, $exemptPath) === 0) {
+            if ($path === $exemptPath) {
                 return $next($request);
             }
         }

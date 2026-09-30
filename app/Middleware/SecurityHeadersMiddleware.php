@@ -17,7 +17,7 @@ class SecurityHeadersMiddleware implements MiddlewareInterface
             (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
         );
 
-        $host = $_SERVER['HTTP_HOST'] ?? 'benchero.co.ke';
+        $host = $request->host() ?: 'benchero.co.ke';
         $isLocalhost = str_contains($host, 'localhost') || str_contains($host, '127.0.0.1');
 
         // HTTP to HTTPS enforcement in production (excluding local dev environment)

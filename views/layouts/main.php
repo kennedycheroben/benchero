@@ -180,6 +180,19 @@
                                 <i class="bi bi-person-vcard"></i> Staff & Management
                             </a>
 
+                            <?php
+                                if (!isset($sport['slug']) && isset($tenant['id'])) {
+                                    $defaultSportStmt = \Benchero\Core\Database\Database::getConnection()->prepare(
+                                        "SELECT s.* FROM sports s JOIN organization_sports os ON s.id = os.sport_id WHERE os.organization_id = :org_id AND os.is_active = 1 ORDER BY s.name ASC LIMIT 1"
+                                    );
+                                    $defaultSportStmt->execute(['org_id' => $tenant['id']]);
+                                    $resolvedSport = $defaultSportStmt->fetch(\PDO::FETCH_ASSOC);
+                                    if ($resolvedSport) {
+                                        $sport = $resolvedSport;
+                                    }
+                                }
+                            ?>
+
                             <?php if (isset($sport['slug'])): ?>
                                 <div class="text-uppercase text-muted fw-bold fs-7 mt-3 mb-2 px-2"><?= htmlspecialchars($sport['name']) ?></div>
                                 <a class="tenant-nav-link <?= $isActive('/seasons') ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/s/' . urlencode($sport['slug']) . '/seasons') ?>">

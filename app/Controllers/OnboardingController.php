@@ -27,6 +27,7 @@ class OnboardingController
         $slug = trim($request->input('slug') ?? '');
         $country = trim($request->input('country') ?? '');
         $timezone = trim($request->input('timezone') ?? '');
+        $sportSlug = trim($request->input('sport') ?? $request->input('sport_slug') ?? '');
 
         // Auto-generate slug from name if empty
         if (empty($slug) && !empty($name)) {
@@ -47,7 +48,7 @@ class OnboardingController
 
         $service = new OrganizationService();
         try {
-            $createdSlug = $service->createOrganization($name, $slug, $country, $timezone, $_SESSION['_user_id']);
+            $createdSlug = $service->createOrganization($name, $slug, $country, $timezone, $_SESSION['_user_id'], !empty($sportSlug) ? $sportSlug : null);
             unset($_SESSION['old_onboarding_input']);
             return Response::redirect('/o/' . $createdSlug . '/dashboard');
         } catch (\Exception $e) {

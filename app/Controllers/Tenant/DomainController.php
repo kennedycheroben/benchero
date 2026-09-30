@@ -42,6 +42,7 @@ class DomainController extends Controller
         $domains = $this->domainService->getDomainsByOrg($org['id']);
         $hasPro = $this->entitlementService->hasCapability($org['id'], EntitlementService::CAP_CUSTOM_DOMAIN);
         $dnsInstructions = null;
+        $cfService = $this->domainService->getCloudflareService();
 
         if ($domainRecord && !empty($domainRecord['dns_records'])) {
             $dnsInstructions = is_array($domainRecord['dns_records']) ? $domainRecord['dns_records'] : json_decode($domainRecord['dns_records'], true);
@@ -53,6 +54,8 @@ class DomainController extends Controller
             'domains' => $domains,
             'has_pro' => $hasPro,
             'dns_instructions' => $dnsInstructions,
+            'cloudflare_enabled' => $cfService->isEnabled(),
+            'fallback_origin' => $cfService->getFallbackOrigin(),
             'error' => $request->getFlash('error'),
             'success' => $request->getFlash('success'),
             'info' => $request->getFlash('info')

@@ -40,9 +40,9 @@ $orgB = $db->query("SELECT id FROM organizations WHERE slug = 'org-b'")->fetchCo
 $footballId = $db->query("SELECT id FROM sports WHERE slug = 'football'")->fetchColumn();
 $basketballId = $db->query("SELECT id FROM sports WHERE slug = 'basketball'")->fetchColumn();
 
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$footballId')");
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$basketballId')");
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgB', '$footballId')");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$footballId') ON DUPLICATE KEY UPDATE is_active = 1");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$basketballId') ON DUPLICATE KEY UPDATE is_active = 1");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgB', '$footballId') ON DUPLICATE KEY UPDATE is_active = 1");
 
 // 2. Test Season Creation and is_current logic
 $seasonService = new SeasonService();

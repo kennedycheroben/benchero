@@ -37,7 +37,7 @@ $orgService = new OrganizationService();
 $orgService->createOrganization('Org A', 'org-a', 'KE', 'Africa/Nairobi', $userA);
 $orgA = $db->query("SELECT id FROM organizations WHERE slug = 'org-a'")->fetchColumn();
 $footballId = $db->query("SELECT id FROM sports WHERE slug = 'football'")->fetchColumn();
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$footballId')");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgA', '$footballId') ON DUPLICATE KEY UPDATE is_active = 1");
 
 // Create a Team and Season
 $teamService = new TeamService();
@@ -75,7 +75,7 @@ $userB = Ulid::generate();
 $db->exec("INSERT INTO users (id, name, email, password_hash, email_verified_at) VALUES ('$userB', 'User B', 'b@b.com', 'pwd', NOW())");
 $orgService->createOrganization('Org B', 'org-b', 'US', 'America/New_York', $userB);
 $orgB = $db->query("SELECT id FROM organizations WHERE slug = 'org-b'")->fetchColumn();
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgB', '$footballId')");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$orgB', '$footballId') ON DUPLICATE KEY UPDATE is_active = 1");
 
 $team2 = $teamService->createTeam($orgB, $footballId, 'Team B', 'B', 'Senior');
 $season2 = $seasonService->createSeason($orgB, $footballId, '2025', '2025-01-01', '2025-12-31');

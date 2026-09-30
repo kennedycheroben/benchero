@@ -70,11 +70,14 @@ class ExportController extends Controller
 
             case 'fixtures':
                 $stmt = $this->db->prepare("
-                    SELECT f.id, f.fixture_date, f.venue, f.status, f.home_score, f.away_score, ht.name as home_team, at.name as away_team
+                    SELECT f.id, f.scheduled_at as fixture_date, f.venue_name as venue, f.status, f.home_score, f.away_score, 
+                           f.home_team_id, f.home_opponent_name, f.away_team_id, f.away_opponent_name,
+                           COALESCE(ht.name, f.home_opponent_name) as home_team, 
+                           COALESCE(at.name, f.away_opponent_name) as away_team
                     FROM fixtures f
                     LEFT JOIN teams ht ON f.home_team_id = ht.id
                     LEFT JOIN teams at ON f.away_team_id = at.id
-                    WHERE f.organization_id = ? AND f.deleted_at IS NULL ORDER BY f.fixture_date DESC
+                    WHERE f.organization_id = ? AND f.deleted_at IS NULL ORDER BY f.scheduled_at DESC
                 ");
                 $stmt->execute([$org['id']]);
                 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);

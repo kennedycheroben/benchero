@@ -96,6 +96,16 @@ $bencheroUrl = url("/club/") . $orgSlug;
                             <span class="badge bg-warning text-dark px-3 py-2"><i class="bi bi-hourglass-split me-1"></i> ROUTING PENDING</span>
                         <?php endif; ?>
 
+                        <?php if (!empty($domain['cloudflare_custom_hostname_id']) || !empty($cloudflare_enabled)): ?>
+                            <?php if (($domain['cloudflare_status'] ?? '') === 'active'): ?>
+                                <span class="badge bg-success px-3 py-2"><i class="bi bi-cloud-check me-1"></i> CF EDGE ACTIVE</span>
+                            <?php elseif (($domain['cloudflare_status'] ?? '') === 'failed'): ?>
+                                <span class="badge bg-danger px-3 py-2"><i class="bi bi-cloud-slash me-1"></i> CF ERROR</span>
+                            <?php elseif (!empty($domain['cloudflare_custom_hostname_id'])): ?>
+                                <span class="badge bg-info text-dark px-3 py-2"><i class="bi bi-cloud-arrow-up me-1"></i> CF PROVISIONING</span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
                         <?php if ($domain['ssl_status'] === 'active'): ?>
                             <span class="badge bg-success px-3 py-2"><i class="bi bi-shield-lock me-1"></i> HTTPS ACTIVE</span>
                         <?php elseif ($domain['ssl_status'] === 'pending'): ?>
@@ -228,9 +238,19 @@ $bencheroUrl = url("/club/") . $orgSlug;
                                 </p>
 
                                 <?php
-                                    $cnameTarget = env('CUSTOM_DOMAIN_CNAME_TARGET', null);
+                                    $cnameTarget = $fallback_origin ?? env('CUSTOM_DOMAIN_CNAME_TARGET', 'cname.benchero.co.ke');
                                     $aTarget = env('CUSTOM_DOMAIN_A_TARGET', null);
+                                    $isCfEnabled = !empty($cloudflare_enabled);
+                                    $isCfActive = (!$isCfEnabled) || (($domain['cloudflare_status'] ?? '') === 'active' && ($domain['cloudflare_ssl_status'] ?? '') === 'active');
+                                    $canActivate = ($domain['verification_status'] === 'verified') && $isCfActive;
                                 ?>
+
+                                <?php if (!empty($domain['cloudflare_last_error'])): ?>
+                                    <div class="alert alert-warning small py-2 px-3 mb-3 border-0 bg-white shadow-sm">
+                                        <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
+                                        <strong>Cloudflare Notice:</strong> <?= htmlspecialchars($domain['cloudflare_last_error']) ?>
+                                    </div>
+                                <?php endif; ?>
 
                                 <?php if (!empty($cnameTarget) || !empty($aTarget)): ?>
                                     <div class="table-responsive mb-3">
@@ -282,12 +302,14 @@ $bencheroUrl = url("/club/") . $orgSlug;
                                         <form action="<?= url("/o/") ?><?= $orgSlug ?>/domain/activate" method="POST">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="domain_id" value="<?= htmlspecialchars($domain['id']) ?>">
-                                            <button type="submit" class="btn btn-success fw-bold btn-sm" <?= $domain['verification_status'] !== 'verified' ? 'disabled' : '' ?>>
+                                            <button type="submit" class="btn btn-success fw-bold btn-sm" <?= !$canActivate ? 'disabled' : '' ?>>
                                                 <i class="bi bi-power me-1"></i> Activate Domain Routing
                                             </button>
                                         </form>
                                         <?php if ($domain['verification_status'] !== 'verified'): ?>
                                             <small class="text-muted d-block" style="font-size:0.8rem;">* Ownership verification required first.</small>
+                                        <?php elseif (!$isCfActive): ?>
+                                            <small class="text-warning d-block" style="font-size:0.8rem;">* Cloudflare edge SSL is currently provisioning (status: <?= htmlspecialchars($domain['cloudflare_ssl_status'] ?? 'pending') ?>). Verify CNAME and check SSL status to activate.</small>
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <div class="text-success small fw-semibold">

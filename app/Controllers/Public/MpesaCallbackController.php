@@ -21,6 +21,9 @@ class MpesaCallbackController extends Controller
     {
         $rawContent = file_get_contents('php://input');
         $data = json_decode($rawContent, true);
+        if (!$data && !empty($request->body())) {
+            $data = $request->body();
+        }
 
         if (!$data) {
             return Response::json(['ResultCode' => 1, 'ResultDesc' => 'Invalid JSON'], 400);

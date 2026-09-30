@@ -4,6 +4,7 @@ namespace Benchero\Services;
 
 use Benchero\Core\Database\Database;
 use Benchero\Core\Ulid;
+use Benchero\Services\Cloudflare\CloudflareCustomHostnameService;
 use Benchero\Services\Domain\DomainValidator;
 use Benchero\Services\Domain\DomainVerificationService;
 use Benchero\Services\Domain\TenantResolver;
@@ -16,18 +17,32 @@ class DomainService
     private EntitlementService $entitlementService;
     private DomainVerificationService $verificationService;
     private TenantResolver $tenantResolver;
+    private CloudflareCustomHostnameService $cloudflareService;
 
     public function __construct(
         ?PDO $db = null,
         ?EntitlementService $entitlementService = null,
         ?DomainVerificationService $verificationService = null,
-        ?TenantResolver $tenantResolver = null
+        ?TenantResolver $tenantResolver = null,
+        ?CloudflareCustomHostnameService $cloudflareService = null
     ) {
         $this->db = $db ?? Database::getConnection();
         $this->entitlementService = $entitlementService ?? new EntitlementService($this->db);
         $this->verificationService = $verificationService ?? new DomainVerificationService();
         $this->tenantResolver = $tenantResolver ?? new TenantResolver($this->db, $this->entitlementService);
+        $this->cloudflareService = $cloudflareService ?? new CloudflareCustomHostnameService();
     }
+
+    public function getCloudflareService(): CloudflareCustomHostnameService
+    {
+        return $this->cloudflareService;
+    }
+
+    public function setCloudflareService(CloudflareCustomHostnameService $cloudflareService): void
+    {
+        $this->cloudflareService = $cloudflareService;
+    }
+
 
     /**
      * Target Benchero Server CNAME and A Record details for custom domain DNS instructions.
@@ -211,6 +226,42 @@ class DomainService
         $result = $this->verificationService->verifyOwnership($normalizedDomain, $token);
 
         if ($result['verified']) {
+            $cfHostnameId = $record['cloudflare_custom_hostname_id'] ?? null;
+            $cfStatus = $record['cloudflare_status'] ?? 'pending';
+            $cfSslStatus = $record['cloudflare_ssl_status'] ?? 'pending';
+            $cfLastError = null;
+
+            // Trigger Cloudflare Custom Hostname creation if enabled
+            if ($this->cloudflareService->isEnabled()) {
+                if (empty($cfHostnameId)) {
+                    $cfRes = $this->cloudflareService->createCustomHostname($normalizedDomain);
+                    if ($cfRes['success']) {
+                        $cfHostnameId = $cfRes['id'];
+                        $cfStatus = $cfRes['status'] ?? 'pending';
+                        $cfSslStatus = $cfRes['ssl_status'] ?? 'pending';
+                        $this->logAudit($orgId, 'custom_domain_cf_provisioned', $record['id'], [
+                            'domain' => $normalizedDomain,
+                            'cf_id' => $cfHostnameId,
+                            'status' => $cfStatus,
+                            'ssl_status' => $cfSslStatus,
+                        ]);
+                    } else {
+                        $cfLastError = $cfRes['error'] ?? 'Cloudflare provisioning failed';
+                        $this->logAudit($orgId, 'custom_domain_cf_provision_failed', $record['id'], [
+                            'domain' => $normalizedDomain,
+                            'error' => $cfLastError,
+                        ]);
+                    }
+                } else {
+                    // Hostname already provisioned in Cloudflare, sync latest status
+                    $cfCheck = $this->cloudflareService->getCustomHostnameStatus($cfHostnameId);
+                    if ($cfCheck['success']) {
+                        $cfStatus = $cfCheck['hostname_status'];
+                        $cfSslStatus = $cfCheck['ssl_status'];
+                    }
+                }
+            }
+
             $stmt = $this->db->prepare("
                 UPDATE custom_domains
                 SET verification_status = 'verified',
@@ -218,19 +269,48 @@ class DomainService
                     verified_at = NOW(),
                     last_verification_attempt = NOW(),
                     last_verification_error = NULL,
+                    cloudflare_custom_hostname_id = ?,
+                    cloudflare_status = ?,
+                    cloudflare_ssl_status = ?,
+                    cloudflare_last_checked_at = IF(? IS NOT NULL, NOW(), cloudflare_last_checked_at),
+                    cloudflare_last_error = ?,
+                    cloudflare_created_at = IF(cloudflare_created_at IS NULL AND ? IS NOT NULL, NOW(), cloudflare_created_at),
                     updated_at = NOW()
                 WHERE id = ?
             ");
-            $stmt->execute([$record['id']]);
+            $stmt->execute([
+                $cfHostnameId,
+                $cfStatus,
+                $cfSslStatus,
+                $cfHostnameId,
+                $cfLastError,
+                $cfHostnameId,
+                $record['id']
+            ]);
 
             $this->logAudit($orgId, 'custom_domain_verified', $record['id'], [
                 'domain' => $normalizedDomain
             ]);
 
+            $message = "Ownership for domain {$normalizedDomain} successfully verified!";
+            if ($this->cloudflareService->isEnabled()) {
+                if (!empty($cfLastError)) {
+                    $message .= " Note: Cloudflare provisioning encountered an issue: {$cfLastError}.";
+                } elseif ($cfSslStatus === 'active') {
+                    $message .= " Cloudflare edge SSL is ready! You can now activate routing.";
+                } else {
+                    $message .= " Cloudflare edge SSL is currently provisioning. Please ensure your CNAME points to {$this->cloudflareService->getFallbackOrigin()}.";
+                }
+            } else {
+                $message .= " You can now activate routing.";
+            }
+
             return [
                 'success' => true,
                 'status' => 'verified',
-                'message' => "Ownership for domain {$normalizedDomain} successfully verified! You can now activate routing."
+                'cloudflare_status' => $cfStatus,
+                'cloudflare_ssl_status' => $cfSslStatus,
+                'message' => $message
             ];
         }
 
@@ -274,6 +354,43 @@ class DomainService
 
         if (!$this->entitlementService->hasCapability($orgId, EntitlementService::CAP_CUSTOM_DOMAIN)) {
             throw new InvalidArgumentException('Activating custom domains requires an active Benchero Pro subscription.');
+        }
+
+        // Cloudflare prerequisite checks when enabled
+        if ($this->cloudflareService->isEnabled()) {
+            $cfHostnameId = $record['cloudflare_custom_hostname_id'] ?? null;
+            if (empty($cfHostnameId)) {
+                $cfRes = $this->cloudflareService->createCustomHostname($record['normalized_domain']);
+                if (!$cfRes['success'] || empty($cfRes['id'])) {
+                    throw new InvalidArgumentException('Cannot activate domain: Cloudflare custom hostname is not provisioned. ' . ($cfRes['error'] ?? 'Please retry verification.'));
+                }
+                $cfHostnameId = $cfRes['id'];
+                $record['cloudflare_custom_hostname_id'] = $cfHostnameId;
+            }
+
+            $cfCheck = $this->cloudflareService->getCustomHostnameStatus($cfHostnameId);
+            if ($cfCheck['success']) {
+                $cfStatus = $cfCheck['hostname_status'];
+                $cfSslStatus = $cfCheck['ssl_status'];
+
+                // Update record with latest Cloudflare state
+                $updCf = $this->db->prepare("
+                    UPDATE custom_domains 
+                    SET cloudflare_status = ?, cloudflare_ssl_status = ?, cloudflare_last_checked_at = NOW(), updated_at = NOW() 
+                    WHERE id = ?
+                ");
+                $updCf->execute([$cfStatus, $cfSslStatus, $record['id']]);
+
+                if (!$cfCheck['is_active']) {
+                    $targetCname = $this->cloudflareService->getFallbackOrigin();
+                    throw new InvalidArgumentException(
+                        "Cannot activate domain yet: Cloudflare edge SSL is currently '{$cfSslStatus}' (hostname: '{$cfStatus}'). " .
+                        "Please verify your CNAME record points to '{$targetCname}' and wait for Cloudflare certificate issuance to complete."
+                    );
+                }
+            } else {
+                throw new InvalidArgumentException('Failed to check Cloudflare custom hostname status: ' . ($cfCheck['error'] ?? 'network error'));
+            }
         }
 
         // Deactivate any previously active domains for this organization (safe replacement)
@@ -358,7 +475,62 @@ class DomainService
         }
 
         $domain = $record['normalized_domain'];
+        $cfHostnameId = $record['cloudflare_custom_hostname_id'] ?? null;
 
+        // If Cloudflare is enabled and hostname ID exists, query Cloudflare API first
+        if ($this->cloudflareService->isEnabled() && !empty($cfHostnameId)) {
+            $cfCheck = $this->cloudflareService->getCustomHostnameStatus($cfHostnameId);
+            if ($cfCheck['success']) {
+                $cfStatus = $cfCheck['hostname_status'];
+                $cfSslStatus = $cfCheck['ssl_status'];
+                $isLive = $cfCheck['is_active'];
+
+                $bencheroSslStatus = CloudflareCustomHostnameService::mapCfSslStatusToBenchero($cfSslStatus);
+
+                $stmt = $this->db->prepare("
+                    UPDATE custom_domains 
+                    SET cloudflare_status = ?, 
+                        cloudflare_ssl_status = ?, 
+                        ssl_status = ?,
+                        ssl_ready_at = IF(? = 1 AND ssl_ready_at IS NULL, NOW(), ssl_ready_at),
+                        cloudflare_last_checked_at = NOW(),
+                        updated_at = NOW() 
+                    WHERE id = ?
+                ");
+                $stmt->execute([$cfStatus, $cfSslStatus, $bencheroSslStatus, $isLive ? 1 : 0, $record['id']]);
+
+                if ($isLive) {
+                    $this->logAudit($orgId, 'custom_domain_ssl_verified', $record['id'], [
+                        'domain' => $domain,
+                        'source' => 'cloudflare',
+                        'status' => $cfStatus,
+                        'ssl_status' => $cfSslStatus,
+                    ]);
+
+                    return [
+                        'ssl_active' => true,
+                        'status' => 'active',
+                        'issuer' => 'Cloudflare Edge SSL',
+                        'valid_to' => null,
+                        'cloudflare_status' => $cfStatus,
+                        'cloudflare_ssl_status' => $cfSslStatus,
+                        'message' => "Cloudflare edge SSL certificate is active for {$domain}."
+                    ];
+                }
+
+                return [
+                    'ssl_active' => false,
+                    'status' => 'pending',
+                    'issuer' => null,
+                    'valid_to' => null,
+                    'cloudflare_status' => $cfStatus,
+                    'cloudflare_ssl_status' => $cfSslStatus,
+                    'message' => "Cloudflare edge SSL status: '{$cfSslStatus}' (hostname: '{$cfStatus}'). Ensure CNAME points to {$this->cloudflareService->getFallbackOrigin()}."
+                ];
+            }
+        }
+
+        // Secondary / Fallback: Live TCP socket handshake
         $context = stream_context_create([
             'ssl' => [
                 'capture_peer_cert' => true,
@@ -477,9 +649,18 @@ class DomainService
                 return false;
             }
 
+            // Cleanup Cloudflare Custom Hostname if configured
+            $cfDeleted = false;
+            if ($this->cloudflareService->isEnabled() && !empty($record['cloudflare_custom_hostname_id'])) {
+                $cfDelRes = $this->cloudflareService->deleteCustomHostname($record['cloudflare_custom_hostname_id']);
+                $cfDeleted = $cfDelRes['success'];
+            }
+
             $this->logAudit($orgId, 'custom_domain_deleted', $record['id'], [
                 'domain' => $record['domain'],
-                'normalized_domain' => $record['normalized_domain']
+                'normalized_domain' => $record['normalized_domain'],
+                'cf_hostname_id' => $record['cloudflare_custom_hostname_id'] ?? null,
+                'cf_deleted' => $cfDeleted,
             ]);
 
             $stmt = $this->db->prepare("DELETE FROM custom_domains WHERE id = ? AND organization_id = ?");
@@ -492,9 +673,17 @@ class DomainService
         }
 
         foreach ($domains as $record) {
+            $cfDeleted = false;
+            if ($this->cloudflareService->isEnabled() && !empty($record['cloudflare_custom_hostname_id'])) {
+                $cfDelRes = $this->cloudflareService->deleteCustomHostname($record['cloudflare_custom_hostname_id']);
+                $cfDeleted = $cfDelRes['success'];
+            }
+
             $this->logAudit($orgId, 'custom_domain_deleted', $record['id'], [
                 'domain' => $record['domain'],
-                'normalized_domain' => $record['normalized_domain']
+                'normalized_domain' => $record['normalized_domain'],
+                'cf_hostname_id' => $record['cloudflare_custom_hostname_id'] ?? null,
+                'cf_deleted' => $cfDeleted,
             ]);
         }
 

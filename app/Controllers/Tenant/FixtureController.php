@@ -101,8 +101,25 @@ class FixtureController
         $sport = $request->getAttribute('sport');
 
         $seasonId = $_POST['season_id'] ?? '';
-        $homeTeamId = $_POST['home_team_id'] ?? '';
-        $awayTeamId = $_POST['away_team_id'] ?? '';
+        $homeType = $_POST['home_type'] ?? null;
+        $awayType = $_POST['away_type'] ?? null;
+
+        if ($homeType === 'external') {
+            $homeTeamId = null;
+            $homeOpponentName = trim($_POST['home_opponent_name'] ?? '');
+        } else {
+            $homeTeamId = !empty($_POST['home_team_id']) ? $_POST['home_team_id'] : null;
+            $homeOpponentName = !empty($_POST['home_opponent_name']) ? trim($_POST['home_opponent_name']) : null;
+        }
+
+        if ($awayType === 'external') {
+            $awayTeamId = null;
+            $awayOpponentName = trim($_POST['away_opponent_name'] ?? '');
+        } else {
+            $awayTeamId = !empty($_POST['away_team_id']) ? $_POST['away_team_id'] : null;
+            $awayOpponentName = !empty($_POST['away_opponent_name']) ? trim($_POST['away_opponent_name']) : null;
+        }
+
         $scheduledAtLocal = $_POST['scheduled_at'] ?? ''; // YYYY-MM-DDTHH:MM
         $venueName = trim($_POST['venue_name'] ?? '');
         $competitionType = $_POST['competition_type'] ?? 'league';
@@ -127,7 +144,9 @@ class FixtureController
                 $competitionType, 
                 $competitionName ?: null, 
                 'scheduled',
-                $notes ?: null
+                $notes ?: null,
+                $homeOpponentName ?: null,
+                $awayOpponentName ?: null
             );
             return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/fixtures?season_id={$seasonId}");
         } catch (\Exception $e) {
@@ -212,8 +231,25 @@ class FixtureController
         $id = $params['id'];
 
         $seasonId = $_POST['season_id'] ?? '';
-        $homeTeamId = $_POST['home_team_id'] ?? '';
-        $awayTeamId = $_POST['away_team_id'] ?? '';
+        $homeType = $_POST['home_type'] ?? null;
+        $awayType = $_POST['away_type'] ?? null;
+
+        if ($homeType === 'external') {
+            $homeTeamId = null;
+            $homeOpponentName = trim($_POST['home_opponent_name'] ?? '');
+        } else {
+            $homeTeamId = !empty($_POST['home_team_id']) ? $_POST['home_team_id'] : null;
+            $homeOpponentName = !empty($_POST['home_opponent_name']) ? trim($_POST['home_opponent_name']) : null;
+        }
+
+        if ($awayType === 'external') {
+            $awayTeamId = null;
+            $awayOpponentName = trim($_POST['away_opponent_name'] ?? '');
+        } else {
+            $awayTeamId = !empty($_POST['away_team_id']) ? $_POST['away_team_id'] : null;
+            $awayOpponentName = !empty($_POST['away_opponent_name']) ? trim($_POST['away_opponent_name']) : null;
+        }
+
         $scheduledAtLocal = $_POST['scheduled_at'] ?? '';
         $venueName = trim($_POST['venue_name'] ?? '');
         $competitionType = $_POST['competition_type'] ?? 'league';
@@ -237,7 +273,9 @@ class FixtureController
                 $venueName ?: null, 
                 $competitionType, 
                 $competitionName ?: null,
-                $notes ?: null
+                $notes ?: null,
+                $homeOpponentName ?: null,
+                $awayOpponentName ?: null
             );
             return Response::redirect("/o/{$tenant['slug']}/s/{$sport['slug']}/fixtures/{$id}");
         } catch (\Exception $e) {

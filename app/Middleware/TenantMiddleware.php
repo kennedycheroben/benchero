@@ -159,6 +159,21 @@ class TenantMiddleware implements MiddlewareInterface
                     }
 
                     $request->setAttribute('sport', $sport);
+                } else {
+                    // Resolve organization's primary active sport for general management routes
+                    $stmt = $db->prepare("
+                        SELECT s.* FROM sports s 
+                        JOIN organization_sports os ON s.id = os.sport_id 
+                        WHERE os.organization_id = :org_id 
+                        AND os.is_active = 1
+                        ORDER BY s.name ASC 
+                        LIMIT 1
+                    ");
+                    $stmt->execute(['org_id' => $organization['id']]);
+                    $defaultSport = $stmt->fetch(\PDO::FETCH_ASSOC);
+                    if ($defaultSport) {
+                        $request->setAttribute('sport', $defaultSport);
+                    }
                 }
             }
         }

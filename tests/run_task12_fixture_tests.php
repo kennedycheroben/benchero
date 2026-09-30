@@ -43,7 +43,7 @@ if (!$sport1) {
     $sport1 = Ulid::generate();
     $db->exec("INSERT INTO sports (id, name, slug) VALUES ('$sport1', 'Football', 'football')");
 }
-$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$org1', '$sport1'), ('$org2', '$sport1')");
+$db->exec("INSERT INTO organization_sports (organization_id, sport_id) VALUES ('$org1', '$sport1'), ('$org2', '$sport1') ON DUPLICATE KEY UPDATE is_active = 1");
 
 // Create seasons
 $seasonService = new SeasonService();

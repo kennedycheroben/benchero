@@ -40,7 +40,63 @@ class OrganizationService
         }
     }
 
-    public function createOrganization(string $name, string $slug, string $country, string $timezone, string $userId): string
+    public function resolveSportId(?string $sportSlug = null): string
+    {
+        $slug = !empty($sportSlug) ? trim(strtolower($sportSlug)) : 'football';
+        $db = Database::getConnection();
+
+        // 1. Primary lookup by slug
+        $stmt = $db->prepare("SELECT `id` FROM `sports` WHERE `slug` = :slug AND `is_active` = 1 LIMIT 1");
+        $stmt->execute(['slug' => $slug]);
+        $sportId = $stmt->fetchColumn();
+
+        if ($sportId) {
+            return (string)$sportId;
+        }
+
+        // Fallback: If custom slug was not found, resolve football
+        if ($slug !== 'football') {
+            $stmt->execute(['slug' => 'football']);
+            $sportId = $stmt->fetchColumn();
+            if ($sportId) {
+                return (string)$sportId;
+            }
+        }
+
+        // Secondary fallback: search by name
+        $stmt = $db->prepare("SELECT `id` FROM `sports` WHERE `name` = 'Football' AND `is_active` = 1 LIMIT 1");
+        $stmt->execute();
+        $sportId = $stmt->fetchColumn();
+        if ($sportId) {
+            return (string)$sportId;
+        }
+
+        // Tertiary fallback: first active sport in catalog
+        $stmt = $db->prepare("SELECT `id` FROM `sports` WHERE `is_active` = 1 ORDER BY `name` ASC LIMIT 1");
+        $stmt->execute();
+        $sportId = $stmt->fetchColumn();
+        if ($sportId) {
+            return (string)$sportId;
+        }
+
+        throw new \Exception("Default sport could not be resolved. Please ensure sports catalog is seeded.");
+    }
+
+    public function activateSport(string $orgId, string $sportId): bool
+    {
+        $db = Database::getConnection();
+        $stmt = $db->prepare("
+            INSERT INTO `organization_sports` (`organization_id`, `sport_id`, `is_active`, `created_at`, `updated_at`)
+            VALUES (:org_id, :sport_id, 1, NOW(), NOW())
+            ON DUPLICATE KEY UPDATE `is_active` = 1, `updated_at` = NOW()
+        ");
+        return $stmt->execute([
+            'org_id' => $orgId,
+            'sport_id' => $sportId
+        ]);
+    }
+
+    public function createOrganization(string $name, string $slug, string $country, string $timezone, string $userId, ?string $sportSlug = null): string
     {
         $db = Database::getConnection();
 
@@ -90,7 +146,11 @@ class OrganizationService
                 $roleStmt->execute([$userId]);
             }
 
-            // 6. Initialize Trial Subscription using central SubscriptionService
+            // 6. Resolve and activate default/selected sport in organization_sports
+            $sportId = $this->resolveSportId($sportSlug);
+            $this->activateSport($orgId, $sportId);
+
+            // 7. Initialize Trial Subscription using central SubscriptionService
             $subService = new SubscriptionService();
             $subService->initializeTrialSubscription($orgId);
 

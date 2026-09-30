@@ -71,28 +71,70 @@
                             <h5 class="border-bottom pb-2">Matchup</h5>
                             <div class="row">
                                 <div class="col-md-5 mb-3">
-                                    <label class="form-label">Home Team *</label>
-                                    <select name="home_team_id" class="form-select" required>
-                                        <option value="">-- Select Home --</option>
-                                        <?php foreach ($teams as $t): ?>
-                                            <option value="<?= htmlspecialchars($t['id']) ?>"><?= htmlspecialchars($t['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label mb-0 fw-bold">Home Side *</label>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <input type="radio" class="btn-check" name="home_type" id="home_type_internal" value="internal" checked onchange="toggleSide('home', 'internal')">
+                                            <label class="btn btn-outline-secondary" for="home_type_internal">Club Team</label>
+
+                                            <input type="radio" class="btn-check" name="home_type" id="home_type_external" value="external" onchange="toggleSide('home', 'external')">
+                                            <label class="btn btn-outline-secondary" for="home_type_external">External</label>
+                                        </div>
+                                    </div>
+                                    <div id="home_internal_container">
+                                        <select name="home_team_id" id="home_team_id" class="form-select">
+                                            <option value="">-- Select Home Team --</option>
+                                            <?php foreach ($teams as $t): ?>
+                                                <option value="<?= htmlspecialchars($t['id']) ?>"><?= htmlspecialchars($t['name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div id="home_external_container" style="display: none;">
+                                        <input type="text" name="home_opponent_name" id="home_opponent_name" class="form-control" placeholder="e.g. AFC Leopards" maxlength="255">
+                                    </div>
                                 </div>
-                                <div class="col-md-2 d-flex align-items-center justify-content-center fw-bold text-muted">
+                                <div class="col-md-2 d-flex align-items-center justify-content-center fw-bold text-muted" style="padding-top: 1.5rem;">
                                     VS
                                 </div>
                                 <div class="col-md-5 mb-3">
-                                    <label class="form-label">Away Team *</label>
-                                    <select name="away_team_id" class="form-select" required>
-                                        <option value="">-- Select Away --</option>
-                                        <?php foreach ($teams as $t): ?>
-                                            <option value="<?= htmlspecialchars($t['id']) ?>"><?= htmlspecialchars($t['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label mb-0 fw-bold">Away Side *</label>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <input type="radio" class="btn-check" name="away_type" id="away_type_internal" value="internal" checked onchange="toggleSide('away', 'internal')">
+                                            <label class="btn btn-outline-secondary" for="away_type_internal">Club Team</label>
+
+                                            <input type="radio" class="btn-check" name="away_type" id="away_type_external" value="external" onchange="toggleSide('away', 'external')">
+                                            <label class="btn btn-outline-secondary" for="away_type_external">External</label>
+                                        </div>
+                                    </div>
+                                    <div id="away_internal_container">
+                                        <select name="away_team_id" id="away_team_id" class="form-select">
+                                            <option value="">-- Select Away Team --</option>
+                                            <?php foreach ($teams as $t): ?>
+                                                <option value="<?= htmlspecialchars($t['id']) ?>"><?= htmlspecialchars($t['name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div id="away_external_container" style="display: none;">
+                                        <input type="text" name="away_opponent_name" id="away_opponent_name" class="form-control" placeholder="e.g. Gor Mahia" maxlength="255">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <script>
+                        function toggleSide(side, type) {
+                            var intDiv = document.getElementById(side + '_internal_container');
+                            var extDiv = document.getElementById(side + '_external_container');
+                            if (type === 'external') {
+                                intDiv.style.display = 'none';
+                                extDiv.style.display = 'block';
+                            } else {
+                                intDiv.style.display = 'block';
+                                extDiv.style.display = 'none';
+                            }
+                        }
+                        </script>
 
                         <div class="mb-4">
                             <h5 class="border-bottom pb-2">Logistics</h5>

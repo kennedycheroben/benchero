@@ -15,6 +15,15 @@ class DomainVerificationService
     }
 
     /**
+     * Override or inject custom DNS resolver callable (for testing).
+     */
+    public function setDnsResolver(?callable $dnsResolver): void
+    {
+        $this->dnsResolver = $dnsResolver;
+    }
+
+
+    /**
      * Generate a cryptographically unpredictable verification token.
      */
     public static function generateToken(): string

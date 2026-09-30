@@ -21,6 +21,9 @@ class PayPalWebhookController extends Controller
     {
         $rawContent = file_get_contents('php://input');
         $data = json_decode($rawContent, true);
+        if (!$data && !empty($request->body())) {
+            $data = $request->body();
+        }
 
         if (!$data || !is_array($data)) {
             return Response::json(['status' => 'error', 'message' => 'Invalid JSON payload'], 400);
@@ -37,10 +40,10 @@ class PayPalWebhookController extends Controller
         ];
 
         foreach ($headerKeys as $key => $altKey) {
-            $val = $_SERVER['HTTP_' . str_replace('-', '_', $key)] 
+            $val = $request->header($key) ?: ($request->header($altKey) ?: ($_SERVER['HTTP_' . str_replace('-', '_', $key)] 
                 ?? $_SERVER['HTTP_' . str_replace('-', '_', $altKey)] 
-                ?? null;
-            if ($val !== null) {
+                ?? null));
+            if ($val !== null && $val !== '') {
                 $headers[$key] = $val;
                 $headers[$altKey] = $val;
             }

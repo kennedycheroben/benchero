@@ -92,7 +92,7 @@ class AuthController extends Controller
         }
 
         $isTestAccount = is_test_account($email);
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = $request->clientIp();
         if (!$isTestAccount && !$this->rateLimiter->hit("register_{$ip}", 5, 3600)) {
             return $this->render('auth/register', ['error' => 'Too many registration attempts. Please try again later.'], 429);
         }
@@ -141,7 +141,7 @@ class AuthController extends Controller
         }
 
         $isTestAccount = is_test_account($email);
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = $request->clientIp();
         if (!$isTestAccount && (!$this->rateLimiter->hit("login_{$ip}", 5, 900) || !$this->rateLimiter->hit("login_email_{$email}", 5, 900))) {
             return $this->render('auth/login', ['error' => 'Too many login attempts. Please try again later.'], 429);
         }
@@ -223,7 +223,7 @@ class AuthController extends Controller
             return $this->render('auth/forgot_password', ['error' => 'Please enter a valid email address.']);
         }
 
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = $request->clientIp();
         if (!$this->rateLimiter->hit("forgot_pass_{$ip}", 5, 3600) || !$this->rateLimiter->hit("forgot_pass_email_{$email}", 5, 3600)) {
             return $this->render('auth/forgot_password', ['error' => 'Too many password reset requests. Please try again later.'], 429);
         }
@@ -257,7 +257,7 @@ class AuthController extends Controller
         $password = $request->input('password') ?? '';
         $confirm = $request->input('password_confirmation') ?? '';
 
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = $request->clientIp();
         if (!$this->rateLimiter->hit("reset_pass_sub_{$ip}", 5, 900)) {
             return $this->render('auth/reset_password', ['error' => 'Too many reset attempts. Please try again later.', 'token' => $token], 429);
         }
@@ -347,7 +347,7 @@ class AuthController extends Controller
             return $this->render('auth/resend_verification', ['error' => 'Please provide a valid email address.']);
         }
 
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = $request->clientIp();
         if (!$this->rateLimiter->hit("resend_verify_{$ip}", 3, 3600) || !$this->rateLimiter->hit("resend_verify_email_{$email}", 3, 3600)) {
             return $this->render('auth/resend_verification', ['error' => 'Too many verification email requests. Please try again later.'], 429);
         }

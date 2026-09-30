@@ -25,6 +25,7 @@ use Benchero\Core\Http\Response;
 use Benchero\Core\RateLimiter;
 use Benchero\Core\Ulid;
 use Benchero\Middleware\TenantMiddleware;
+use Benchero\Services\Cloudflare\CloudflareCustomHostnameService;
 use Benchero\Services\Domain\DomainValidator;
 use Benchero\Services\Domain\DomainVerificationService;
 use Benchero\Services\Domain\TenantResolver;
@@ -82,6 +83,9 @@ class CustomDomainTestSuite
             $this->testDomainLifecycleAndReplacement();
             $this->testRateLimiting();
             $this->testUrlGenerationAndSeo();
+            $this->testCloudflareCustomHostnameService();
+            $this->testCloudflareDomainServiceLifecycle();
+            $this->testTrustedProxyHostSecurity();
 
         } finally {
             $this->cleanupTestData();
@@ -713,6 +717,403 @@ class CustomDomainTestSuite
         $this->assert(str_starts_with($metaCustom['og_url'], 'https://cheetahsfc.co.ke'), "Open Graph URL points to custom domain");
 
         CustomDomainContext::clear();
+    }
+
+    // =========================================================================
+    // 11. CLOUDFLARE CUSTOM HOSTNAME SERVICE UNIT TESTS
+    // =========================================================================
+    private function testCloudflareCustomHostnameService(): void
+    {
+        echo "\n--- 11. Cloudflare Custom Hostname Service Tests ---\n";
+
+        // 1. Feature Flag: Disabled by default
+        $defaultService = new CloudflareCustomHostnameService();
+        $this->assert($defaultService->isEnabled() === false, "Cloudflare automation disabled by default (safety flag)");
+
+        $bypassedCreate = $defaultService->createCustomHostname('sports.cheetahsfc.co.ke');
+        $this->assert($bypassedCreate['success'] === true && $bypassedCreate['bypassed'] === true, "Disabled Cloudflare service safely bypasses create without network calls");
+
+        $bypassedStatus = $defaultService->getCustomHostnameStatus('dummy-id');
+        $this->assert($bypassedStatus['success'] === true && $bypassedStatus['is_active'] === true, "Disabled Cloudflare service returns active/bypassed status");
+
+        $bypassedDelete = $defaultService->deleteCustomHostname('dummy-id');
+        $this->assert($bypassedDelete['success'] === true && $bypassedDelete['bypassed'] === true, "Disabled Cloudflare service safely bypasses delete without network calls");
+
+        // 2. Credentials validation
+        $unconfiguredService = new CloudflareCustomHostnameService(['enabled' => true, 'api_token' => '', 'zone_id' => '']);
+        $unconfRes = $unconfiguredService->createCustomHostname('sports.cheetahsfc.co.ke');
+        $this->assert($unconfRes['success'] === false && $unconfRes['status'] === 'unconfigured', "Unconfigured credentials detected and blocked safely");
+
+        // 3. Mocked Transport: Successful creation
+        $mockCreateService = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone_123',
+        ], function(string $method, string $url, array $headers, ?string $body) {
+            $parsed = json_decode($body ?? '{}', true);
+            return [
+                'status' => 201,
+                'body' => json_encode([
+                    'success' => true,
+                    'result' => [
+                        'id' => 'cf-uuid-998877',
+                        'hostname' => $parsed['hostname'] ?? 'sports.cheetahsfc.co.ke',
+                        'status' => 'pending',
+                        'ssl' => ['status' => 'pending_validation']
+                    ]
+                ])
+            ];
+        });
+
+        $createRes = $mockCreateService->createCustomHostname('sports.cheetahsfc.co.ke');
+        $this->assert($createRes['success'] === true, "Cloudflare createCustomHostname returns success");
+        $this->assert($createRes['id'] === 'cf-uuid-998877', "Cloudflare custom hostname ID extracted correctly ({$createRes['id']})");
+        $this->assert($createRes['status'] === 'pending', "Cloudflare status parsed as pending");
+        $this->assert($createRes['ssl_status'] === 'pending_validation', "Cloudflare SSL status parsed as pending_validation");
+
+        // 4. Mocked Transport: 409 Conflict idempotency recovery
+        $mockConflictService = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone_123',
+        ], function(string $method, string $url, array $headers, ?string $body) {
+            if ($method === 'POST') {
+                return [
+                    'status' => 409,
+                    'body' => json_encode([
+                        'success' => false,
+                        'errors' => [['code' => 1406, 'message' => 'A custom hostname for this domain already exists']]
+                    ])
+                ];
+            }
+            if ($method === 'GET') {
+                return [
+                    'status' => 200,
+                    'body' => json_encode([
+                        'success' => true,
+                        'result' => [[
+                            'id' => 'cf-uuid-reused-409',
+                            'hostname' => 'sports.cheetahsfc.co.ke',
+                            'status' => 'active',
+                            'ssl' => ['status' => 'active']
+                        ]]
+                    ])
+                ];
+            }
+            return ['status' => 500, 'body' => '{}'];
+        });
+
+        $conflictRes = $mockConflictService->createCustomHostname('sports.cheetahsfc.co.ke');
+        $this->assert($conflictRes['success'] === true, "Cloudflare 409 conflict handled idempotently");
+        $this->assert($conflictRes['id'] === 'cf-uuid-reused-409', "Existing hostname ID retrieved on conflict ({$conflictRes['id']})");
+        $this->assert(!empty($conflictRes['reused']), "Result flagged as reused existing hostname");
+
+        // 5. Mocked Transport: Status check (is_active)
+        $mockStatusService = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone_123',
+        ], function(string $method, string $url, array $headers, ?string $body) {
+            return [
+                'status' => 200,
+                'body' => json_encode([
+                    'success' => true,
+                    'result' => [
+                        'id' => 'cf-uuid-active',
+                        'hostname' => 'sports.cheetahsfc.co.ke',
+                        'status' => 'active',
+                        'ssl' => ['status' => 'active']
+                    ]
+                ])
+            ];
+        });
+
+        $statusActive = $mockStatusService->getCustomHostnameStatus('cf-uuid-active');
+        $this->assert($statusActive['is_active'] === true, "Status reports is_active=true when hostname and SSL are active");
+
+        // 6. Mocked Transport: Idempotent 404 deletion
+        $mockDeleteService = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone_123',
+        ], function(string $method, string $url, array $headers, ?string $body) {
+            return [
+                'status' => 404,
+                'body' => json_encode([
+                    'success' => false,
+                    'errors' => [['code' => 1436, 'message' => 'Custom hostname does not exist']]
+                ])
+            ];
+        });
+
+        $deleteRes = $mockDeleteService->deleteCustomHostname('cf-uuid-already-deleted');
+        $this->assert($deleteRes['success'] === true, "Cloudflare 404 on delete treated as idempotent success");
+        $this->assert(!empty($deleteRes['idempotent']), "Delete flagged as idempotent");
+
+        // 7. Mocked Transport: Rate limit 429 error
+        $mockRateLimitService = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone_123',
+        ], function(string $method, string $url, array $headers, ?string $body) {
+            return [
+                'status' => 429,
+                'body' => json_encode([
+                    'success' => false,
+                    'errors' => [['code' => 10000, 'message' => 'Too many requests']]
+                ])
+            ];
+        });
+
+        $rateLimitRes = $mockRateLimitService->createCustomHostname('sports.cheetahsfc.co.ke');
+        $this->assert($rateLimitRes['success'] === false, "Cloudflare 429 returns failure");
+        $this->assert(str_contains($rateLimitRes['error'], 'rate limit'), "Error message mentions rate limit");
+
+        // 8. Mocked Transport: Server Error 5xx (HTTP 500 / 502)
+        $mock5xxService = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone_123',
+        ], function(string $method, string $url, array $headers, ?string $body) {
+            return [
+                'status' => 502,
+                'body' => json_encode([
+                    'success' => false,
+                    'errors' => [['code' => 502, 'message' => 'Bad gateway upstream']]
+                ])
+            ];
+        });
+
+        $res5xx = $mock5xxService->createCustomHostname('sports.cheetahsfc.co.ke');
+        $this->assert($res5xx['success'] === false, "Cloudflare 5xx returns failure without throwing");
+        $this->assert(str_contains($res5xx['error'], 'server error') || str_contains($res5xx['error'], '502'), "Error message mentions server error (HTTP 502)");
+
+        // 9. Mocked Transport: API Timeout / Connection Failure (Status 0 or thrown exception)
+        $mockTimeoutService = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone_123',
+        ], function(string $method, string $url, array $headers, ?string $body) {
+            throw new \RuntimeException("Connection timed out after 5000 milliseconds");
+        });
+
+        $timeoutRes = $mockTimeoutService->createCustomHostname('sports.cheetahsfc.co.ke');
+        $this->assert($timeoutRes['success'] === false, "Cloudflare timeout caught gracefully");
+        $this->assert(str_contains($timeoutRes['error'], 'timed out') || str_contains($timeoutRes['error'], 'connection error'), "Error message identifies connection timeout");
+
+        // 10. Status Mappings Audit Tests
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_ACTIVE) === CloudflareCustomHostnameService::BENCHERO_SSL_ACTIVE, "SSL active maps to active");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_INITIALIZING) === CloudflareCustomHostnameService::BENCHERO_SSL_PENDING, "SSL initializing maps to pending");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_PENDING_VALIDATION) === CloudflareCustomHostnameService::BENCHERO_SSL_PENDING, "SSL pending_validation maps to pending");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_PENDING_ISSUANCE) === CloudflareCustomHostnameService::BENCHERO_SSL_PENDING, "SSL pending_issuance maps to pending");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_PENDING_DEPLOYMENT) === CloudflareCustomHostnameService::BENCHERO_SSL_PENDING, "SSL pending_deployment maps to pending");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_EXPIRED) === CloudflareCustomHostnameService::BENCHERO_SSL_FAILED, "SSL expired maps to failed");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_TIMED_OUT) === CloudflareCustomHostnameService::BENCHERO_SSL_FAILED, "SSL timed_out maps to failed");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_FAILED) === CloudflareCustomHostnameService::BENCHERO_SSL_FAILED, "SSL failed maps to failed");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(CloudflareCustomHostnameService::CF_SSL_DELETED) === CloudflareCustomHostnameService::BENCHERO_SSL_NOT_CONFIGURED, "SSL deleted maps to not_configured");
+        $this->assert(CloudflareCustomHostnameService::mapCfSslStatusToBenchero(null) === CloudflareCustomHostnameService::BENCHERO_SSL_NOT_CONFIGURED, "SSL null maps to not_configured");
+    }
+
+    // =========================================================================
+    // 12. CLOUDFLARE DOMAINSERVICE LIFECYCLE TESTS
+    // =========================================================================
+    private function testCloudflareDomainServiceLifecycle(): void
+    {
+        echo "\n--- 12. Cloudflare DomainService Lifecycle Tests ---\n";
+
+        // State machine for mock CF API
+        $mockCfState = [
+            'status' => 'pending',
+            'ssl_status' => 'pending_validation',
+            'id' => 'cf-test-lifecycle-uuid',
+            'deleted' => false,
+        ];
+
+        $mockCf = new CloudflareCustomHostnameService([
+            'enabled' => true,
+            'api_token' => 'mock_token',
+            'zone_id' => 'mock_zone',
+            'fallback_origin' => 'cname.benchero.co.ke'
+        ], function(string $method, string $url, array $headers, ?string $body) use (&$mockCfState) {
+            if ($method === 'POST') {
+                return [
+                    'status' => 201,
+                    'body' => json_encode([
+                        'success' => true,
+                        'result' => [
+                            'id' => $mockCfState['id'],
+                            'hostname' => 'sports.cheetahsfc.co.ke',
+                            'status' => $mockCfState['status'],
+                            'ssl' => ['status' => $mockCfState['ssl_status']]
+                        ]
+                    ])
+                ];
+            }
+            if ($method === 'GET') {
+                return [
+                    'status' => 200,
+                    'body' => json_encode([
+                        'success' => true,
+                        'result' => [
+                            'id' => $mockCfState['id'],
+                            'hostname' => 'sports.cheetahsfc.co.ke',
+                            'status' => $mockCfState['status'],
+                            'ssl' => ['status' => $mockCfState['ssl_status']]
+                        ]
+                    ])
+                ];
+            }
+            if ($method === 'DELETE') {
+                $mockCfState['deleted'] = true;
+                return [
+                    'status' => 200,
+                    'body' => json_encode(['success' => true])
+                ];
+            }
+            return ['status' => 500, 'body' => '{}'];
+        });
+
+        $entitlementService = new EntitlementService($this->db);
+        $mockDnsResolver = fn(string $host, int $type) => [
+            ['type' => 'TXT', 'txt' => 'benchero-verification=dummy_token_placeholder']
+        ];
+        $verificationService = new DomainVerificationService($mockDnsResolver);
+        $domainService = new DomainService($this->db, $entitlementService, $verificationService, null, $mockCf);
+
+        // 1. Save Domain
+        $domain = $domainService->saveDomain($this->orgAId, 'sports.cheetahsfc.co.ke');
+        $this->assert($domain['normalized_domain'] === 'sports.cheetahsfc.co.ke', "Domain saved cleanly for lifecycle test");
+
+        // Set DNS resolver to return actual token for verified ownership
+        $token = $domain['verification_token'];
+        $verificationService->setDnsResolver(fn(string $h, int $t) => [
+            ['type' => 'TXT', 'txt' => "benchero-verification={$token}"]
+        ]);
+
+        // 2. Verify Domain -> Triggers Cloudflare Custom Hostname Creation
+        $verRes = $domainService->verifyDomain($this->orgAId, $domain['id']);
+        $this->assert($verRes['success'] === true, "Domain ownership verified via DNS TXT");
+        $this->assert($verRes['cloudflare_status'] === 'pending', "Cloudflare status initialized to pending");
+
+        // Verify row in DB was updated with Cloudflare fields
+        $row = $domainService->getDomainByOrg($this->orgAId);
+        $this->assert($row['cloudflare_custom_hostname_id'] === 'cf-test-lifecycle-uuid', "Database stored cloudflare_custom_hostname_id ({$row['cloudflare_custom_hostname_id']})");
+        $this->assert($row['cloudflare_status'] === 'pending', "Database stored cloudflare_status=pending");
+        $this->assert($row['cloudflare_ssl_status'] === 'pending_validation', "Database stored cloudflare_ssl_status=pending_validation");
+
+        // 3. Attempt Activation while Cloudflare SSL is pending -> Must be BLOCKED
+        $activationBlocked = false;
+        try {
+            $domainService->activateDomain($this->orgAId, $domain['id']);
+        } catch (\InvalidArgumentException $e) {
+            $activationBlocked = true;
+            $this->assert(str_contains($e->getMessage(), 'Cloudflare edge SSL'), "Activation blocked when Cloudflare SSL pending: {$e->getMessage()}");
+        }
+        $this->assert($activationBlocked, "Activation prevented when Cloudflare SSL is not active");
+
+        // 4. Update Mock State: Cloudflare SSL is now ACTIVE
+        $mockCfState['status'] = 'active';
+        $mockCfState['ssl_status'] = 'active';
+
+        // 5. Live SSL Check -> Updates DB and returns active
+        $sslRes = $domainService->checkSslStatus($this->orgAId, $domain['id']);
+        $this->assert($sslRes['ssl_active'] === true, "checkSslStatus recognizes Cloudflare active SSL");
+        $this->assert($sslRes['cloudflare_status'] === 'active', "checkSslStatus reports cloudflare_status=active");
+
+        // 6. Activate Domain -> Now SUCCEEDS
+        $actRes = $domainService->activateDomain($this->orgAId, $domain['id']);
+        $this->assert($actRes['success'] === true, "Domain activated successfully once Cloudflare SSL is active");
+        $this->assert($actRes['activation_status'] === 'active', "Activation status confirmed active");
+
+        // 7. Delete Domain -> Cleans up Cloudflare Custom Hostname
+        $deleted = $domainService->deleteDomain($this->orgAId, $domain['id']);
+        $this->assert($deleted === true, "Domain deleted cleanly from database");
+        $this->assert($mockCfState['deleted'] === true, "Cloudflare custom hostname deletion was executed before DB delete");
+    }
+
+    // =========================================================================
+    // 13. TRUSTED PROXY HOST SECURITY TESTS
+    // =========================================================================
+    private function testTrustedProxyHostSecurity(): void
+    {
+        echo "\n--- 13. Trusted Proxy Host Security Tests ---\n";
+
+        // Save original APP_ENV
+        $origAppEnv = getenv('APP_ENV');
+
+        // 1. Dev mode without secret: accepts X-Forwarded-Host for local testing
+        putenv('APP_ENV=local');
+        $_ENV['APP_ENV'] = 'local';
+        putenv('CLOUDFLARE_WORKER_SECRET=');
+        $_ENV['CLOUDFLARE_WORKER_SECRET'] = '';
+        $reqDev = new Request([], [], [
+            'HTTP_X_FORWARDED_HOST' => 'cheetahsfc.co.ke',
+            'HTTP_HOST' => 'origin.benchero.co.ke'
+        ], [], []);
+        $this->assert($reqDev->host() === 'cheetahsfc.co.ke', "Dev mode accepts forwarded host without secret");
+
+        // 2. Production with missing secret: NEVER silently trust X-Forwarded-Host!
+        putenv('APP_ENV=production');
+        $_ENV['APP_ENV'] = 'production';
+        putenv('CLOUDFLARE_WORKER_SECRET=');
+        $_ENV['CLOUDFLARE_WORKER_SECRET'] = '';
+
+        $reqProdMissingSecret = new Request([], [], [
+            'HTTP_X_FORWARDED_HOST' => 'forged-attacker.co.ke',
+            'HTTP_HOST' => 'origin.benchero.co.ke'
+        ], [], []);
+        $this->assert($reqProdMissingSecret->isTrustedProxy() === false, "Production + missing secret: isTrustedProxy returns false");
+        $this->assert($reqProdMissingSecret->host() === 'origin.benchero.co.ke', "Production + missing secret: forged X-Forwarded-Host safely rejected");
+
+        // 3. Production with configured secret: forged request without secret header is REJECTED
+        putenv('CLOUDFLARE_WORKER_SECRET=prod_super_secret_xyz');
+        $_ENV['CLOUDFLARE_WORKER_SECRET'] = 'prod_super_secret_xyz';
+
+        $reqProdForged = new Request([], [], [
+            'HTTP_X_FORWARDED_HOST' => 'victim-club.co.ke',
+            'HTTP_HOST' => 'origin.benchero.co.ke'
+        ], [], []);
+        $this->assert($reqProdForged->isTrustedProxy() === false, "Production + forged host: isTrustedProxy returns false");
+        $this->assert($reqProdForged->host() === 'origin.benchero.co.ke', "Production + forged host: host falls back to direct HTTP_HOST");
+
+        // 4. Production with configured secret: client-supplied X-Benchero-Proxy-Hop CANNOT bypass security
+        $reqClientHop = new Request([], [], [
+            'HTTP_X_FORWARDED_HOST' => 'victim-club.co.ke',
+            'HTTP_HOST' => 'origin.benchero.co.ke',
+            'HTTP_X_BENCHERO_PROXY_HOP' => '1'
+        ], [], []);
+        $this->assert($reqClientHop->isTrustedProxy() === false, "Client-supplied X-Benchero-Proxy-Hop cannot grant proxy trust");
+        $this->assert($reqClientHop->host() === 'origin.benchero.co.ke', "Client-supplied X-Benchero-Proxy-Hop safely rejected");
+
+        // 5. Production with valid Worker secret header: ACCEPTED
+        $reqValidSecret = new Request([], [], [
+            'HTTP_X_FORWARDED_HOST' => 'cheetahsfc.co.ke',
+            'HTTP_HOST' => 'origin.benchero.co.ke',
+            'HTTP_X_BENCHERO_WORKER_SECRET' => 'prod_super_secret_xyz'
+        ], [], []);
+        $this->assert($reqValidSecret->isTrustedProxy() === true, "Valid worker secret accepted in production");
+        $this->assert($reqValidSecret->host() === 'cheetahsfc.co.ke', "Valid worker secret resolves forwarded custom hostname");
+
+        // 6. Cloudflare IPv4 & IPv6 Range Validation Tests
+        $reqCfIpv4 = new Request([], [], ['REMOTE_ADDR' => '173.245.48.10'], [], []);
+        $this->assert($reqCfIpv4->isCloudflareIp() === true, "Recognizes Cloudflare IPv4 address (173.245.48.10)");
+
+        $reqCfIpv6 = new Request([], [], ['REMOTE_ADDR' => '2606:4700:4700::1111'], [], []);
+        $this->assert($reqCfIpv6->isCloudflareIp() === true, "Recognizes Cloudflare IPv6 address (2606:4700:4700::1111)");
+
+        $reqNonCfIp = new Request([], [], ['REMOTE_ADDR' => '198.51.100.5'], [], []);
+        $this->assert($reqNonCfIp->isCloudflareIp() === false, "Rejects non-Cloudflare IP address (198.51.100.5)");
+
+        // Restore original env
+        putenv('CLOUDFLARE_WORKER_SECRET=');
+        $_ENV['CLOUDFLARE_WORKER_SECRET'] = '';
+        if ($origAppEnv !== false) {
+            putenv("APP_ENV={$origAppEnv}");
+            $_ENV['APP_ENV'] = $origAppEnv;
+        } else {
+            putenv('APP_ENV=local');
+            $_ENV['APP_ENV'] = 'local';
+        }
     }
 }
 

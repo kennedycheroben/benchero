@@ -31,6 +31,9 @@
                             <?= htmlspecialchars($fixture['home_team_name']) ?>
                         </h2>
                         <span class="badge bg-light text-dark border">Home</span>
+                        <?php if (empty($fixture['home_team_id']) && !empty($fixture['home_opponent_name'])): ?>
+                            <span class="badge bg-warning text-dark border">External</span>
+                        <?php endif; ?>
                     </div>
 
                     <?php if ($fixture['status'] === 'completed' && $fixture['home_score'] !== null): ?>
@@ -46,6 +49,9 @@
                             <?= htmlspecialchars($fixture['away_team_name']) ?>
                         </h2>
                         <span class="badge bg-light text-dark border">Away</span>
+                        <?php if (empty($fixture['away_team_id']) && !empty($fixture['away_opponent_name'])): ?>
+                            <span class="badge bg-warning text-dark border">External</span>
+                        <?php endif; ?>
                     </div>
                 </div>
                 

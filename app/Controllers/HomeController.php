@@ -113,7 +113,7 @@ class HomeController extends Controller
 
     public function contactSubmit(Request $request): Response
     {
-        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $ip = $request->clientIp();
         if (!$this->rateLimiter->hit("contact_form_{$ip}", 5, 3600)) {
             return $this->render('public/contact', [
                 'title' => 'Contact Benchero Team',

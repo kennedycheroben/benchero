@@ -226,15 +226,21 @@ PHP cannot dynamically intercept the TLS handshake in Apache. Therefore, product
 
 ### Recommended Production Solutions
 
-#### Option 1: Cloudflare for SaaS (Recommended)
-- **Mechanism**: Cloudflare Custom Hostnames / SSL for SaaS.
+#### Option 1: Cloudflare for SaaS (IMPLEMENTED & AUTHORITATIVE)
+- **Status**: **PRODUCTION IMPLEMENTED** (Migration 040, `CloudflareCustomHostnameService`, `bin/cloudflare_sync.php`)
+- **Mechanism**: Cloudflare Custom Hostnames / SSL for SaaS API v4.
 - **Workflow**:
-  1. Benchero acts as the SaaS provider on Cloudflare Enterprise/Pro plan.
-  2. Customer creates a CNAME: `www.myclub.com` -> `cname.benchero.co.ke`.
-  3. Benchero's backend calls Cloudflare API (`POST /zones/{zone_id}/custom_hostnames`) when domain is saved.
-  4. Cloudflare provisions and renews SSL certificates automatically at the edge within 60 seconds.
-  5. Traffic arrives at Benchero server over SNI with Benchero's origin certificate.
-- **Pros**: Zero Apache configuration changes; DDoS mitigation; worldwide CDN caching; automated certificate lifecycle.
+  1. Customer proves domain ownership via DNS TXT record (`_benchero-verification.<domain>`).
+  2. Upon verification, Benchero calls Cloudflare API (`POST /zones/{zone_id}/custom_hostnames`) to provision the custom hostname.
+  3. Customer creates CNAME: `www.myclub.com` -> `cname.benchero.co.ke`.
+  4. Cloudflare provisions edge TLS certificate automatically via HTTP DCV.
+  5. Traffic terminates at Cloudflare edge; Worker `benchero-saas-proxy` validates and forwards to origin with `X-Forwarded-Host` and `X-Benchero-Worker-Secret`.
+  6. `Request::host()` securely resolves tenant to serve the public website.
+- **Documentation References**:
+  - Architecture Validation: `docs/ARCHITECTURE_VALIDATION.md`
+  - Cloudflare & Worker Setup: `docs/CLOUDFLARE_SETUP.md`
+  - Operational Runbook: `docs/CUSTOM_DOMAINS_OPERATIONS.md`
+
 
 #### Option 2: cPanel UAPI Parked Domain Automation
 - **Mechanism**: Use cPanel UAPI `Park::park` to add customer domain as a ServerAlias to the Benchero cPanel account.

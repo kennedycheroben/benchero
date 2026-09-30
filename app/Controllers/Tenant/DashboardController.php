@@ -32,10 +32,13 @@ class DashboardController
         // 2. Fetch Recent Fixtures
         $recentFixturesStmt = $db->prepare("
             SELECT f.id, f.scheduled_at, f.status, f.home_score, f.away_score, f.venue_name,
-                   ht.name as home_team_name, at.name as away_team_name, s.name as sport_name
+                   f.home_team_id, f.away_team_id, f.home_opponent_name, f.away_opponent_name,
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name, 
+                   s.name as sport_name
             FROM fixtures f
-            JOIN teams ht ON f.home_team_id = ht.id
-            JOIN teams at ON f.away_team_id = at.id
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
             JOIN sports s ON f.sport_id = s.id
             WHERE f.organization_id = ? AND f.deleted_at IS NULL
             ORDER BY f.scheduled_at DESC
@@ -67,9 +70,12 @@ class DashboardController
         $websiteService = new WebsiteService($db);
         $websiteReadiness = $websiteService->calculateCompletionScore($tenant['id'], $org ?: $tenant);
 
+        $sport = $request->getAttribute('sport');
+
         return Response::view('tenant/dashboard', [
             'tenant' => $tenant,
             'role' => $role,
+            'sport' => $sport,
             'subscription' => $subService->getSubscription($tenant['id']),
             'subscriptionStatus' => $subscriptionStatus,
             'stats' => [
