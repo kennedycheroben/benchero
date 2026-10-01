@@ -240,4 +240,133 @@ if (!function_exists('club_url')) {
     }
 }
 
+if (!function_exists('tenant')) {
+    /**
+     * Get the current active tenant from TenantContext.
+     */
+    function tenant(): ?array
+    {
+        return class_exists(\Benchero\Core\TenantContext::class) 
+            ? \Benchero\Core\TenantContext::getTenant() 
+            : null;
+    }
+}
+
+if (!function_exists('tenant_sport')) {
+    /**
+     * Get the current active sport from TenantContext.
+     */
+    function tenant_sport(): ?array
+    {
+        return class_exists(\Benchero\Core\TenantContext::class) 
+            ? \Benchero\Core\TenantContext::getSport() 
+            : null;
+    }
+}
+
+if (!function_exists('tenant_role')) {
+    /**
+     * Get the current tenant user role from TenantContext.
+     */
+    function tenant_role(): ?string
+    {
+        return class_exists(\Benchero\Core\TenantContext::class) 
+            ? \Benchero\Core\TenantContext::getRole() 
+            : null;
+    }
+}
+
+if (!function_exists('normalize_contact_message')) {
+    /**
+     * Safely normalize contact message text for readable display.
+     * Decodes encoded newline entities (e.g. &#13;&#10;, &#13;, &#10;, &#x0d;&#x0a;, &NewLine;)
+     * into standard newlines without altering or decoding any other HTML entities or tags,
+     * ensuring strict XSS safety when escaped.
+     */
+    function normalize_contact_message(?string $text): string
+    {
+        if ($text === null || $text === '') {
+            return '';
+        }
+
+        // 1. Convert CRLF entity pairs (decimal and hex, with or without double-encoding) to standard \n
+        $normalized = preg_replace(
+            '/&(?:amp;)?#(?:13|0*13|x0*d);?&(?:amp;)?#(?:10|0*10|x0*a);?/i',
+            "\n",
+            $text
+        );
+
+        // 2. Convert standalone CR/LF entities to \n
+        $normalized = preg_replace(
+            '/&(?:amp;)?#(?:13|0*13|x0*d|10|0*10|x0*a);?/i',
+            "\n",
+            $normalized
+        );
+
+        // 3. Convert &NewLine; entity
+        $normalized = preg_replace(
+            '/&(?:amp;)?NewLine;?/i',
+            "\n",
+            $normalized
+        );
+
+        // 4. Standardize native CRLF and CR to LF (\n)
+        $normalized = str_replace(["\r\n", "\r"], "\n", $normalized);
+
+        return $normalized;
+    }
+}
+
+if (!function_exists('contact_message_preview')) {
+    /**
+     * Generate a clean, single-line preview snippet of a contact message.
+     * Collapses newlines and multiple whitespace runs into a single space.
+     */
+    function contact_message_preview(?string $text, int $limit = 140): string
+    {
+        if ($text === null || $text === '') {
+            return '';
+        }
+
+        $normalized = normalize_contact_message($text);
+        
+        // Collapse all whitespace (including newlines) into single spaces
+        $flattened = trim(preg_replace('/\s+/u', ' ', $normalized));
+
+        if (mb_strlen($flattened) > $limit) {
+            return mb_substr($flattened, 0, $limit) . '...';
+        }
+
+        return $flattened;
+    }
+}
+
+if (!function_exists('contact_message_needs_expansion')) {
+    /**
+     * Determine if a contact message requires a View More/View Less control.
+     * True if the message exceeds the preview character limit or contains internal linebreaks.
+     */
+    function contact_message_needs_expansion(?string $text, int $limit = 140): bool
+    {
+        if ($text === null || $text === '') {
+            return false;
+        }
+
+        $normalized = normalize_contact_message($text);
+        $flattened = trim(preg_replace('/\s+/u', ' ', $normalized));
+
+        if (mb_strlen($flattened) > $limit) {
+            return true;
+        }
+
+        if (str_contains($normalized, "\n")) {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+
+
 

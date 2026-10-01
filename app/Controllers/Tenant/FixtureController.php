@@ -66,6 +66,39 @@ class FixtureController
         return new Response(ob_get_clean());
     }
 
+    public function results(Request $request): Response
+    {
+        $tenant = $request->getAttribute('tenant');
+        $sport = $request->getAttribute('sport');
+        $role = $request->getAttribute('tenant_role');
+
+        $seasonId = $_GET['season_id'] ?? null;
+        $seasons = $this->seasonRepo->findActiveByOrgAndSport($tenant['id'], $sport['id']);
+
+        if (!$seasonId && !empty($seasons)) {
+            $seasonId = $seasons[0]['id'];
+        }
+
+        $results = [];
+        if ($seasonId) {
+            $results = $this->repository->findResultsBySeason($seasonId, $tenant['id'], $sport['id']);
+
+            // Convert UTC to Organization Timezone for display
+            $tz    = new DateTimeZone($tenant['timezone'] ?? 'UTC');
+            $utcTz = new DateTimeZone('UTC');
+            foreach ($results as &$r) {
+                $dt = new DateTime($r['scheduled_at'], $utcTz);
+                $dt->setTimezone($tz);
+                $r['scheduled_at_local'] = $dt->format('Y-m-d H:i');
+            }
+            unset($r);
+        }
+
+        ob_start();
+        require __DIR__ . '/../../../views/tenant/fixtures/results.php';
+        return new Response(ob_get_clean());
+    }
+
     public function create(Request $request): Response
     {
         try {

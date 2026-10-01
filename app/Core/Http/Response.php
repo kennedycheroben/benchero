@@ -47,6 +47,16 @@ class Response
         return $this->headers;
     }
 
+    public function getHeader(string $name): ?string
+    {
+        foreach ($this->headers as $key => $val) {
+            if (strcasecmp($key, $name) === 0) {
+                return (string)$val;
+            }
+        }
+        return null;
+    }
+
     public function setContent(string $content): self
     {
         $this->content = $content;
@@ -83,6 +93,18 @@ class Response
 
     public static function view(string $template, array $data = [], int $statusCode = 200): self
     {
+        if (class_exists(\Benchero\Core\TenantContext::class)) {
+            if (!isset($data['tenant']) && \Benchero\Core\TenantContext::hasTenant()) {
+                $data['tenant'] = \Benchero\Core\TenantContext::getTenant();
+            }
+            if (!isset($data['sport']) && \Benchero\Core\TenantContext::hasSport()) {
+                $data['sport'] = \Benchero\Core\TenantContext::getSport();
+            }
+            if (!isset($data['role']) && \Benchero\Core\TenantContext::getRole() !== null) {
+                $data['role'] = \Benchero\Core\TenantContext::getRole();
+            }
+        }
+
         $engine = new \League\Plates\Engine(dirname(__DIR__, 3) . '/views');
         $engine->registerFunction('url', 'url');
         $content = $engine->render($template, $data);

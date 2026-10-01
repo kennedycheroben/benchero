@@ -113,11 +113,13 @@ class TenantMiddleware implements MiddlewareInterface
                 $organization = $stmt->fetch(\PDO::FETCH_ASSOC);
 
                 if (!$organization) {
+                    \Benchero\Core\TenantContext::reset();
                     return new Response('404 Not Found', 404);
                 }
 
                 $userId = $_SESSION['_user_id'] ?? null;
                 if (!$userId) {
+                    \Benchero\Core\TenantContext::reset();
                     return Response::redirect('/login');
                 }
 
@@ -130,6 +132,7 @@ class TenantMiddleware implements MiddlewareInterface
                 $membership = $stmt->fetch(\PDO::FETCH_ASSOC);
 
                 if (!$membership) {
+                    \Benchero\Core\TenantContext::reset();
                     return new Response('403 Forbidden - Not a member of this organization', 403);
                 }
 
@@ -137,45 +140,44 @@ class TenantMiddleware implements MiddlewareInterface
                 $request->setAttribute('tenant', $organization);
                 $request->setAttribute('tenant_role', $membership['role']);
 
-                // Sport resolution
+                // Sport resolution in priority order:
+                // 1. Explicit sport from the route: /o/{slug}/s/{sport_slug}/...
+                // 2. Explicit sport already attached to the request
+                // 3. Organization's primary active sport
+                // 4. Null (no active sport)
+                $sport = null;
+
                 if (count($parts) >= 4 && $parts[2] === 's') {
                     $sportSlug = $parts[3];
-
-                    $stmt = $db->prepare("
-                        SELECT s.* FROM sports s 
-                        JOIN organization_sports os ON s.id = os.sport_id 
-                        WHERE s.slug = :sport_slug 
-                        AND os.organization_id = :org_id 
-                        AND os.is_active = 1
-                    ");
-                    $stmt->execute([
-                        'sport_slug' => $sportSlug,
-                        'org_id' => $organization['id']
-                    ]);
-                    $sport = $stmt->fetch(\PDO::FETCH_ASSOC);
+                    $sport = \Benchero\Core\TenantContext::resolveSportBySlugForOrg($organization['id'], $sportSlug);
 
                     if (!$sport) {
+                        \Benchero\Core\TenantContext::reset();
                         return new Response('404 Not Found - Sport not found or not active for this organization', 404);
                     }
-
-                    $request->setAttribute('sport', $sport);
                 } else {
-                    // Resolve organization's primary active sport for general management routes
-                    $stmt = $db->prepare("
-                        SELECT s.* FROM sports s 
-                        JOIN organization_sports os ON s.id = os.sport_id 
-                        WHERE os.organization_id = :org_id 
-                        AND os.is_active = 1
-                        ORDER BY s.name ASC 
-                        LIMIT 1
-                    ");
-                    $stmt->execute(['org_id' => $organization['id']]);
-                    $defaultSport = $stmt->fetch(\PDO::FETCH_ASSOC);
-                    if ($defaultSport) {
-                        $request->setAttribute('sport', $defaultSport);
+                    $existingSport = $request->getAttribute('sport');
+                    if (is_array($existingSport) && !empty($existingSport['slug'])) {
+                        $verified = \Benchero\Core\TenantContext::resolveSportBySlugForOrg($organization['id'], $existingSport['slug']);
+                        if ($verified) {
+                            $sport = $verified;
+                        }
+                    }
+
+                    if (!$sport) {
+                        $sport = \Benchero\Core\TenantContext::resolvePrimarySportForOrg($organization['id']);
                     }
                 }
+
+                if ($sport) {
+                    $request->setAttribute('sport', $sport);
+                }
+
+                // Register global TenantContext for view rendering & sidebar
+                \Benchero\Core\TenantContext::set($organization, $sport, $membership['role']);
             }
+        } else {
+            \Benchero\Core\TenantContext::reset();
         }
 
         return $next($request);

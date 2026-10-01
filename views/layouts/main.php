@@ -143,6 +143,28 @@
 
     <div class="container-fluid">
         <div class="row">
+            <?php
+                // Resolve tenant context from local scope or TenantContext
+                if (!isset($tenant) || !is_array($tenant) || empty($tenant['slug'])) {
+                    $ctxTenant = \Benchero\Core\TenantContext::getTenant();
+                    if ($ctxTenant) {
+                        $tenant = $ctxTenant;
+                    }
+                }
+
+                // Resolve sport context from local scope or TenantContext
+                if (!isset($sport) || !is_array($sport) || empty($sport['slug'])) {
+                    $ctxSport = \Benchero\Core\TenantContext::getSport();
+                    if ($ctxSport && !empty($ctxSport['slug'])) {
+                        $sport = $ctxSport;
+                    } elseif (isset($tenant['id']) && !empty($tenant['id'])) {
+                        $resolvedSport = \Benchero\Core\TenantContext::resolvePrimarySportForOrg($tenant['id']);
+                        if ($resolvedSport) {
+                            $sport = $resolvedSport;
+                        }
+                    }
+                }
+            ?>
             <?php if (isset($tenant['slug'])): ?>
                 <?php
                     $currentUri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
@@ -180,32 +202,27 @@
                                 <i class="bi bi-person-vcard"></i> Staff & Management
                             </a>
 
-                            <?php
-                                if (!isset($sport['slug']) && isset($tenant['id'])) {
-                                    $defaultSportStmt = \Benchero\Core\Database\Database::getConnection()->prepare(
-                                        "SELECT s.* FROM sports s JOIN organization_sports os ON s.id = os.sport_id WHERE os.organization_id = :org_id AND os.is_active = 1 ORDER BY s.name ASC LIMIT 1"
-                                    );
-                                    $defaultSportStmt->execute(['org_id' => $tenant['id']]);
-                                    $resolvedSport = $defaultSportStmt->fetch(\PDO::FETCH_ASSOC);
-                                    if ($resolvedSport) {
-                                        $sport = $resolvedSport;
-                                    }
-                                }
-                            ?>
-
                             <?php if (isset($sport['slug'])): ?>
-                                <div class="text-uppercase text-muted fw-bold fs-7 mt-3 mb-2 px-2"><?= htmlspecialchars($sport['name']) ?></div>
+                                <div class="text-uppercase text-muted fw-bold fs-7 mt-3 mb-2 px-2 d-flex justify-content-between align-items-center">
+                                    <span><?= htmlspecialchars($sport['name']) ?></span>
+                                    <a href="<?= url('/o/' . urlencode($tenant['slug']) . '/sports') ?>" class="text-decoration-none text-muted small" title="Switch or manage sports">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </a>
+                                </div>
                                 <a class="tenant-nav-link <?= $isActive('/seasons') ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/s/' . urlencode($sport['slug']) . '/seasons') ?>">
                                     <i class="bi bi-calendar-event"></i> Seasons
                                 </a>
                                 <a class="tenant-nav-link <?= $isActive('/teams') ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/s/' . urlencode($sport['slug']) . '/teams') ?>">
-                                    <i class="bi bi-people"></i> Teams
+                                    <i class="bi bi-people"></i> Teams & Squads
                                 </a>
                                 <a class="tenant-nav-link <?= $isActive('/players') ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/s/' . urlencode($sport['slug']) . '/players') ?>">
                                     <i class="bi bi-person-badge"></i> Players
                                 </a>
                                 <a class="tenant-nav-link <?= $isActive('/fixtures') ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/s/' . urlencode($sport['slug']) . '/fixtures') ?>">
-                                    <i class="bi bi-calendar3"></i> Fixtures & Results
+                                    <i class="bi bi-calendar3"></i> Fixtures
+                                </a>
+                                <a class="tenant-nav-link <?= $isActive('/results') ?>" href="<?= url('/o/' . urlencode($tenant['slug']) . '/s/' . urlencode($sport['slug']) . '/results') ?>">
+                                    <i class="bi bi-trophy"></i> Results
                                 </a>
                             <?php endif; ?>
 

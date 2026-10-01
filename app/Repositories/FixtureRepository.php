@@ -176,6 +176,37 @@ class FixtureRepository
         ]);
     }
 
+    /**
+     * Find completed fixtures (results) for a season, scoped to org and sport.
+     * Ordered newest-completed first (completed_at DESC, then scheduled_at DESC as fallback).
+     * Preserves all existing joins and exposes score fields.
+     */
+    public function findResultsBySeason(string $seasonId, string $orgId, string $sportId): array
+    {
+        $stmt = $this->db->prepare("
+            SELECT f.*, 
+                   COALESCE(ht.name, f.home_opponent_name) as home_team_name, 
+                   COALESCE(at.name, f.away_opponent_name) as away_team_name,
+                   s.name as season_name
+            FROM fixtures f
+            LEFT JOIN teams ht ON f.home_team_id = ht.id
+            LEFT JOIN teams at ON f.away_team_id = at.id
+            JOIN seasons s ON f.season_id = s.id
+            WHERE f.season_id = :season_id
+            AND f.organization_id = :org_id 
+            AND f.sport_id = :sport_id
+            AND f.status = 'completed'
+            AND f.deleted_at IS NULL
+            ORDER BY f.completed_at DESC, f.scheduled_at DESC
+        ");
+        $stmt->execute([
+            'season_id' => $seasonId,
+            'org_id'    => $orgId,
+            'sport_id'  => $sportId,
+        ]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function findPublicBySeason(string $seasonId, string $orgId, string $sportId): array
     {
         $stmt = $this->db->prepare("

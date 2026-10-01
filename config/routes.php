@@ -162,6 +162,7 @@ $router->addRoute('POST', '/o/{slug}/staff/{id}/delete', ['Benchero\Controllers\
 
 // Tenant Fixtures & Results
 $router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures', ['Benchero\Controllers\Tenant\FixtureController', 'index']);
+$router->addRoute('GET', '/o/{slug}/s/{sport_slug}/results', ['Benchero\Controllers\Tenant\FixtureController', 'results']);
 $router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/create', ['Benchero\Controllers\Tenant\FixtureController', 'create']);
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures', ['Benchero\Controllers\Tenant\FixtureController', 'store']);
 $router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Benchero\Controllers\Tenant\FixtureController', 'show']);
@@ -169,6 +170,13 @@ $router->addRoute('GET', '/o/{slug}/s/{sport_slug}/fixtures/{id}/edit', ['Benche
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}', ['Benchero\Controllers\Tenant\FixtureController', 'update']);
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/status', ['Benchero\Controllers\Tenant\FixtureController', 'status']);
 $router->addRoute('POST', '/o/{slug}/s/{sport_slug}/fixtures/{id}/result', ['Benchero\Controllers\Tenant\FixtureController', 'saveResult']);
+
+// Legacy Non-Sport Scoped Tenant Routes (redirect to active sport context)
+$router->addRoute('GET', '/o/{slug}/teams', ['Benchero\Controllers\Tenant\LegacyRouteController', 'teams']);
+$router->addRoute('GET', '/o/{slug}/players', ['Benchero\Controllers\Tenant\LegacyRouteController', 'players']);
+$router->addRoute('GET', '/o/{slug}/fixtures', ['Benchero\Controllers\Tenant\LegacyRouteController', 'fixtures']);
+$router->addRoute('GET', '/o/{slug}/results', ['Benchero\Controllers\Tenant\LegacyRouteController', 'results']);
+$router->addRoute('GET', '/o/{slug}/seasons', ['Benchero\Controllers\Tenant\LegacyRouteController', 'seasons']);
 
 // Tenant Billing, M-Pesa STK Push & PayPal Checkout
 $router->addRoute('GET', '/o/{slug}/billing', ['Benchero\Controllers\Tenant\BillingController', 'index']);

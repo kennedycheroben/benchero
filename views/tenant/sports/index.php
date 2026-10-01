@@ -20,24 +20,24 @@
             <hr>
             
             <div class="row mt-4">
-                <?php foreach ($sports as $sport): ?>
+                <?php foreach ($sports as $catalogSport): ?>
                     <div class="col-md-6 mb-3">
-                        <div class="card shadow-sm <?= $sport['org_active'] ? 'border-primary' : '' ?>">
+                        <div class="card shadow-sm <?= $catalogSport['org_active'] ? 'border-primary' : '' ?>">
                             <div class="card-body d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title mb-1"><?= htmlspecialchars($sport['name']) ?></h5>
-                                    <?php if ($sport['org_active']): ?>
+                                    <h5 class="card-title mb-1"><?= htmlspecialchars($catalogSport['name']) ?></h5>
+                                    <?php if ($catalogSport['org_active']): ?>
                                         <span class="badge bg-primary">Active</span>
-                                        <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($sport['slug']) ?>/teams" class="btn btn-sm btn-link text-decoration-none">Manage Teams</a>
+                                        <a href="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/s/<?= htmlspecialchars($catalogSport['slug']) ?>/teams" class="btn btn-sm btn-link text-decoration-none">Manage Teams</a>
                                     <?php else: ?>
                                         <span class="badge bg-secondary">Inactive</span>
                                     <?php endif; ?>
                                 </div>
                                 <form method="POST" action="<?= url("/o/") ?><?= htmlspecialchars($tenant['slug']) ?>/sports/toggle">
                                     <?= csrf_field() ?>
-                                    <input type="hidden" name="sport_id" value="<?= htmlspecialchars($sport['id']) ?>">
+                                    <input type="hidden" name="sport_id" value="<?= htmlspecialchars($catalogSport['id']) ?>">
                                     
-                                    <?php if ($sport['org_active']): ?>
+                                    <?php if ($catalogSport['org_active']): ?>
                                         <input type="hidden" name="action" value="deactivate">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">Deactivate</button>
                                     <?php else: ?>

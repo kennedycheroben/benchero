@@ -18,6 +18,18 @@ abstract class Controller
 
     protected function render(string $template, array $data = [], int $statusCode = 200): Response
     {
+        if (class_exists(\Benchero\Core\TenantContext::class)) {
+            if (!isset($data['tenant']) && \Benchero\Core\TenantContext::hasTenant()) {
+                $data['tenant'] = \Benchero\Core\TenantContext::getTenant();
+            }
+            if (!isset($data['sport']) && \Benchero\Core\TenantContext::hasSport()) {
+                $data['sport'] = \Benchero\Core\TenantContext::getSport();
+            }
+            if (!isset($data['role']) && \Benchero\Core\TenantContext::getRole() !== null) {
+                $data['role'] = \Benchero\Core\TenantContext::getRole();
+            }
+        }
+
         $content = $this->templates->render($template, $data);
         return new Response($content, $statusCode, ['Content-Type' => 'text/html; charset=utf-8']);
     }
